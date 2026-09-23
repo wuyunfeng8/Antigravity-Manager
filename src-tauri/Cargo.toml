@@ -6,6 +6,10 @@ authors = ["you"]
 license = "CC-BY-NC-SA-4.0"
 edition = "2021"
 
+[[bin]]
+name = "AMT"
+path = "src/main.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
