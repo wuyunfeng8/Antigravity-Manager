@@ -326,12 +326,8 @@ function AddAccountDialog({
 
   const chooseJson = async () => {
     try {
-      const selected = await open({
-        multiple: false,
-        filters: [{ name: 'JSON', extensions: ['json'] }],
-      });
-      if (!selected || typeof selected !== 'string') return;
-      const content = await invoke<string>('read_text_file', { path: selected });
+      const content = await invoke<string | null>('pick_account_import_json');
+      if (content === null) return;
       setTokenText(content);
       setTokenResults(null);
       setNotice({ tone: 'info', text: t('accounts.add.flow.json_loaded') });

@@ -353,7 +353,7 @@ pub fn run() {
             commands::delete_account,
             commands::switch_account,
             commands::get_current_account,
-            commands::export_accounts,
+            commands::export_accounts_to_file,
             // Device fingerprint
             commands::get_device_profiles,
             commands::bind_device_profile,
@@ -390,8 +390,7 @@ pub fn run() {
             commands::clear_local_account_scan,
             commands::sync_account_from_db,
             // File & Cache commands
-            commands::save_text_file,
-            commands::read_text_file,
+            commands::pick_account_import_json,
             commands::clear_log_cache,
             commands::clear_antigravity_cache,
             commands::get_antigravity_cache_paths,

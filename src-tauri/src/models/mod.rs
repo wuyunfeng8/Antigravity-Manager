@@ -4,8 +4,8 @@ pub mod quota;
 pub mod token;
 
 pub use account::{
-    Account, AccountExportItem, AccountExportResponse, AccountIndex, AccountSummary, DeviceProfile,
-    DeviceProfileVersion,
+    Account, AccountExportItem, AccountExportResponse, AccountIndex, AccountSummary, AccountView,
+    DeviceProfile, DeviceProfileVersion,
 };
 #[allow(unused_imports)]
 pub use config::AppConfig;

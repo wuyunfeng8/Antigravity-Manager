@@ -1,7 +1,8 @@
-use crate::models::{Account, AccountExportResponse, AppConfig, QuotaData};
+use crate::models::{Account, AccountView, AppConfig, QuotaData};
 use crate::modules;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use tauri::Emitter;
+use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
 
 // 导出 autostart 命令
@@ -9,10 +10,11 @@ pub mod autostart;
 
 /// 列出所有账号
 #[tauri::command]
-pub async fn list_accounts() -> Result<Vec<Account>, String> {
+pub async fn list_accounts() -> Result<Vec<AccountView>, String> {
     tokio::task::spawn_blocking(modules::list_accounts)
         .await
         .unwrap_or_else(|_| Err("Task panicked".to_string()))
+        .map(|accounts| accounts.into_iter().map(AccountView::from).collect())
 }
 
 /// 添加账号
@@ -21,14 +23,14 @@ pub async fn add_account(
     app: tauri::AppHandle,
     _email: String,
     refresh_token: String,
-) -> Result<Account, String> {
+) -> Result<AccountView, String> {
     let service = modules::account_service::AccountService::new(
         crate::modules::integration::SystemManager::Desktop(app.clone()),
     );
 
     let account = service.add_account(&refresh_token).await?;
     crate::modules::tray::update_tray_menus(&app);
-    Ok(account)
+    Ok(account.into())
 }
 
 /// 删除账号
@@ -65,25 +67,17 @@ pub async fn switch_account(
 
 /// 获取当前账号
 #[tauri::command]
-pub async fn get_current_account() -> Result<Option<Account>, String> {
+pub async fn get_current_account() -> Result<Option<AccountView>, String> {
     modules::logger::log_info("Backend Command: get_current_account called");
 
     let account_id = modules::get_current_account_id()?;
 
     if let Some(id) = account_id {
-        modules::load_account(&id).map(Some)
+        modules::load_account(&id).map(|account| Some(account.into()))
     } else {
         modules::logger::log_info("   No current account set");
         Ok(None)
     }
-}
-
-/// 导出账号（包含 refresh_token）
-#[tauri::command]
-pub async fn export_accounts(account_ids: Vec<String>) -> Result<AccountExportResponse, String> {
-    tokio::task::spawn_blocking(move || modules::account::export_accounts_by_ids(&account_ids))
-        .await
-        .unwrap_or_else(|_| Err("Task panicked".to_string()))
 }
 
 /// 内部辅助功能：在添加或导入账号后自动刷新一次额度
@@ -266,7 +260,7 @@ pub async fn save_config(app: tauri::AppHandle, config: AppConfig) -> Result<(),
 pub async fn start_oauth_login(
     app_handle: tauri::AppHandle,
     oauth_client_key: Option<String>,
-) -> Result<Account, String> {
+) -> Result<AccountView, String> {
     modules::logger::log_info("开始 OAuth 授权流程...");
     let service = modules::account_service::AccountService::new(
         crate::modules::integration::SystemManager::Desktop(app_handle.clone()),
@@ -277,12 +271,12 @@ pub async fn start_oauth_login(
     // 自动触发刷新额度
     let _ = internal_refresh_account_quota(&app_handle, &mut account).await;
 
-    Ok(account)
+    Ok(account.into())
 }
 
 /// 完成 OAuth 授权（不自动打开浏览器）
 #[tauri::command]
-pub async fn complete_oauth_login(app_handle: tauri::AppHandle) -> Result<Account, String> {
+pub async fn complete_oauth_login(app_handle: tauri::AppHandle) -> Result<AccountView, String> {
     modules::logger::log_info("完成 OAuth 授权流程 (manual)...");
     let service = modules::account_service::AccountService::new(
         crate::modules::integration::SystemManager::Desktop(app_handle.clone()),
@@ -293,7 +287,7 @@ pub async fn complete_oauth_login(app_handle: tauri::AppHandle) -> Result<Accoun
     // 自动触发刷新额度
     let _ = internal_refresh_account_quota(&app_handle, &mut account).await;
 
-    Ok(account)
+    Ok(account.into())
 }
 
 /// 预生成 OAuth 授权链接 (不打开浏览器)
@@ -340,7 +334,7 @@ pub async fn set_active_oauth_client(client_key: String) -> Result<(), String> {
 // --- 导入命令 ---
 
 #[tauri::command]
-pub async fn import_v1_accounts(app: tauri::AppHandle) -> Result<Vec<Account>, String> {
+pub async fn import_v1_accounts(app: tauri::AppHandle) -> Result<Vec<AccountView>, String> {
     let accounts = modules::migration::import_from_v1().await?;
 
     // 对导入的账号尝试刷新一波
@@ -348,14 +342,14 @@ pub async fn import_v1_accounts(app: tauri::AppHandle) -> Result<Vec<Account>, S
         let _ = internal_refresh_account_quota(&app, &mut account).await;
     }
 
-    Ok(accounts)
+    Ok(accounts.into_iter().map(AccountView::from).collect())
 }
 
 #[tauri::command]
 pub async fn import_from_db(
     app: tauri::AppHandle,
     target_ide: Option<String>,
-) -> Result<Vec<Account>, String> {
+) -> Result<Vec<AccountView>, String> {
     let imported_accounts =
         modules::migration::import_all_local_accounts(target_ide.as_deref()).await?;
 
@@ -365,12 +359,15 @@ pub async fn import_from_db(
 
     crate::modules::tray::update_tray_menus(&app);
 
-    Ok(imported_accounts)
+    Ok(imported_accounts
+        .into_iter()
+        .map(AccountView::from)
+        .collect())
 }
 
 #[tauri::command]
 #[allow(dead_code)]
-pub async fn import_custom_db(app: tauri::AppHandle, path: String) -> Result<Account, String> {
+pub async fn import_custom_db(app: tauri::AppHandle, path: String) -> Result<AccountView, String> {
     // 调用重构后的自定义导入函数
     let mut account = modules::migration::import_from_custom_db_path(path).await?;
 
@@ -380,7 +377,7 @@ pub async fn import_custom_db(app: tauri::AppHandle, path: String) -> Result<Acc
     // 刷新托盘图标展示
     crate::modules::tray::update_tray_menus(&app);
 
-    Ok(account)
+    Ok(account.into())
 }
 
 #[tauri::command]
@@ -436,7 +433,7 @@ pub async fn import_selected_local_accounts(
 }
 
 #[tauri::command]
-pub async fn sync_account_from_db(app: tauri::AppHandle) -> Result<Option<Account>, String> {
+pub async fn sync_account_from_db(app: tauri::AppHandle) -> Result<Option<AccountView>, String> {
     // Check if the current target is one we should not sync (like agy CLI)
     let index = modules::account::load_account_index()?;
     let current_target = index.current_target_ide.as_deref();
@@ -483,95 +480,82 @@ pub async fn sync_account_from_db(app: tauri::AppHandle) -> Result<Option<Accoun
     // 刷新托盘图标展示
     crate::modules::tray::update_tray_menus(&app);
 
-    Ok(Some(account))
+    Ok(Some(account.into()))
 }
 
-fn resolve_existing_or_parent(path: &Path) -> Result<PathBuf, String> {
-    if path.exists() {
-        return path
-            .canonicalize()
-            .map_err(|e| format!("failed_to_resolve_path: {}", e));
+/// Only a path selected in the native dialog may be read for account import.
+#[tauri::command]
+pub async fn pick_account_import_json(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    let (sender, receiver) = tokio::sync::oneshot::channel();
+    app.dialog()
+        .file()
+        .add_filter("JSON", &["json"])
+        .pick_file(move |path| {
+            let _ = sender.send(path);
+        });
+    let Some(selected) = receiver.await.map_err(|e| e.to_string())? else {
+        return Ok(None);
+    };
+    let path = selected.into_path().map_err(|e| e.to_string())?;
+    let metadata = std::fs::metadata(&path).map_err(|e| e.to_string())?;
+    if !metadata.is_file() || metadata.len() > 2 * 1024 * 1024 {
+        return Err("invalid_import_file".to_string());
     }
-
-    let parent = path
-        .parent()
-        .ok_or_else(|| "invalid_path: missing parent directory".to_string())?;
-    let canonical_parent = parent
-        .canonicalize()
-        .map_err(|e| format!("failed_to_resolve_parent: {}", e))?;
-    let file_name = path
-        .file_name()
-        .ok_or_else(|| "invalid_path: missing file name".to_string())?;
-    Ok(canonical_parent.join(file_name))
+    std::fs::read_to_string(path)
+        .map(Some)
+        .map_err(|e| format!("read_import_file_failed: {}", e))
 }
 
-fn is_sensitive_path(path: &Path) -> bool {
-    let lower = path.to_string_lossy().to_ascii_lowercase();
-    let sensitive_prefixes = [
-        "/etc/",
-        "/var/spool/cron",
-        "/root/",
-        "/proc/",
-        "/sys/",
-        "/dev/",
-        "c:\\windows",
-        "c:\\program files",
-        "c:\\program files (x86)",
-        "c:\\users\\administrator",
-        "c:\\pagefile.sys",
-    ];
-
-    sensitive_prefixes
-        .iter()
-        .any(|prefix| lower == *prefix || lower.starts_with(prefix))
-}
-
-fn validate_user_json_path(path: &str, must_exist: bool) -> Result<PathBuf, String> {
-    let requested = PathBuf::from(path);
-    if requested.as_os_str().is_empty() {
-        return Err("invalid_path: empty path".to_string());
+/// Export credentials only after a native save dialog; never return tokens over IPC.
+#[tauri::command]
+pub async fn export_accounts_to_file(
+    app: tauri::AppHandle,
+    account_ids: Vec<String>,
+) -> Result<bool, String> {
+    if account_ids.is_empty() {
+        return Err("no_accounts_selected".to_string());
     }
-    if !requested.is_absolute() {
-        return Err("invalid_path: absolute path is required".to_string());
+    let response = modules::account::export_accounts_by_ids(&account_ids)?;
+    if response.accounts.len() != account_ids.len() {
+        return Err("account_not_found".to_string());
     }
-
-    let resolved = resolve_existing_or_parent(&requested)?;
-    if is_sensitive_path(&resolved) {
-        return Err("security_denied: sensitive system path is not allowed".to_string());
-    }
-
-    let is_json = resolved
+    let suggested_name = if response.accounts.len() == 1 {
+        format!(
+            "amt_{}.json",
+            response.accounts[0]
+                .email
+                .chars()
+                .map(|c| if c.is_ascii_alphanumeric() || matches!(c, '.' | '-') {
+                    c
+                } else {
+                    '_'
+                })
+                .collect::<String>()
+        )
+    } else {
+        "amt_accounts.json".to_string()
+    };
+    let (sender, receiver) = tokio::sync::oneshot::channel();
+    app.dialog()
+        .file()
+        .add_filter("JSON", &["json"])
+        .set_file_name(suggested_name)
+        .save_file(move |path| {
+            let _ = sender.send(path);
+        });
+    let Some(selected) = receiver.await.map_err(|e| e.to_string())? else {
+        return Ok(false);
+    };
+    let path = selected.into_path().map_err(|e| e.to_string())?;
+    if !path
         .extension()
-        .and_then(|ext| ext.to_str())
-        .map(|ext| ext.eq_ignore_ascii_case("json"))
-        .unwrap_or(false);
-    if !is_json {
-        return Err("invalid_path: only .json files are allowed".to_string());
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("json"))
+    {
+        return Err("invalid_export_path".to_string());
     }
-
-    if must_exist {
-        let metadata = std::fs::metadata(&resolved)
-            .map_err(|e| format!("failed_to_read_file_metadata: {}", e))?;
-        if !metadata.is_file() {
-            return Err("invalid_path: expected a regular file".to_string());
-        }
-    }
-
-    Ok(resolved)
-}
-
-/// 保存文本文件 (绕过前端 Scope 限制)
-#[tauri::command]
-pub async fn save_text_file(path: String, content: String) -> Result<(), String> {
-    let path = validate_user_json_path(&path, false)?;
-    std::fs::write(&path, content).map_err(|e| format!("写入文件失败: {}", e))
-}
-
-/// 读取文本文件 (绕过前端 Scope 限制)
-#[tauri::command]
-pub async fn read_text_file(path: String) -> Result<String, String> {
-    let path = validate_user_json_path(&path, true)?;
-    std::fs::read_to_string(&path).map_err(|e| format!("读取文件失败: {}", e))
+    let content = serde_json::to_vec_pretty(&response.accounts).map_err(|e| e.to_string())?;
+    crate::utils::fs::write_atomic(path, &content)?;
+    Ok(true)
 }
 
 /// 清理日志缓存
@@ -795,47 +779,17 @@ pub async fn update_account_label(account_id: String, label: String) -> Result<(
     if label.chars().count() > 15 {
         return Err("标签长度不能超过15个字符".to_string());
     }
-
-    modules::logger::log_info(&format!(
-        "更新账号标签: {} -> {:?}",
-        account_id,
-        if label.is_empty() { "无" } else { &label }
-    ));
-
-    let data_dir = modules::account::get_data_dir()?;
-    let account_path = data_dir
-        .join("accounts")
-        .join(format!("{}.json", account_id));
-
-    if !account_path.exists() {
-        return Err(format!("账号文件不存在: {}", account_id));
+    if !account_id
+        .chars()
+        .all(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_'))
+        || !modules::account::load_account_index()?
+            .accounts
+            .iter()
+            .any(|account| account.id == account_id)
+    {
+        return Err("账号不存在".to_string());
     }
-
-    let content =
-        std::fs::read_to_string(&account_path).map_err(|e| format!("读取账号文件失败: {}", e))?;
-
-    let mut account_json: serde_json::Value =
-        serde_json::from_str(&content).map_err(|e| format!("解析账号文件失败: {}", e))?;
-
-    if label.is_empty() {
-        account_json["custom_label"] = serde_json::Value::Null;
-    } else {
-        account_json["custom_label"] = serde_json::Value::String(label.clone());
-    }
-
-    let json_str = serde_json::to_string_pretty(&account_json)
-        .map_err(|e| format!("序列化账号数据失败: {}", e))?;
-    std::fs::write(&account_path, json_str).map_err(|e| format!("写入账号文件失败: {}", e))?;
-
-    modules::logger::log_info(&format!(
-        "账号标签已更新: {} ({})",
-        account_id,
-        if label.is_empty() {
-            "已清除".to_string()
-        } else {
-            label
-        }
-    ));
-
-    Ok(())
+    let mut account = modules::account::load_account(&account_id)?;
+    account.custom_label = if label.is_empty() { None } else { Some(label) };
+    modules::account::save_account(&account)
 }

@@ -131,18 +131,8 @@ export async function warmUpAccount(accountId: string): Promise<string> {
     return await invoke('warm_up_account', { accountId });
 }
 
-// 导出账号相关
-export interface ExportAccountItem {
-    email: string;
-    refresh_token: string;
-}
-
-export interface ExportAccountsResponse {
-    accounts: ExportAccountItem[];
-}
-
-export async function exportAccounts(accountIds: string[]): Promise<ExportAccountsResponse> {
-    return await invoke('export_accounts', { accountIds });
+export async function exportAccounts(accountIds: string[]): Promise<boolean> {
+    return await invoke('export_accounts_to_file', { accountIds });
 }
 
 // 自定义标签相关

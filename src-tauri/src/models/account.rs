@@ -122,6 +122,73 @@ impl Account {
     }
 }
 
+/// Account fields that may cross the Tauri IPC boundary. Credentials stay in Rust.
+#[derive(Debug, Clone, Serialize)]
+pub struct AccountView {
+    pub id: String,
+    pub email: String,
+    pub name: Option<String>,
+    pub device_profile: Option<DeviceProfile>,
+    pub device_history: Vec<DeviceProfileVersion>,
+    pub quota: Option<QuotaData>,
+    pub disabled: bool,
+    pub disabled_reason: Option<String>,
+    pub disabled_at: Option<i64>,
+    pub validation_blocked: bool,
+    pub validation_blocked_until: Option<i64>,
+    pub validation_blocked_reason: Option<String>,
+    pub validation_url: Option<String>,
+    pub created_at: i64,
+    pub last_used: i64,
+    pub custom_label: Option<String>,
+}
+
+impl From<Account> for AccountView {
+    fn from(account: Account) -> Self {
+        Self {
+            id: account.id,
+            email: account.email,
+            name: account.name,
+            device_profile: account.device_profile,
+            device_history: account.device_history,
+            quota: account.quota,
+            disabled: account.disabled,
+            disabled_reason: account.disabled_reason,
+            disabled_at: account.disabled_at,
+            validation_blocked: account.validation_blocked,
+            validation_blocked_until: account.validation_blocked_until,
+            validation_blocked_reason: account.validation_blocked_reason,
+            validation_url: account.validation_url,
+            created_at: account.created_at,
+            last_used: account.last_used,
+            custom_label: account.custom_label,
+        }
+    }
+}
+
+#[cfg(test)]
+mod ipc_tests {
+    use super::*;
+
+    #[test]
+    fn account_view_never_serializes_credentials() {
+        let token = TokenData::new(
+            "access-secret".into(),
+            "refresh-secret".into(),
+            3600,
+            None,
+            None,
+            None,
+            false,
+            Some("id-secret".into()),
+        );
+        let account = Account::new("test-id".into(), "test@example.com".into(), token);
+        let value = serde_json::to_value(AccountView::from(account)).unwrap();
+        assert!(value.get("token").is_none());
+        assert_eq!(value["email"], "test@example.com");
+    }
+}
+
 /// 账号索引数据（accounts.json）
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountIndex {

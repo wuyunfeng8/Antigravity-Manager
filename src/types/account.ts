@@ -2,7 +2,6 @@ export interface Account {
     id: string;
     email: string;
     name?: string;
-    token: TokenData;
     device_profile?: DeviceProfile;
     device_history?: DeviceProfileVersion[];
     quota?: QuotaData;
@@ -16,15 +15,6 @@ export interface Account {
     validation_url?: string;
     created_at: number;
     last_used: number;
-}
-
-export interface TokenData {
-    access_token: string;
-    refresh_token: string;
-    expires_in: number;
-    expiry_timestamp: number;
-    token_type: string;
-    email?: string;
 }
 
 export interface QuotaData {

@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Search, RefreshCw, RadioTower, ShieldCheck, TriangleAlert, Users, Clock3 } from "lucide-react";
-import { join } from "@tauri-apps/api/path";
-import { save } from "@tauri-apps/plugin-dialog";
 import { useTranslation } from "react-i18next";
 
 import AccountCard from "../components/accounts/AccountCard";
@@ -19,12 +17,10 @@ import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { findQuotaModel, ModelCategory } from "../config/modelConfig";
 import { exportAccounts } from "../services/accountService";
 import { useAccountStore } from "../stores/useAccountStore";
-import { useConfigStore } from "../stores/useConfigStore";
 import { Account, getAccountTier } from "../types/account";
 import { cn } from "../utils/cn";
 import { getCategoryQuotaDisplay, formatQuotaResetTime } from "../utils/quotaDisplay";
 import { formatDate } from "../utils/format";
-import { request as invoke } from "../utils/request";
 
 type Filter = "all" | "ready" | "risk";
 type QuotaWindow = "5h" | "weekly";
@@ -102,7 +98,6 @@ export default function Accounts() {
     warmUpAccount,
     updateAccountLabel,
   } = useAccountStore();
-  const { config } = useConfigStore();
 
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
@@ -220,14 +215,9 @@ export default function Accounts() {
 
   const handleExport = async (account: Account) => {
     try {
-      const response = await exportAccounts([account.id]);
-      const fileName = `amt_${account.email.replace(/[^a-zA-Z0-9.-]/g, "_")}.json`;
-      const path = config?.default_export_path
-        ? await join(config.default_export_path, fileName)
-        : await save({ defaultPath: fileName, filters: [{ name: "JSON", extensions: ["json"] }] });
-      if (!path) return;
-      await invoke("save_text_file", { path, content: JSON.stringify(response.accounts, null, 2) });
-      showToast(t("common.saved"), "success");
+      if (await exportAccounts([account.id])) {
+        showToast(t("common.saved"), "success");
+      }
     } catch (error) {
       showToast(`${t("common.error")}: ${error}`, "error");
     }
