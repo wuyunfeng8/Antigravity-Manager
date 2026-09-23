@@ -15,8 +15,9 @@
 - [ ] Release 工作流的 CI 复用检查和所有构建矩阵通过；`prepare-release.mjs` 确认所有声明的安装包与五个更新签名齐全，生成 `updater.json` 和 `SHA256SUMS`。
 - [ ] macOS 正式产物通过 Developer ID 签名和公证检查；Windows、Linux 安装包的下载哈希与 `SHA256SUMS` 一致。
 
-## 真实验收（测试账号，不使用生产账号作为首验）
+## 真实验收（仅使用已明确授权的账号）
 
+- [x] 2026-09-23 在本机 macOS / Antigravity 2.15.1 使用已获授权的现有账号完成 c*** → k*** 往返切换；两次均在 Antigravity 设置页读回目标邮箱，最终 AMT 当前账号恢复为原 k***。`storage.json` 保持有效 JSON 与 `0600` 权限，生成两份完整备份。此项只覆盖当前本机版本与已有账号切换。
 - [ ] Antigravity 主程序现行版本：OAuth、已有账号导入、配额刷新、推荐接力与手动切换各走通一次。
 - [ ] 切换后在 Antigravity 客户端核对实际登录邮箱；覆盖 Keyring 写入失败、SQLite 写入失败、客户端重启失败和 Token 失效。
 - [ ] macOS Intel/Apple Silicon、Windows x64、Linux x64/ARM 的发布包分别完成安装与启动；升级路径至少覆盖当前公开的 1.0.1。
