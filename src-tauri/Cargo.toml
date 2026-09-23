@@ -3,7 +3,7 @@ name = "antigravity-tools"
 version = "1.1.0"
 description = "AMT"
 authors = ["you"]
-license = "CC-BY-NC-SA-4.0"
+license = "MIT"
 edition = "2021"
 
 [[bin]]

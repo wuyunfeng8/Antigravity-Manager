@@ -1,6 +1,7 @@
 {
   "version": "1.1.0",
   "name": "amt",
+  "license": "MIT",
   "description": "AMT",
   "type": "module",
   "private": true,

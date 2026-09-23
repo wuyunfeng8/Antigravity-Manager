@@ -4,7 +4,7 @@
 
 ## 必须先解决的外部条件
 
-- [ ] 确认继承代码、翻译、图标和其他素材的版权归属。原项目与本仓库当前均使用 CC BY-NC-SA 4.0；在取得所需许可或完成独立替换前，不得将全部代码改标为允许商业使用的许可证，也不得宣称已采用 OSI 开源许可证。
+- [ ] 确认代码、翻译、图标和其他素材的版权归属及 MIT 再授权范围。仓库层面的许可声明已按项目维护者要求改为 MIT；此项修改本身不证明所有第三方内容已经获得 MIT 授权，发布前仍需完成权利核对或替换。
 - [ ] 确认内置 Google OAuth 客户端的归属及公开分发使用权限。现有客户端并非本项目可证明持有；PKCE 增强授权码安全，但不能保证该客户端长期有效，也不能代替平台授权。
 - [ ] 以安全渠道配置 `TAURI_SIGNING_PRIVATE_KEY`、`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`、`APPLE_CERTIFICATE`、`APPLE_CERTIFICATE_PASSWORD`、`APPLE_ID`、`APPLE_PASSWORD`、`APPLE_TEAM_ID`。不得把值写进仓库、日志或 Issue。
 

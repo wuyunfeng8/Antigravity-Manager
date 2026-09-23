@@ -9,7 +9,7 @@
 
   [![Release](https://img.shields.io/github/v/release/wuyunfeng8/Antigravity-Manager?style=flat-square&color=16a34a)](https://github.com/wuyunfeng8/Antigravity-Manager/releases)
   [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-0f172a?style=flat-square)](#installation)
-  [![License](https://img.shields.io/badge/license-CC%20BY--NC--SA%204.0-64748b?style=flat-square)](LICENSE)
+  [![License](https://img.shields.io/badge/license-MIT-64748b?style=flat-square)](LICENSE)
 
   [简体中文](README.md) · **English**
 </div>
@@ -122,6 +122,6 @@ cargo check
 
 ## License
 
-Licensed under [CC BY-NC-SA 4.0](LICENSE).
+Licensed under the [MIT License](LICENSE).
 
 AMT independently evolved while learning from and referencing [lbjlaq/Antigravity-Manager](https://github.com/lbjlaq/Antigravity-Manager), with sincere appreciation.
