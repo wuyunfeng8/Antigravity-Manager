@@ -59,6 +59,17 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --legacy-peer-deps
 
+      - name: Check release tag version
+        shell: bash
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            node scripts/check-version.mjs "${VERSION#v}"
+          else
+            node scripts/check-version.mjs
+          fi
+
       - name: Require updater signing secrets
         shell: pwsh
         env:

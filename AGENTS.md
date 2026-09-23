@@ -230,7 +230,7 @@ modules（账号、OAuth、配额、设备、集成、进程、配置、更新�
 
 ### 8.3 Release
 
-- 版本号同步检查 `package.json`、`src-tauri/Cargo.toml`、`src-tauri/tauri.conf.json`、Cask 和变更记录；使用现有 bump 脚本，不手改一处后遗漏其他位置。
+- 版本号同步检查 `package.json`、`package-lock.json`、`src-tauri/Cargo.toml`、`src-tauri/Cargo.lock`、`src-tauri/tauri.conf.json` 和变更记录；使用 bump 脚本。Cask 保持上一已验证版本，拿到新版 DMG 的实际 SHA-256 后再更新版本与哈希，不得只改版本号。
 - Release 工作流只从本仓库构建；安装包、Updater URL、README、安装脚本和 Cask 的仓库/文件名必须一致。
 - 发布前至少通过第 9 节发布门禁，并确认两个签名 Secret 存在。不得以读取不到 Secret 值为由打印或重新生成密钥。
 - Tag、Release 和产物上传是外部发布动作，必须有明确授权。普通 `main` 推送不自动打 Tag。

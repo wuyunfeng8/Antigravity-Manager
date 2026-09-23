@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * AMT - 一键版本升级与多文件原子化同步脚本
+ * AMT - 多文件版本同步脚本
  *
  * 用法:
  *   npm run bump patch           # 自动自增补丁版本号 (例如 4.7.9 -> 4.7.10)
@@ -9,12 +9,10 @@
  *   npm run bump major           # 自动自增主版本号 (例如 4.7.9 -> 5.0.0)
  *   npm run bump 4.8.0           # 指定目标版本号
  *   npm run bump patch --dry-run # 模拟演练模式，仅检查和输出 diff，不实际写磁盘
- *   npm run bump patch --commit  # 自动生成标准提交 `chore(release): bump version to ...`
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { execSync, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -63,7 +61,12 @@ if (!currentVersion || !/^\d+\.\d+\.\d+$/.test(currentVersion)) {
 // 2. 解析命令行参数
 const args = process.argv.slice(2);
 const isDryRun = args.includes('--dry-run') || process.env.npm_config_dry_run === 'true';
-const autoCommit = args.includes('--commit') || process.env.npm_config_commit === 'true';
+for (const arg of args) {
+    if (arg.startsWith('--') && arg !== '--dry-run') {
+        error(`不支持的参数: ${arg}`);
+        process.exit(1);
+    }
+}
 const targetArg = args.find(a => !a.startsWith('--'));
 
 if (!targetArg) {
@@ -80,7 +83,6 @@ ${colors.bold}AMT 一键打版版本升级工具${colors.reset}
 
 选项:
   --dry-run                    # 仅演练测试，不实际修改任何文件
-  --commit                     # 自动执行 git commit 提交所有版本修改
 `);
     process.exit(0);
 }
@@ -144,6 +146,13 @@ const TARGET_FILES = [
         ),
     },
     {
+        name: 'package-lock.json',
+        relPath: 'package-lock.json',
+        replace: (content) => content
+            .replace(`  "version": "${currentVersion}",`, `  "version": "${newVersion}",`)
+            .replace(`      "version": "${currentVersion}",`, `      "version": "${newVersion}",`),
+    },
+    {
         name: 'src-tauri/Cargo.toml',
         relPath: 'src-tauri/Cargo.toml',
         replace: (content) => content.replace(
@@ -165,36 +174,6 @@ const TARGET_FILES = [
         replace: (content) => content.replace(
             /(\[\[package\]\]\r?\nname = "antigravity-tools"\r?\nversion = )"[^"]+"/,
             `$1"${newVersion}"`
-        ),
-    },
-    {
-        name: 'Casks/antigravity-tools.rb',
-        relPath: 'Casks/antigravity-tools.rb',
-        replace: (content) => content.replace(
-            `version "${currentVersion}"`,
-            `version "${newVersion}"`
-        ),
-    },
-    {
-        name: 'README.md (标题与徽章)',
-        relPath: 'README.md',
-        replace: (content) => content
-            .replace(`(v${currentVersion})`, `(v${newVersion})`)
-            .replace(`Version-${currentVersion}-blue`, `Version-${newVersion}-blue`),
-    },
-    {
-        name: 'README_EN.md (标题与徽章)',
-        relPath: 'README_EN.md',
-        replace: (content) => content
-            .replace(`(v${currentVersion})`, `(v${newVersion})`)
-            .replace(`Version-${currentVersion}-blue`, `Version-${newVersion}-blue`),
-    },
-    {
-        name: 'src/components/layout/MiniView.tsx',
-        relPath: 'src/components/layout/MiniView.tsx',
-        replace: (content) => content.replace(
-            `setAppVersion('${currentVersion}');`,
-            `setAppVersion('${newVersion}');`
         ),
     },
     {
@@ -263,41 +242,11 @@ for (const target of TARGET_FILES) {
     }
 }
 
-// 7. 若存在 cargo 环境，辅助执行 cargo check 确保依赖图完全一致
-if (!isDryRun && fs.existsSync(path.join(ROOT_DIR, 'src-tauri/Cargo.toml'))) {
-    try {
-        execSync('cargo --version', { stdio: 'ignore' });
-        log('执行 cargo check 校验 src-tauri/Cargo.lock 依赖图完整性...');
-        execSync('cargo check --manifest-path src-tauri/Cargo.toml', {
-            cwd: ROOT_DIR,
-            stdio: 'ignore',
-        });
-        success('Cargo 依赖图校验通过');
-    } catch {
-        // 缺少 Rust/Cargo 环境时不影响整体成功，因 Cargo.lock 已被安全规则同步
-    }
-}
-
-log(`全部 ${updatedCount} 处版本配置已完成原子化同步！`);
-
-// 8. 自动化 Commit 辅助支持（使用 execFileSync 避免 Windows cmd.exe 换行崩溃）
-if (!isDryRun && autoCommit) {
-    log('执行自动 Git Commit...');
-    try {
-        execFileSync('git', ['add', '-A'], { cwd: ROOT_DIR, stdio: 'ignore' });
-        const commitMsg = `chore(release): bump version to ${newVersion} and update changelog\n\nCo-Authored-By: JeikCode <331041501+JeikCode@users.noreply.github.com>`;
-        execFileSync('git', ['commit', '-m', commitMsg], { cwd: ROOT_DIR, stdio: 'inherit' });
-        success(`已自动生成提交: chore(release): bump version to ${newVersion}`);
-        warn('提示: CHANGELOG.md 顶部已自动插入结构骨架，请记得补充本次发版内容并使用 git commit --amend 更新！');
-    } catch (e) {
-        error('自动 Git Commit 失败，请手动执行 git commit: ' + (e.stderr?.toString() || e.message));
-    }
-}
+log(isDryRun
+    ? `演练完成：${updatedCount} 处配置需要同步。`
+    : `全部 ${updatedCount} 处版本配置已完成同步。请单独运行构建和检查。`);
 
 console.log(`
-${colors.bold}${colors.green}🎉 版本号已全部成功升级到 v${newVersion}！${colors.reset}
-后续发版三步走提示:
-  1. 在 ${colors.cyan}CHANGELOG.md${colors.reset} 补充本次发版的核心更新内容
-  2. 提交发版准备: ${colors.cyan}git commit -am "chore(release): bump version to ${newVersion} and update changelog"${colors.reset}
-  3. 推送主干与标签: ${colors.cyan}git push origin main && git tag v${newVersion} && git push origin v${newVersion}${colors.reset}
+${colors.bold}${colors.green}${isDryRun ? '演练目标版本' : '版本号已同步到'} v${newVersion}${colors.reset}
+请补充变更记录，并在实际产物生成后更新 Cask 的版本与 SHA-256。
 `);

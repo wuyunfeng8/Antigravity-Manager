@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -29,6 +29,11 @@ try {
   assert.equal(Object.keys(updater.platforms).length, 5);
   assert.equal(readdirSync(output).length, names.length + 2);
   assert.equal(readFileSync(join(output, 'SHA256SUMS'), 'utf8').trim().split('\n').length, names.length + 1);
+  const testCask = join(root, 'antigravity-tools.rb');
+  copyFileSync('Casks/antigravity-tools.rb', testCask);
+  const caskUpdate = spawnSync(process.execPath, ['scripts/update-cask-digests.mjs', version, join(output, 'SHA256SUMS'), testCask], { encoding: 'utf8' });
+  assert.equal(caskUpdate.status, 0);
+  assert.match(readFileSync(testCask, 'utf8'), /version "9\.8\.7"/);
 
   rmSync(output, { recursive: true });
   rmSync(join(input, `AMT_${version}_x64-setup.exe`));

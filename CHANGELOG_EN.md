@@ -3,6 +3,12 @@
 > Complete version history for Antigravity Tools. Return to project home at [README_EN.md](README_EN.md).
 
 *   **Version History**:
+    *   **v1.1.0 (2026-09-23)**:
+        -   **Credential safety**: Routine account views no longer receive tokens; native dialogs handle import and export, with private atomic exports. OAuth authorization uses PKCE, and proxy credentials are omitted from logs.
+        -   **Desktop relay**: Account cards offer one Antigravity desktop switch action. Credential writes are read back; failures are reported and the client is restarted where possible.
+        -   **Recovery and quotas**: Device identity changes preserve full backups and use atomic writes. Data migration activates the destination before removing the source. Missing quotas are distinct from zero, and stale data is excluded from relay recommendations.
+        -   **Release gate**: Missing platform artifacts or updater signatures stop publication. Installers verify SHA256SUMS. Production signing, cross-platform installation, and real-account switching still require pre-release acceptance.
+
     *   **v1.0.1 (2026-09-23)**:
         -   **First public release of the independent AMT project**: Focused on Antigravity account management, real quotas, recommended relay, device identities, and native client switching; removed the legacy gateway and proxy features.
         -   **Account experience**: Simplified core quota display, improved account addition and import, and refined card layout, expansion, and action feedback.

@@ -36,6 +36,9 @@ jobs:
       - name: TypeScript check
         run: npx tsc --noEmit
 
+      - name: Check version consistency
+        run: node scripts/check-version.mjs
+
       - name: Build frontend
         run: npm run build
 
