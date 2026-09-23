@@ -474,12 +474,6 @@ pub fn close_antigravity(timeout_secs: u64, target_ide: Option<&str>) -> Result<
             }
             thread::sleep(Duration::from_millis(300));
         }
-
-        // Extra cleanup: If closing Antigravity (classic/client), also sweep any orphan language_server processes
-        // that belong to the antigravity installation to prevent port/mutex locks blocking restarts.
-        if target_ide != Some("ide") {
-            sweep_orphan_language_servers();
-        }
     }
 
     #[cfg(target_os = "macos")]
