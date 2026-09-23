@@ -4,7 +4,6 @@ import {
   Clock3,
   Download,
   Fingerprint,
-  Info,
   MoreHorizontal,
   Pencil,
   RefreshCw,
@@ -17,8 +16,8 @@ import { useTranslation } from "react-i18next";
 import { findQuotaModel } from "../../config/modelConfig";
 import { Account, getAccountTier } from "../../types/account";
 import { cn } from "../../utils/cn";
-import { getModelQuotaDisplay } from "../../utils/quotaDisplay";
-import { formatTimeRemaining } from "../../utils/format";
+import { getCategoryQuotaDisplay, formatQuotaResetTime } from "../../utils/quotaDisplay";
+import { formatDate } from "../../utils/format";
 import { getValidationBlockedStatusLabel } from "./accountValidationStatus";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -41,7 +40,6 @@ interface AccountCardProps {
   onSwitch: (targetIde?: string) => void;
   onRefresh: () => void;
   onViewDevice: () => void;
-  onViewDetails: () => void;
   onViewError: () => void;
   onExport: () => void;
   onDelete: () => void;
@@ -75,7 +73,6 @@ export default function AccountCard({
   onSwitch,
   onRefresh,
   onViewDevice,
-  onViewDetails,
   onViewError,
   onExport,
   onDelete,
@@ -93,27 +90,12 @@ export default function AccountCard({
 
   const quotas = useMemo(() => {
     return [
+      ["Gemini", findQuotaModel(account.quota?.models, "gemini")],
       ["Claude", findQuotaModel(account.quota?.models, "claude")],
-      ["Gemini Pro", findQuotaModel(account.quota?.models, "gemini-pro")],
-      ["Gemini Flash", findQuotaModel(account.quota?.models, "gemini-flash")],
+      ["GPT", findQuotaModel(account.quota?.models, "gpt")],
     ].map(([name, model]) => {
       const typedModel = typeof model === "object" ? model : undefined;
-      if (quotaWindow === "weekly") {
-        const thirdParty = name === "Claude";
-        const bucket = (account.quota?.quota_groups || [])
-          .filter((group) => {
-            const groupName = group.display_name.toLowerCase();
-            const isThirdParty = /claude|3p/.test(groupName) || group.buckets?.some((item) => item.bucket_id.toLowerCase().includes("3p"));
-            return thirdParty ? isThirdParty : !isThirdParty;
-          })
-          .flatMap((group) => group.buckets || [])
-          .filter((item) => /week|7d/i.test(`${item.window} ${item.bucket_id}`))
-          .sort((a, b) => a.remaining_fraction - b.remaining_fraction)[0];
-        if (bucket) {
-          return { name: String(name), percentage: Math.round(bucket.remaining_fraction * 100), resetTime: bucket.reset_time };
-        }
-      }
-      const display = getModelQuotaDisplay(typedModel?.name || String(name), typedModel, account.quota?.quota_groups);
+      const display = getCategoryQuotaDisplay(String(name), typedModel, account.quota?.quota_groups, quotaWindow);
       return { name: String(name), percentage: display.percentage, resetTime: display.resetTime };
     });
   }, [account.quota, quotaWindow]);
@@ -133,7 +115,7 @@ export default function AccountCard({
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <Button variant="ghost" className="h-auto min-w-0 justify-start p-0 text-left hover:bg-transparent" onClick={onViewDetails}>
+        <div className="flex items-center min-w-0">
           <span className={cn("mr-3 grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-black", isCurrent ? "bg-emerald-500 text-white" : "bg-muted text-foreground")}>
             {(account.name || account.email)[0].toUpperCase()}
           </span>
@@ -141,7 +123,7 @@ export default function AccountCard({
             <span className="block truncate text-sm font-bold">{accountLabel(account)}</span>
             <span className="mt-0.5 block max-w-[180px] truncate text-[11px] font-normal text-muted-foreground">{account.email}</span>
           </span>
-        </Button>
+        </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
           {isBestStandby && !isCurrent && <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 px-1.5 text-[9px] text-emerald-600">推荐</Badge>}
@@ -154,7 +136,6 @@ export default function AccountCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={onViewDetails}><Info className="mr-2 h-4 w-4" />{t('relay.actions.details')}</DropdownMenuItem>
               <DropdownMenuItem onClick={onViewDevice}><Fingerprint className="mr-2 h-4 w-4" />{t('relay.actions.device')}</DropdownMenuItem>
               <DropdownMenuItem onClick={() => setEditing(true)}><Pencil className="mr-2 h-4 w-4" />{t('relay.actions.label')}</DropdownMenuItem>
               {onWarmup && <DropdownMenuItem onClick={onWarmup}><Sparkles className="mr-2 h-4 w-4" />{t('relay.actions.warmup')}</DropdownMenuItem>}
@@ -186,16 +167,31 @@ export default function AccountCard({
 
       <div className="mt-4 flex-1 space-y-3">
         {quotas.map((quota) => (
-          <div key={quota.name}>
+          <div key={quota.name} className="space-y-1">
             <div className="flex items-center justify-between gap-3 text-[11px]">
               <span className="font-medium text-muted-foreground">{quota.name}</span>
-              <div className="flex items-center gap-2">
-                {quota.resetTime && <span className="hidden items-center gap-1 text-[9px] text-muted-foreground xl:flex"><Clock3 className="h-3 w-3" />{formatTimeRemaining(quota.resetTime)}</span>}
-                <span className="font-mono font-bold">{quota.percentage}%</span>
-              </div>
+              <span className="font-mono font-bold">{quota.percentage}%</span>
             </div>
-            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
               <div className={cn("h-full rounded-full transition-all duration-500", quotaColor(quota.percentage))} style={{ width: `${quota.percentage}%` }} />
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-0.5">
+              <span className="flex items-center gap-1 font-mono truncate" title={quota.resetTime ? formatDate(quota.resetTime) || undefined : undefined}>
+                <Clock3 className="h-3 w-3 text-muted-foreground/70 shrink-0" />
+                <span>
+                  {quotaWindow === "weekly"
+                    ? t('accounts.details.reset_weekly', '周限重置时间')
+                    : t('accounts.details.reset_5h', '5H 重置时间')}:
+                </span>
+                <span className="font-semibold text-foreground/90">
+                  {formatQuotaResetTime(quota.resetTime, quota.percentage, quotaWindow, t)}
+                </span>
+              </span>
+              <span className={cn("text-[9px] font-medium shrink-0 ml-1", quota.percentage === 100 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400")}>
+                {quota.percentage === 100
+                  ? t('accounts.details.ample', '额度充沛')
+                  : t('accounts.details.recovering', '恢复中')}
+              </span>
             </div>
           </div>
         ))}

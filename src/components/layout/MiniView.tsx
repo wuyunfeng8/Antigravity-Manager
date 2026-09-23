@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '../../utils/cn';
 import { formatTimeRemaining } from '../../utils/format';
 import { enterMiniMode, exitMiniMode } from '../../utils/windowManager';
-import { getModelDisplayName, findQuotaModel } from '../../config/modelConfig';
+import { findQuotaModel } from '../../config/modelConfig';
 import { getVersion } from '@tauri-apps/api/app';
 import { useConfigStore } from '../../stores/useConfigStore';
 import { Button } from '../ui/button';
@@ -20,7 +20,7 @@ function relayScore(account: Account) {
     const tierWeight = tier === 'ultra' ? 300 : tier === 'pro' ? 200 : 100;
     return tierWeight
         + (findQuotaModel(account.quota?.models, 'claude')?.percentage ?? 0)
-        + (findQuotaModel(account.quota?.models, 'gemini-pro')?.percentage ?? 0);
+        + (findQuotaModel(account.quota?.models, 'gemini')?.percentage ?? findQuotaModel(account.quota?.models, 'gemini-pro')?.percentage ?? 0);
 }
 
 export default function MiniView() {
@@ -104,9 +104,9 @@ export default function MiniView() {
         }
     };
 
-    const geminiProModel = findQuotaModel(currentAccount?.quota?.models, 'gemini-pro');
-    const geminiFlashModel = findQuotaModel(currentAccount?.quota?.models, 'gemini-flash');
+    const geminiModel = findQuotaModel(currentAccount?.quota?.models, 'gemini') || findQuotaModel(currentAccount?.quota?.models, 'gemini-pro');
     const claudeModel = findQuotaModel(currentAccount?.quota?.models, 'claude');
+    const gptModel = findQuotaModel(currentAccount?.quota?.models, 'gpt');
 
     const renderModelRow = (model: any, displayName: string) => {
         if (!model) return null;
@@ -202,15 +202,15 @@ export default function MiniView() {
 
                             {/* Models List */}
                             <div className="space-y-3">
-                                    {renderModelRow(geminiProModel, getModelDisplayName(geminiProModel))}
-                                    {renderModelRow(geminiFlashModel, getModelDisplayName(geminiFlashModel))}
-                                    {renderModelRow(claudeModel, getModelDisplayName(claudeModel, t('common.claude_series', 'Claude 系列')))}
+                                {renderModelRow(geminiModel, 'Gemini')}
+                                {renderModelRow(claudeModel, 'Claude')}
+                                {renderModelRow(gptModel, 'GPT')}
 
-                                    {!geminiProModel && !geminiFlashModel && !claudeModel && (
-                                        <div className="text-center py-4 text-xs text-muted-foreground">
-                                            {t('relay.no_quota')}
-                                        </div>
-                                    )}
+                                {!geminiModel && !claudeModel && !gptModel && (
+                                    <div className="text-center py-4 text-xs text-muted-foreground">
+                                        {t('relay.no_quota')}
+                                    </div>
+                                )}
                             </div>
                             {bestStandby && (
                                 <Button

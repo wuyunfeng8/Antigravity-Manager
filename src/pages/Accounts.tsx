@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, RefreshCw, RadioTower, ShieldCheck, TriangleAlert, Users } from "lucide-react";
+import { Search, RefreshCw, RadioTower, ShieldCheck, TriangleAlert, Users, Clock3 } from "lucide-react";
 import { join } from "@tauri-apps/api/path";
 import { save } from "@tauri-apps/plugin-dialog";
 import { useTranslation } from "react-i18next";
 
 import AccountCard from "../components/accounts/AccountCard";
-import AccountDetailsDialog from "../components/accounts/AccountDetailsDialog";
 import AccountErrorDialog from "../components/accounts/AccountErrorDialog";
 import AddAccountDialog from "../components/accounts/AddAccountDialog";
 import DeviceFingerprintDialog from "../components/accounts/DeviceFingerprintDialog";
@@ -16,13 +15,14 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { findQuotaModel } from "../config/modelConfig";
+import { findQuotaModel, ModelCategory } from "../config/modelConfig";
 import { exportAccounts } from "../services/accountService";
 import { useAccountStore } from "../stores/useAccountStore";
 import { useConfigStore } from "../stores/useConfigStore";
 import { Account, getAccountTier } from "../types/account";
 import { cn } from "../utils/cn";
-import { getModelQuotaDisplay } from "../utils/quotaDisplay";
+import { getCategoryQuotaDisplay, formatQuotaResetTime } from "../utils/quotaDisplay";
+import { formatDate } from "../utils/format";
 import { request as invoke } from "../utils/request";
 
 type Filter = "all" | "ready" | "risk";
@@ -40,40 +40,46 @@ function accountScore(account: Account): number {
   const tier = getAccountTier(account);
   const tierWeight = tier === "ultra" ? 300 : tier === "pro" ? 200 : 100;
   const claude = findQuotaModel(account.quota?.models, "claude")?.percentage ?? 0;
-  const pro = findQuotaModel(account.quota?.models, "gemini-pro")?.percentage ?? 0;
-  return tierWeight + claude + pro;
+  const gemini = findQuotaModel(account.quota?.models, "gemini")?.percentage ?? findQuotaModel(account.quota?.models, "gemini-pro")?.percentage ?? 0;
+  return tierWeight + claude + gemini;
 }
 
-function quotaValue(account: Account | null, category: "claude" | "gemini-pro" | "gemini-flash", quotaWindow: QuotaWindow) {
+function quotaValue(account: Account | null, category: ModelCategory, quotaWindow: QuotaWindow) {
   if (!account) return { percentage: 0, resetTime: undefined as string | undefined };
   const model = findQuotaModel(account.quota?.models, category);
-  if (quotaWindow === "weekly") {
-    const thirdParty = category === "claude";
-    const buckets = (account.quota?.quota_groups || [])
-      .filter((group) => {
-        const name = group.display_name.toLowerCase();
-        const isThirdParty = /claude|3p/.test(name) || group.buckets?.some((bucket) => bucket.bucket_id.toLowerCase().includes("3p"));
-        return thirdParty ? isThirdParty : !isThirdParty;
-      })
-      .flatMap((group) => group.buckets || [])
-      .filter((bucket) => /week|7d/i.test(`${bucket.window} ${bucket.bucket_id}`));
-    const bucket = buckets.sort((a, b) => a.remaining_fraction - b.remaining_fraction)[0];
-    if (bucket) return { percentage: Math.round(bucket.remaining_fraction * 100), resetTime: bucket.reset_time };
-  }
-  const display = getModelQuotaDisplay(model?.name || category, model, account.quota?.quota_groups);
-  return { percentage: display.percentage, resetTime: display.resetTime };
+  return getCategoryQuotaDisplay(category, model, account.quota?.quota_groups, quotaWindow);
 }
 
-function HeroQuota({ label, value }: { label: string; value: number }) {
+function HeroQuota({
+  label,
+  value,
+  resetTime,
+  quotaWindow,
+}: {
+  label: string;
+  value: number;
+  resetTime?: string;
+  quotaWindow?: QuotaWindow;
+}) {
+  const { t } = useTranslation();
   const color = value <= 20 ? "bg-rose-400" : value <= 50 ? "bg-amber-400" : "bg-emerald-400";
+  const resetText = formatQuotaResetTime(resetTime, value, quotaWindow || "5h", t);
+
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 space-y-1">
       <div className="flex items-center justify-between gap-2 text-[11px] text-slate-300">
         <span className="truncate">{label}</span>
         <span className="font-semibold text-white">{value}%</span>
       </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+      <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
         <div className={cn("h-full rounded-full transition-all duration-500", color)} style={{ width: `${value}%` }} />
+      </div>
+      <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+        <span className="flex items-center gap-1 font-mono truncate" title={resetTime ? formatDate(resetTime) || undefined : undefined}>
+          <Clock3 className="h-3 w-3 text-slate-400 shrink-0" />
+          <span>{quotaWindow === "weekly" ? t('accounts.details.reset_weekly', '周限重置时间') : t('accounts.details.reset_5h', '5H 重置时间')}:</span>
+          <span className="font-medium text-slate-200">{resetText}</span>
+        </span>
       </div>
     </div>
   );
@@ -102,7 +108,6 @@ export default function Accounts() {
   const [switchingId, setSwitchingId] = useState<string | null>(null);
   const [refreshingIds, setRefreshingIds] = useState<Set<string>>(new Set());
   const [refreshingAll, setRefreshingAll] = useState(false);
-  const [detailsAccount, setDetailsAccount] = useState<Account | null>(null);
   const [deviceAccount, setDeviceAccount] = useState<Account | null>(null);
   const [errorAccount, setErrorAccount] = useState<Account | null>(null);
   const [deleteAccountId, setDeleteAccountId] = useState<string | null>(null);
@@ -135,9 +140,9 @@ export default function Accounts() {
   const riskCount = accounts.filter(isRiskAccount).length;
   const readyCount = accounts.filter((account) => account.id !== currentAccount?.id && !isRiskAccount(account)).length;
   const currentQuotas = {
-    claude: quotaValue(currentAccount, "claude", quotaWindow).percentage,
-    pro: quotaValue(currentAccount, "gemini-pro", quotaWindow).percentage,
-    flash: quotaValue(currentAccount, "gemini-flash", quotaWindow).percentage,
+    gemini: quotaValue(currentAccount, "gemini", quotaWindow),
+    claude: quotaValue(currentAccount, "claude", quotaWindow),
+    gpt: quotaValue(currentAccount, "gpt", quotaWindow),
   };
 
   const handleSwitch = async (account: Account, targetIde?: string) => {
@@ -241,19 +246,19 @@ export default function Accounts() {
         <Card className="overflow-hidden rounded-3xl border-slate-800 bg-slate-950 text-white shadow-lg">
           <CardContent className="p-5 sm:p-6">
             <div className="flex items-start justify-between gap-4">
-              <Button type="button" variant="ghost" className="h-auto min-w-0 justify-start p-0 text-left text-white hover:bg-transparent hover:text-white" onClick={() => currentAccount && setDetailsAccount(currentAccount)}>
+              <div className="flex flex-col items-start justify-start gap-1.5 min-w-0 text-white" title={currentAccount?.email}>
                 <div className="text-[10px] font-bold tracking-[0.2em] text-emerald-300">{t('relay.current')}</div>
-                <div className="mt-2 truncate text-xl font-bold">{currentAccount ? accountName(currentAccount) : t('relay.unselected')}</div>
-                <div className="mt-0.5 truncate text-xs text-slate-400">{currentAccount?.email || t('relay.select_hint')}</div>
-              </Button>
+                <div className="max-w-full truncate text-xl font-bold">{currentAccount ? accountName(currentAccount) : t('relay.unselected')}</div>
+                {!currentAccount && <div className="truncate text-xs text-slate-400">{t('relay.select_hint')}</div>}
+              </div>
               <Badge className="border-0 bg-emerald-400/15 text-emerald-300 hover:bg-emerald-400/15">
                 {currentAccount ? `${getAccountTier(currentAccount).toUpperCase()} · ${t('relay.connected')}` : t('relay.unselected')}
               </Badge>
             </div>
             <div className="mt-6 grid grid-cols-3 gap-4 sm:gap-6">
-              <HeroQuota label="Claude" value={currentQuotas.claude} />
-              <HeroQuota label="Gemini Pro" value={currentQuotas.pro} />
-              <HeroQuota label="Gemini Flash" value={currentQuotas.flash} />
+              <HeroQuota label="Gemini" value={currentQuotas.gemini.percentage} resetTime={currentQuotas.gemini.resetTime} quotaWindow={quotaWindow} />
+              <HeroQuota label="Claude" value={currentQuotas.claude.percentage} resetTime={currentQuotas.claude.resetTime} quotaWindow={quotaWindow} />
+              <HeroQuota label="GPT" value={currentQuotas.gpt.percentage} resetTime={currentQuotas.gpt.resetTime} quotaWindow={quotaWindow} />
             </div>
           </CardContent>
         </Card>
@@ -265,7 +270,7 @@ export default function Accounts() {
               <div className="mt-2 truncate text-lg font-bold">{bestStandby ? accountName(bestStandby) : t('relay.none')}</div>
               <div className="mt-1 text-xs text-muted-foreground">
                 {bestStandby
-                  ? `${getAccountTier(bestStandby).toUpperCase()} · Claude ${quotaValue(bestStandby, "claude", quotaWindow).percentage}% · Pro ${quotaValue(bestStandby, "gemini-pro", quotaWindow).percentage}%`
+                  ? `${getAccountTier(bestStandby).toUpperCase()} · Gemini ${quotaValue(bestStandby, "gemini", quotaWindow).percentage}% · Claude ${quotaValue(bestStandby, "claude", quotaWindow).percentage}%`
                   : t('relay.none_hint')}
               </div>
             </div>
@@ -307,7 +312,7 @@ export default function Accounts() {
           </div>
         </div>
 
-        <div className="scrollbar-none mt-4 min-h-0 flex-1 overflow-y-auto pb-2 pr-1">
+        <div className="scrollbar-none mt-4 min-h-0 flex-1 overflow-y-auto px-1 pt-1.5 pb-2">
           {filteredAccounts.length > 0 ? (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
               {filteredAccounts.map((account) => (
@@ -321,7 +326,6 @@ export default function Accounts() {
                   quotaWindow={quotaWindow}
                   onSwitch={(targetIde) => handleSwitch(account, targetIde)}
                   onRefresh={() => handleRefresh(account)}
-                  onViewDetails={() => setDetailsAccount(account)}
                   onViewDevice={() => setDeviceAccount(account)}
                   onViewError={() => setErrorAccount(account)}
                   onWarmup={() => handleWarmup(account)}
@@ -343,7 +347,6 @@ export default function Accounts() {
         </div>
       </section>
 
-      <AccountDetailsDialog account={detailsAccount} onClose={() => setDetailsAccount(null)} />
       <DeviceFingerprintDialog account={deviceAccount} onClose={() => setDeviceAccount(null)} />
       <AccountErrorDialog account={errorAccount} onClose={() => setErrorAccount(null)} />
       <ModalDialog
