@@ -245,7 +245,7 @@ export default function AccountCard({
       </div>
 
       {showResets && (
-        <div className="grid grid-cols-3 gap-2.5 border-t pb-2 pt-2">
+        <div className="grid grid-cols-3 gap-2.5 pb-2 pt-2">
           {quotas.map((quota) => (
             <div key={quota.name} className="min-w-0 text-[10px] leading-relaxed text-muted-foreground"
               title={quota.resetTime ? formatDate(quota.resetTime) || undefined : undefined}>
