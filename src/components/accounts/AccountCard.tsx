@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import {
+  ArrowLeftRight,
   Check,
   Clock3,
   Download,
   Fingerprint,
+  Loader2,
   MoreHorizontal,
   Pencil,
   RefreshCw,
@@ -201,12 +203,33 @@ export default function AccountCard({
         {isCurrent ? (
           <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400"><span className="h-2 w-2 rounded-full bg-emerald-500" />{t('relay.actions.current')}</div>
         ) : (
-          <Button variant="outline" size="sm" className="h-7.5 rounded-lg px-2.5 text-xs font-semibold" onClick={() => onSwitch()} disabled={isSwitching || risky}>
-            <RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", isSwitching && "animate-spin")} />
+          <Button
+            size="sm"
+            className={cn(
+              "h-7.5 rounded-lg px-2.5 text-xs font-semibold transition-all",
+              isBestStandby
+                ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
+                : "border border-emerald-500/25 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-300",
+            )}
+            onClick={() => onSwitch()}
+            disabled={isSwitching || risky}
+          >
+            {isSwitching ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <ArrowLeftRight className="mr-1.5 h-3.5 w-3.5" />
+            )}
             {isSwitching ? t('relay.actions.switching') : t('relay.actions.switch')}
           </Button>
         )}
-        <Button variant="ghost" size="iconSm" className="h-7 w-7 rounded-lg text-muted-foreground" onClick={onRefresh} disabled={isRefreshing || risky} title={t('relay.actions.refresh')}>
+        <Button
+          variant="ghost"
+          size="iconSm"
+          className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground"
+          onClick={onRefresh}
+          disabled={isRefreshing || risky}
+          title={t('relay.actions.refresh')}
+        >
           <RefreshCw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")} />
         </Button>
       </div>
