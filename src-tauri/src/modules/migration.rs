@@ -2,15 +2,171 @@ use crate::models::{Account, TokenData};
 use crate::modules::{account, db};
 use crate::utils::protobuf;
 use base64::{engine::general_purpose, Engine as _};
+use serde::Serialize;
 use serde_json::Value;
+use std::collections::HashSet;
 use std::fs;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Mutex, OnceLock};
+use std::time::{Duration, Instant};
 
 #[derive(Debug, Clone)]
 pub struct ImportedOAuthState {
     pub refresh_token: String,
     pub is_gcp_tos: bool,
     pub project_id: Option<String>,
+}
+
+/// 扫描只向前端提供账号概要；Refresh Token 仅短暂保留在 Rust 内存中。
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalAccountPreview {
+    pub id: String,
+    pub email: Option<String>,
+    pub source: String,
+    pub available: bool,
+}
+
+pub struct LocalImportCandidate {
+    pub id: String,
+    pub source: String,
+    pub oauth_state: ImportedOAuthState,
+}
+
+struct PendingLocalScan {
+    created_at: Instant,
+    candidates: Vec<LocalImportCandidate>,
+}
+
+static PENDING_LOCAL_SCAN: OnceLock<Mutex<Option<PendingLocalScan>>> = OnceLock::new();
+static LOCAL_SCAN_EPOCH: AtomicU64 = AtomicU64::new(0);
+const LOCAL_SCAN_TTL: Duration = Duration::from_secs(10 * 60);
+
+fn pending_local_scan() -> &'static Mutex<Option<PendingLocalScan>> {
+    PENDING_LOCAL_SCAN.get_or_init(|| Mutex::new(None))
+}
+
+pub fn clear_local_scan() {
+    LOCAL_SCAN_EPOCH.fetch_add(1, Ordering::SeqCst);
+    if let Ok(mut pending) = pending_local_scan().lock() {
+        *pending = None;
+    }
+}
+
+/// 读取本地凭据并验证账号身份，不写入 AMT 账号库，也不改变当前账号。
+pub async fn scan_local_accounts(
+    custom_db_path: Option<&str>,
+) -> Result<Vec<LocalAccountPreview>, String> {
+    use crate::modules::{integration, oauth};
+
+    clear_local_scan();
+    let scan_epoch = LOCAL_SCAN_EPOCH.load(Ordering::SeqCst);
+    let mut sources = Vec::new();
+    if custom_db_path.is_none() {
+        if let Ok(state) = integration::read_from_system_keyring() {
+            sources.push(("keyring".to_string(), state));
+        }
+        for path in db::get_all_candidate_db_paths(None) {
+            if path.is_file() {
+                if let Ok(state) = extract_oauth_state_from_file(&path) {
+                    sources.push(("ide_database".to_string(), state));
+                }
+            }
+        }
+    }
+
+    if let Some(path) = custom_db_path {
+        let path = PathBuf::from(path);
+        if !path.is_file() || path.extension().and_then(|v| v.to_str()) != Some("vscdb") {
+            return Err("请选择有效的 state.vscdb 文件".to_string());
+        }
+        let state = extract_oauth_state_from_file(&path)?;
+        sources.push(("custom_database".to_string(), state));
+    }
+
+    let mut seen_tokens = HashSet::new();
+    let mut seen_emails = HashSet::new();
+    let mut previews = Vec::new();
+    let mut candidates = Vec::new();
+
+    for (source, state) in sources {
+        if state.refresh_token.trim().is_empty() || !seen_tokens.insert(state.refresh_token.clone())
+        {
+            continue;
+        }
+        let id = uuid::Uuid::new_v4().to_string();
+        let email = match oauth::refresh_access_token(&state.refresh_token, None).await {
+            Ok(token) => oauth::get_user_info(&token.access_token, None)
+                .await
+                .ok()
+                .map(|user| user.email),
+            Err(_) => None,
+        };
+        if let Some(ref address) = email {
+            if !seen_emails.insert(address.to_ascii_lowercase()) {
+                continue;
+            }
+        }
+        let available = email.is_some();
+        previews.push(LocalAccountPreview {
+            id: id.clone(),
+            email,
+            source: source.clone(),
+            available,
+        });
+        if available {
+            candidates.push(LocalImportCandidate {
+                id,
+                source,
+                oauth_state: state,
+            });
+        }
+    }
+
+    let mut pending = pending_local_scan()
+        .lock()
+        .map_err(|_| "本地扫描状态不可用，请重试".to_string())?;
+    if LOCAL_SCAN_EPOCH.load(Ordering::SeqCst) != scan_epoch {
+        return Err("扫描已取消，请重新扫描".to_string());
+    }
+    *pending = Some(PendingLocalScan {
+        created_at: Instant::now(),
+        candidates,
+    });
+    Ok(previews)
+}
+
+pub fn take_selected_local_candidates(
+    selected_ids: &[String],
+) -> Result<Vec<LocalImportCandidate>, String> {
+    if selected_ids.is_empty() {
+        return Err("请先选择至少一个账号".to_string());
+    }
+    let mut pending = pending_local_scan()
+        .lock()
+        .map_err(|_| "本地扫描状态不可用，请重试".to_string())?;
+    let Some(scan) = pending.as_ref() else {
+        return Err("扫描结果已失效，请重新扫描".to_string());
+    };
+    if scan.created_at.elapsed() > LOCAL_SCAN_TTL {
+        *pending = None;
+        return Err("扫描结果已过期，请重新扫描".to_string());
+    }
+    let unique_ids: HashSet<&str> = selected_ids.iter().map(String::as_str).collect();
+    if unique_ids.len() != selected_ids.len()
+        || unique_ids
+            .iter()
+            .any(|id| !scan.candidates.iter().any(|candidate| candidate.id == *id))
+    {
+        return Err("所选账号不在当前扫描结果中，请重新扫描".to_string());
+    }
+    let scan = pending.take().expect("scan checked above");
+    Ok(scan
+        .candidates
+        .into_iter()
+        .filter(|candidate| unique_ids.contains(candidate.id.as_str()))
+        .collect())
 }
 
 /// Scan and import V1 data
@@ -244,14 +400,18 @@ pub async fn import_from_v1() -> Result<Vec<Account>, String> {
 
 /// Import account from custom database path
 pub async fn import_from_custom_db_path(path_str: String) -> Result<Account, String> {
-    use crate::modules::oauth;
-
     let path = PathBuf::from(path_str);
     if !path.exists() {
         return Err(format!("File does not exist: {:?}", path));
     }
 
     let oauth_state = extract_oauth_state_from_file(&path)?;
+    import_oauth_state(oauth_state).await
+}
+
+pub async fn import_oauth_state(oauth_state: ImportedOAuthState) -> Result<Account, String> {
+    use crate::modules::oauth;
+
     let refresh_token = oauth_state.refresh_token.clone();
 
     // 3. Use Refresh Token to get latest Access Token and user info
@@ -427,8 +587,9 @@ fn extract_oauth_state_from_file(db_path: &PathBuf) -> Result<ImportedOAuthState
     }
 
     // Connect to database
-    let conn = rusqlite::Connection::open(db_path)
-        .map_err(|e| format!("Failed to open database: {}", e))?;
+    let conn =
+        rusqlite::Connection::open_with_flags(db_path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
+            .map_err(|e| format!("Failed to open database: {}", e))?;
 
     // 1. 尝试新版格式 (>= 1.16.5)
     // 键: antigravityUnifiedStateSync.oauthToken
@@ -522,4 +683,66 @@ pub fn get_refresh_token_from_db(target_ide: Option<&str>) -> Result<String, Str
     }
 
     Err("Login state data not found in keyring or any database format".to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn local_scan_only_imports_current_selected_candidates() {
+        clear_local_scan();
+        let first_id = uuid::Uuid::new_v4().to_string();
+        let second_id = uuid::Uuid::new_v4().to_string();
+        *pending_local_scan().lock().unwrap() = Some(PendingLocalScan {
+            created_at: Instant::now(),
+            candidates: vec![
+                LocalImportCandidate {
+                    id: first_id.clone(),
+                    source: "keyring".to_string(),
+                    oauth_state: ImportedOAuthState {
+                        refresh_token: "1//test-first".to_string(),
+                        is_gcp_tos: true,
+                        project_id: None,
+                    },
+                },
+                LocalImportCandidate {
+                    id: second_id.clone(),
+                    source: "ide_database".to_string(),
+                    oauth_state: ImportedOAuthState {
+                        refresh_token: "1//test-second".to_string(),
+                        is_gcp_tos: false,
+                        project_id: Some("project-test".to_string()),
+                    },
+                },
+            ],
+        });
+
+        assert!(take_selected_local_candidates(&["unknown".to_string()]).is_err());
+        let selected = take_selected_local_candidates(&[second_id]).unwrap();
+        assert_eq!(selected.len(), 1);
+        assert_eq!(selected[0].source, "ide_database");
+        assert_eq!(
+            selected[0].oauth_state.project_id.as_deref(),
+            Some("project-test")
+        );
+        assert!(take_selected_local_candidates(&[first_id]).is_err());
+
+        let expired_id = uuid::Uuid::new_v4().to_string();
+        *pending_local_scan().lock().unwrap() = Some(PendingLocalScan {
+            created_at: Instant::now() - LOCAL_SCAN_TTL - Duration::from_secs(1),
+            candidates: vec![LocalImportCandidate {
+                id: expired_id.clone(),
+                source: "keyring".to_string(),
+                oauth_state: ImportedOAuthState {
+                    refresh_token: "1//expired-test".to_string(),
+                    is_gcp_tos: true,
+                    project_id: None,
+                },
+            }],
+        });
+        assert!(take_selected_local_candidates(&[expired_id]).is_err());
+        assert!(pending_local_scan().lock().unwrap().is_none());
+        clear_local_scan();
+    }
 }

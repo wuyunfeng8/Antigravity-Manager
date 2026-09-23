@@ -26,11 +26,8 @@ pub async fn add_account(
         crate::modules::integration::SystemManager::Desktop(app.clone()),
     );
 
-    let mut account = service.add_account(&refresh_token).await?;
-
-    // 自动刷新配额
-    let _ = internal_refresh_account_quota(&app, &mut account).await;
-
+    let account = service.add_account(&refresh_token).await?;
+    crate::modules::tray::update_tray_menus(&app);
     Ok(account)
 }
 
@@ -362,14 +359,6 @@ pub async fn import_from_db(
     let imported_accounts =
         modules::migration::import_all_local_accounts(target_ide.as_deref()).await?;
 
-    if let Some(first_acc) = imported_accounts.first() {
-        let account_id = first_acc.id.clone();
-        let _ = modules::account::set_current_account_id_with_target(
-            &account_id,
-            target_ide.as_deref(),
-        );
-    }
-
     for mut account in imported_accounts.clone() {
         let _ = internal_refresh_account_quota(&app, &mut account).await;
     }
@@ -385,10 +374,6 @@ pub async fn import_custom_db(app: tauri::AppHandle, path: String) -> Result<Acc
     // 调用重构后的自定义导入函数
     let mut account = modules::migration::import_from_custom_db_path(path).await?;
 
-    // 自动设为当前账号
-    let account_id = account.id.clone();
-    modules::account::set_current_account_id(&account_id)?;
-
     // 自动触发刷新额度
     let _ = internal_refresh_account_quota(&app, &mut account).await;
 
@@ -396,6 +381,58 @@ pub async fn import_custom_db(app: tauri::AppHandle, path: String) -> Result<Acc
     crate::modules::tray::update_tray_menus(&app);
 
     Ok(account)
+}
+
+#[tauri::command]
+pub async fn scan_local_accounts(
+    custom_db_path: Option<String>,
+) -> Result<Vec<modules::migration::LocalAccountPreview>, String> {
+    modules::migration::scan_local_accounts(custom_db_path.as_deref()).await
+}
+
+#[tauri::command]
+pub fn clear_local_account_scan() {
+    modules::migration::clear_local_scan();
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalImportResult {
+    pub imported: Vec<String>,
+    pub failed: Vec<LocalImportFailure>,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalImportFailure {
+    pub source: String,
+    pub message: String,
+}
+
+#[tauri::command]
+pub async fn import_selected_local_accounts(
+    app: tauri::AppHandle,
+    candidate_ids: Vec<String>,
+) -> Result<LocalImportResult, String> {
+    let selected = modules::migration::take_selected_local_candidates(&candidate_ids)?;
+    let mut result = LocalImportResult {
+        imported: Vec::new(),
+        failed: Vec::new(),
+    };
+    for candidate in selected {
+        match modules::migration::import_oauth_state(candidate.oauth_state).await {
+            Ok(mut account) => {
+                let _ = internal_refresh_account_quota(&app, &mut account).await;
+                result.imported.push(account.email);
+            }
+            Err(_) => result.failed.push(LocalImportFailure {
+                source: candidate.source,
+                message: "账号凭据无法验证，请在 Antigravity 中重新登录后重试".to_string(),
+            }),
+        }
+    }
+    crate::modules::tray::update_tray_menus(&app);
+    Ok(result)
 }
 
 #[tauri::command]

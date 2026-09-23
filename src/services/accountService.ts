@@ -1,4 +1,3 @@
-import i18n from '../i18n';
 import { Account, DeviceProfile, DeviceProfileVersion, QuotaData } from '../types/account';
 import { request as invoke } from '../utils/request';
 
@@ -45,34 +44,7 @@ export async function refreshAllQuotas(): Promise<RefreshStats> {
 
 // OAuth
 export async function startOAuthLogin(oauthClientKey?: string): Promise<Account> {
-    try {
-        return await invoke('start_oauth_login', oauthClientKey ? { oauthClientKey } : undefined);
-    } catch (error) {
-        // 增强错误信息
-        if (typeof error === 'string') {
-            // 如果是 refresh_token 缺失错误,保持原样(已包含详细说明)
-            if (error.includes('Refresh Token') || error.includes('refresh_token')) {
-                throw error;
-            }
-            // 其他错误添加上下文
-            throw i18n.t('accounts.add.oauth_error', { error });
-        }
-        throw error;
-    }
-}
-
-export async function completeOAuthLogin(): Promise<Account> {
-    try {
-        return await invoke('complete_oauth_login');
-    } catch (error) {
-        if (typeof error === 'string') {
-            if (error.includes('Refresh Token') || error.includes('refresh_token')) {
-                throw error;
-            }
-            throw i18n.t('accounts.add.oauth_error', { error });
-        }
-        throw error;
-    }
+    return await invoke('start_oauth_login', oauthClientKey ? { oauthClientKey } : undefined);
 }
 
 export async function cancelOAuthLogin(): Promise<void> {
@@ -85,14 +57,28 @@ export async function importV1Accounts(): Promise<Account[]> {
     return await invoke('import_v1_accounts');
 }
 
-export async function importFromDb(targetIde?: string): Promise<Account[]> {
-    const res = await invoke<any>('import_from_db', { targetIde });
-    if (Array.isArray(res)) return res;
-    return res ? [res] : [];
+export interface LocalAccountPreview {
+    id: string;
+    email: string | null;
+    source: 'keyring' | 'ide_database' | 'custom_database';
+    available: boolean;
 }
 
-export async function importFromCustomDb(path: string): Promise<Account> {
-    return await invoke('import_custom_db', { path });
+export interface LocalImportResult {
+    imported: string[];
+    failed: { source: string; message: string }[];
+}
+
+export async function scanLocalAccounts(customDbPath?: string): Promise<LocalAccountPreview[]> {
+    return await invoke('scan_local_accounts', { customDbPath: customDbPath ?? null });
+}
+
+export async function importSelectedLocalAccounts(candidateIds: string[]): Promise<LocalImportResult> {
+    return await invoke('import_selected_local_accounts', { candidateIds });
+}
+
+export async function clearLocalAccountScan(): Promise<void> {
+    return await invoke('clear_local_account_scan');
 }
 
 export async function syncAccountFromDb(): Promise<Account | null> {

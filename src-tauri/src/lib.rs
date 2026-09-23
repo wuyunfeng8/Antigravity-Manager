@@ -385,6 +385,9 @@ pub fn run() {
             commands::import_v1_accounts,
             commands::import_from_db,
             commands::import_custom_db,
+            commands::scan_local_accounts,
+            commands::import_selected_local_accounts,
+            commands::clear_local_account_scan,
             commands::sync_account_from_db,
             // File & Cache commands
             commands::save_text_file,

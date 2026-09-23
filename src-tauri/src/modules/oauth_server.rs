@@ -200,10 +200,7 @@ async fn ensure_oauth_flow_prepared(
                 };
 
                 if code.is_none() && bytes_read > 0 {
-                    crate::modules::logger::log_error(&format!(
-                        "OAuth callback failed to parse code. Raw request (first 512 bytes): {}",
-                        request.chars().take(512).collect::<String>()
-                    ));
+                    crate::modules::logger::log_error("OAuth callback failed to parse code");
                 }
 
                 // Verify state
@@ -294,10 +291,7 @@ async fn ensure_oauth_flow_prepared(
                 };
 
                 if code.is_none() && bytes_read > 0 {
-                    crate::modules::logger::log_error(&format!(
-                        "OAuth callback failed to parse code (IPv6). Raw request: {}",
-                        request.chars().take(512).collect::<String>()
-                    ));
+                    crate::modules::logger::log_error("OAuth callback failed to parse code (IPv6)");
                 }
 
                 // Verify state
@@ -395,9 +389,13 @@ pub async fn start_oauth_flow(
     if let Some(h) = app_handle {
         // Open default browser
         use tauri_plugin_opener::OpenerExt;
-        h.opener()
-            .open_url(&auth_url, None::<String>)
-            .map_err(|e| format!("failed_to_open_browser: {}", e))?;
+        if h.opener().open_url(&auth_url, None::<String>).is_err() {
+            crate::modules::logger::log_warn(
+                "OAuth browser could not be opened; waiting for manual callback",
+            );
+            use tauri::Emitter;
+            let _ = h.emit("oauth-browser-open-failed", ());
+        }
     }
 
     // Take code_rx to wait for it
@@ -417,17 +415,17 @@ pub async fn start_oauth_flow(
 
     // Wait for code (if user has already authorized, this returns immediately)
     // For mpsc, we use recv()
-    let code = match code_rx.recv().await {
-        Some(Ok(code)) => code,
-        Some(Err(e)) => return Err(e),
-        None => return Err("OAuth flow channel closed unexpectedly".to_string()),
+    let code_result = match code_rx.recv().await {
+        Some(result) => result,
+        None => Err("OAuth flow channel closed unexpectedly".to_string()),
     };
 
-    // Clean up flow state (release cancel_tx, etc.)
+    // 成功、回调错误和取消都要释放状态，确保下一次授权可以重新开始。
     if let Ok(mut lock) = get_oauth_flow_state().lock() {
         *lock = None;
     }
 
+    let code = code_result?;
     oauth::exchange_code_with_client(&code, &redirect_uri, Some(&client_key)).await
 }
 
@@ -455,16 +453,16 @@ pub async fn complete_oauth_flow(
         (rx, state.redirect_uri.clone(), state.client_key.clone())
     };
 
-    let code = match code_rx.recv().await {
-        Some(Ok(code)) => code,
-        Some(Err(e)) => return Err(e),
-        None => return Err("OAuth flow channel closed unexpectedly".to_string()),
+    let code_result = match code_rx.recv().await {
+        Some(result) => result,
+        None => Err("OAuth flow channel closed unexpectedly".to_string()),
     };
 
     if let Ok(mut lock) = get_oauth_flow_state().lock() {
         *lock = None;
     }
 
+    let code = code_result?;
     oauth::exchange_code_with_client(&code, &redirect_uri, Some(&client_key)).await
 }
 

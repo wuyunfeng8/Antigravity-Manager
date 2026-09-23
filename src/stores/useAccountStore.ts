@@ -11,19 +11,19 @@ interface AccountState {
     // Actions
     fetchAccounts: () => Promise<void>;
     fetchCurrentAccount: () => Promise<void>;
-    addAccount: (email: string, refreshToken: string) => Promise<void>;
+    addAccount: (email: string, refreshToken: string) => Promise<Account>;
     deleteAccount: (accountId: string) => Promise<void>;
     switchAccount: (accountId: string, targetIde?: string) => Promise<void>;
     refreshQuota: (accountId: string) => Promise<void>;
     refreshAllQuotas: () => Promise<accountService.RefreshStats>;
 
     // 新增 actions
-    startOAuthLogin: () => Promise<void>;
-    completeOAuthLogin: () => Promise<void>;
+    startOAuthLogin: () => Promise<Account>;
     cancelOAuthLogin: () => Promise<void>;
-    importV1Accounts: () => Promise<void>;
-    importFromDb: () => Promise<void>;
-    importFromCustomDb: (path: string) => Promise<void>;
+    importV1Accounts: () => Promise<Account[]>;
+    scanLocalAccounts: (customDbPath?: string) => Promise<accountService.LocalAccountPreview[]>;
+    importSelectedLocalAccounts: (candidateIds: string[]) => Promise<accountService.LocalImportResult>;
+    clearLocalAccountScan: () => Promise<void>;
     syncAccountFromDb: () => Promise<void>;
     warmUpAccounts: () => Promise<string>;
     warmUpAccount: (accountId: string) => Promise<string>;
@@ -60,9 +60,10 @@ export const useAccountStore = create<AccountState>((set, get) => ({
     addAccount: async (email: string, refreshToken: string) => {
         set({ loading: true, error: null });
         try {
-            await accountService.addAccount(email, refreshToken);
+            const account = await accountService.addAccount(email, refreshToken);
             await get().fetchAccounts();
             set({ loading: false });
+            return account;
         } catch (error) {
             set({ error: String(error), loading: false });
             throw error;
@@ -124,21 +125,10 @@ export const useAccountStore = create<AccountState>((set, get) => ({
     startOAuthLogin: async () => {
         set({ loading: true, error: null });
         try {
-            await accountService.startOAuthLogin();
+            const account = await accountService.startOAuthLogin();
             await get().fetchAccounts();
             set({ loading: false });
-        } catch (error) {
-            set({ error: String(error), loading: false });
-            throw error;
-        }
-    },
-
-    completeOAuthLogin: async () => {
-        set({ loading: true, error: null });
-        try {
-            await accountService.completeOAuthLogin();
-            await get().fetchAccounts();
-            set({ loading: false });
+            return account;
         } catch (error) {
             set({ error: String(error), loading: false });
             throw error;
@@ -146,55 +136,49 @@ export const useAccountStore = create<AccountState>((set, get) => ({
     },
 
     cancelOAuthLogin: async () => {
-        try {
-            await accountService.cancelOAuthLogin();
-            set({ loading: false, error: null });
-        } catch (error) {
-            console.error('[Store] Cancel OAuth failed:', error);
-        }
+        await accountService.cancelOAuthLogin();
+        set({ loading: false, error: null });
     },
 
     importV1Accounts: async () => {
         set({ loading: true, error: null });
         try {
-            await accountService.importV1Accounts();
+            const accounts = await accountService.importV1Accounts();
             await get().fetchAccounts();
             set({ loading: false });
+            return accounts;
         } catch (error) {
             set({ error: String(error), loading: false });
             throw error;
         }
     },
 
-    importFromDb: async () => {
+    scanLocalAccounts: async (customDbPath?: string) => {
         set({ loading: true, error: null });
         try {
-            await accountService.importFromDb();
-            await Promise.all([
-                get().fetchAccounts(),
-                get().fetchCurrentAccount()
-            ]);
+            const previews = await accountService.scanLocalAccounts(customDbPath);
             set({ loading: false });
+            return previews;
         } catch (error) {
             set({ error: String(error), loading: false });
             throw error;
         }
     },
 
-    importFromCustomDb: async (path: string) => {
+    importSelectedLocalAccounts: async (candidateIds: string[]) => {
         set({ loading: true, error: null });
         try {
-            await accountService.importFromCustomDb(path);
-            await Promise.all([
-                get().fetchAccounts(),
-                get().fetchCurrentAccount()
-            ]);
+            const result = await accountService.importSelectedLocalAccounts(candidateIds);
+            await get().fetchAccounts();
             set({ loading: false });
+            return result;
         } catch (error) {
             set({ error: String(error), loading: false });
             throw error;
         }
     },
+
+    clearLocalAccountScan: accountService.clearLocalAccountScan,
 
     syncAccountFromDb: async () => {
         try {

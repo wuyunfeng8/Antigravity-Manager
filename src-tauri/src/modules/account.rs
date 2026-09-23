@@ -1735,6 +1735,7 @@ pub fn get_current_account() -> Result<Option<Account>, String> {
 }
 
 /// Set current active account ID
+#[cfg(test)]
 pub fn set_current_account_id(account_id: &str) -> Result<(), String> {
     set_current_account_id_with_target(account_id, None)
 }
