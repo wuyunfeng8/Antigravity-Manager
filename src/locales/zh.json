@@ -520,6 +520,13 @@
     "empty": "没有匹配的账号",
     "empty_hint": "调整筛选条件或添加一个新账号",
     "no_quota": "暂无配额数据",
+    "card": {
+      "recommended": "推荐",
+      "show_resets": "重置时间",
+      "hide_resets": "收起时间",
+      "quota_label": "{{model}} 剩余额度 {{percentage}}%",
+      "quota_unavailable": "{{model}} 暂无配额数据"
+    },
     "actions": {
       "more": "更多操作",
       "details": "配额详情",

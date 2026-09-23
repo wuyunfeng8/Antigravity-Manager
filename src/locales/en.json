@@ -520,6 +520,13 @@
     "empty": "No matching accounts",
     "empty_hint": "Adjust filters or add a new account",
     "no_quota": "No quota data",
+    "card": {
+      "recommended": "Suggested",
+      "show_resets": "Reset times",
+      "hide_resets": "Hide times",
+      "quota_label": "{{model}} {{percentage}}% remaining",
+      "quota_unavailable": "{{model}} quota unavailable"
+    },
     "actions": {
       "more": "More actions",
       "details": "Quota details",

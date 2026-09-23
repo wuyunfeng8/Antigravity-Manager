@@ -521,6 +521,13 @@
     "empty": "沒有符合的帳號",
     "empty_hint": "調整篩選條件或新增帳號",
     "no_quota": "暫無配額資料",
+    "card": {
+      "recommended": "推薦",
+      "show_resets": "重置時間",
+      "hide_resets": "收起時間",
+      "quota_label": "{{model}} 剩餘額度 {{percentage}}%",
+      "quota_unavailable": "{{model}} 暫無配額資料"
+    },
     "actions": {
       "more": "更多操作",
       "details": "配額詳情",
