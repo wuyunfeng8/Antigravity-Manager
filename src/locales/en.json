@@ -83,7 +83,7 @@
       "title": "Device Fingerprint",
       "operations": "Device Fingerprint Operations",
       "generate_and_bind": "Generate and Bind",
-      "restore_original": "Restore Original",
+      "restore_original": "Restore Saved Baseline",
       "open_storage_directory": "Open Storage Directory",
       "current_storage": "Current Storage",
       "effective": "Effective",
@@ -98,9 +98,9 @@
       "delete_version": "Delete this version",
       "confirm_generate_title": "Confirm generate and bind?",
       "confirm_generate_desc": "Will generate a new set of device fingerprints and set as current fingerprint. Confirm continue?",
-      "confirm_restore_title": "Confirm restore original fingerprint?",
-      "confirm_restore_desc": "Bind the original fingerprint to this account. It will apply on the next account switch. Continue?",
-      "original_bound": "Original fingerprint bound; it will apply on the next account switch",
+      "confirm_restore_title": "Restore the saved baseline?",
+      "confirm_restore_desc": "Bind the previously saved device identity to this account. It will apply on the next switch. A baseline saved by an older version may not be the first-install identity. Continue?",
+      "original_bound": "Saved baseline bound; it will apply on the next account switch",
       "cancel": "Cancel",
       "confirm": "Confirm",
       "processing": "Processing...",
@@ -115,7 +115,7 @@
       "restored": "Restored",
       "deleted": "Deleted",
       "directory_opened": "Storage directory opened",
-      "original_fingerprint_not_found": "Original fingerprint not found"
+      "original_fingerprint_not_found": "Saved baseline not found"
     },
     "warmup_now": "Warmup Now",
     "details": {

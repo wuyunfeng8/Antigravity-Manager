@@ -51,7 +51,7 @@ Add accounts  →  Inspect real quotas  →  Pick a recommended account  →  Re
 - FREE, PRO, and ULTRA subscription-tier detection.
 - Google OAuth, refresh-token, legacy database, and custom `state.vscdb` import.
 - Account switching for the Antigravity desktop app.
-- Device identity generation, binding, history, and original-state restoration.
+- Device identity generation, binding, history, and saved-baseline restoration; older baselines may not represent the first-install state.
 - Clear account verification, 403, and OAuth-expiration states.
 - System tray, compact quota view, scheduled refresh, and weekly quota warmup.
 - Data-directory migration, client cache cleanup, network proxy, and debug console.
