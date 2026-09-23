@@ -236,51 +236,11 @@ function Settings() {
         }
     };
 
-    const handleSelectAntigravityIdePath = async () => {
-        try {
-            const selected = await open({
-                directory: false,
-                multiple: false,
-                title: t('settings.advanced.antigravity_ide_path_select', 'Select Antigravity IDE Executable'),
-            });
-            if (selected && typeof selected === 'string') {
-                setFormData({ ...formData, antigravity_ide_executable: selected });
-            }
-        } catch (error) {
-            showToast(`${t('common.error')}: ${error}`, 'error');
-        }
-    };
-
     const handleDetectAntigravityPath = async () => {
         try {
             const path = await invoke<string>('get_antigravity_path', { bypassConfig: true });
             setFormData({ ...formData, antigravity_executable: path });
             showToast(t('settings.advanced.antigravity_path_detected'), 'success');
-        } catch (error) {
-            showToast(`${t('common.error')}: ${error}`, 'error');
-        }
-    };
-
-    const handleSelectAntigravityCliPath = async () => {
-        try {
-            const selected = await open({
-                directory: false,
-                multiple: false,
-                title: t('settings.advanced.antigravity_cli_path_select', 'Select Antigravity CLI (agy) Executable'),
-            });
-            if (selected && typeof selected === 'string') {
-                setFormData({ ...formData, antigravity_cli_executable: selected });
-            }
-        } catch (error) {
-            showToast(`${t('common.error')}: ${error}`, 'error');
-        }
-    };
-
-    const handleDetectAntigravityCliPath = async () => {
-        try {
-            const path = await invoke<string>('get_antigravity_cli_path', { bypassConfig: true });
-            setFormData({ ...formData, antigravity_cli_executable: path });
-            showToast(t('settings.advanced.antigravity_cli_path_detected', 'Detected CLI path updated'), 'success');
         } catch (error) {
             showToast(`${t('common.error')}: ${error}`, 'error');
         }
@@ -752,77 +712,6 @@ function Settings() {
                                     </div>
                                     <p className="text-xs text-muted-foreground mt-2">
                                         {t('settings.advanced.antigravity_path_desc')}
-                                    </p>
-                                </div>
-
-                                {/* Antigravity CLI (agy) 程序路径 */}
-                                <div>
-                                    <Label className="block text-sm font-medium text-foreground mb-1">
-                                        {t('settings.advanced.antigravity_cli_path', 'Antigravity CLI (agy) Path')}
-                                    </Label>
-                                    <div className="flex gap-2">
-                                        <Input
-                                            type="text"
-                                            className="flex-1 font-mono text-xs"
-                                            value={formData.antigravity_cli_executable || ''}
-                                            placeholder={t('settings.advanced.antigravity_cli_path_placeholder', '未设置 (将使用自动探测)')}
-                                            onChange={(e) => setFormData({ ...formData, antigravity_cli_executable: e.target.value })}
-                                        />
-                                        {formData.antigravity_cli_executable && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="text-destructive hover:bg-destructive/10"
-                                                onClick={() => setFormData({ ...formData, antigravity_cli_executable: undefined })}
-                                            >
-                                                {t('common.clear')}
-                                            </Button>
-                                        )}
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={handleDetectAntigravityCliPath}
-                                        >
-                                            {t('settings.advanced.detect_btn')}
-                                        </Button>
-                                        <Button variant="outline" size="sm" onClick={handleSelectAntigravityCliPath}>
-                                            {t('settings.advanced.select_btn')}
-                                        </Button>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-2">
-                                        {t('settings.advanced.antigravity_cli_path_desc', '设置 Antigravity CLI (agy) 可执行文件路径，用于账号切换。')}
-                                    </p>
-                                </div>
-
-                                {/* Antigravity IDE 程序路径 */}
-                                <div>
-                                    <Label className="block text-sm font-medium text-foreground mb-1">
-                                        {t('settings.advanced.antigravity_ide_path', 'Antigravity IDE Path')}
-                                    </Label>
-                                    <div className="flex gap-2">
-                                        <Input
-                                            type="text"
-                                            className="flex-1 font-mono text-xs"
-                                            value={formData.antigravity_ide_executable || ''}
-                                            placeholder={t('settings.advanced.antigravity_ide_path_placeholder', 'D:\\Antigravity\\Antigravity.exe')}
-                                            onChange={(e) => setFormData({ ...formData, antigravity_ide_executable: e.target.value })}
-                                        />
-                                        {formData.antigravity_ide_executable && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="text-destructive hover:bg-destructive/10"
-                                                onClick={() => setFormData({ ...formData, antigravity_ide_executable: undefined })}
-                                            >
-                                                {t('common.clear')}
-                                            </Button>
-                                        )}
-                                        <Button variant="outline" size="sm" onClick={handleSelectAntigravityIdePath}>
-                                            {t('settings.advanced.select_btn')}
-                                        </Button>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-2">
-                                        {t('settings.advanced.antigravity_ide_path_desc', 'Specify the executable path for Antigravity IDE (code editor). Once set, account switching will strictly protect processes at this path from being terminated.')}
                                     </p>
                                 </div>
 

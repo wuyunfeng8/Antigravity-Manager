@@ -400,7 +400,6 @@ pub fn run() {
             commands::show_main_window,
             commands::set_window_theme,
             commands::get_antigravity_path,
-            commands::get_antigravity_cli_path,
             commands::get_antigravity_args,
             // Updates
             commands::check_for_updates,

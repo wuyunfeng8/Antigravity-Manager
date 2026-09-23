@@ -21,11 +21,10 @@ pub struct AppConfig {
     #[serde(default)]
     pub network_proxy: UpstreamProxyConfig,
     pub antigravity_executable: Option<String>, // Manually specified Antigravity executable path
-    pub antigravity_ide_executable: Option<String>, // Manually specified Antigravity IDE executable path
-    pub antigravity_cli_executable: Option<String>, // Manually specified Antigravity CLI (agy) path
-    pub antigravity_args: Option<Vec<String>>,      // Antigravity startup arguments
+    pub antigravity_ide_executable: Option<String>, // Legacy IDE path for process protection only
+    pub antigravity_args: Option<Vec<String>>,  // Antigravity startup arguments
     #[serde(default)]
-    pub auto_launch: bool,     // Launch on startup
+    pub auto_launch: bool, // Launch on startup
     #[serde(default)]
     pub scheduled_warmup: ScheduledWarmupConfig,
 }
@@ -78,7 +77,6 @@ impl AppConfig {
             network_proxy: UpstreamProxyConfig::default(),
             antigravity_executable: None,
             antigravity_ide_executable: None,
-            antigravity_cli_executable: None,
             antigravity_args: None,
             auto_launch: false,
             scheduled_warmup: ScheduledWarmupConfig::default(),
@@ -105,5 +103,20 @@ mod tests {
             let restored: AppConfig = serde_json::from_str(&saved).unwrap();
             assert_eq!(restored.language, language);
         }
+    }
+
+    #[test]
+    fn old_cli_path_is_dropped_but_ide_process_guard_is_preserved() {
+        let mut legacy = serde_json::to_value(AppConfig::new()).unwrap();
+        legacy["antigravity_cli_executable"] = serde_json::json!("/tmp/agy");
+        legacy["antigravity_ide_executable"] = serde_json::json!("/tmp/antigravity-ide");
+
+        let config: AppConfig = serde_json::from_value(legacy).unwrap();
+        let canonical = serde_json::to_value(config).unwrap();
+        assert!(canonical.get("antigravity_cli_executable").is_none());
+        assert_eq!(
+            canonical["antigravity_ide_executable"],
+            "/tmp/antigravity-ide"
+        );
     }
 }

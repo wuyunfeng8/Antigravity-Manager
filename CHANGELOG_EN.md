@@ -9,6 +9,7 @@
         -   **Recovery and quotas**: Device identity changes preserve full backups and use atomic writes. Data migration activates the destination before removing the source. Missing quotas are distinct from zero, and stale data is excluded from relay recommendations.
         -   **Release gate**: Missing platform artifacts or updater signatures stop publication. Installers verify SHA256SUMS. Production signing, cross-platform installation, and real-account switching still require pre-release acceptance.
         -   **Languages**: The interface and tray now ship only Simplified Chinese and English. Old Traditional Chinese settings migrate to Simplified Chinese; other removed languages migrate to English.
+        -   **Settings**: Removed obsolete CLI and IDE switch-path controls while keeping the desktop app path. A saved IDE path remains a background process-safety guard.
 
     *   **v1.0.1 (2026-09-23)**:
         -   **First public release of the independent AMT project**: Focused on Antigravity account management, real quotas, recommended relay, device identities, and native client switching; removed the legacy gateway and proxy features.
