@@ -89,8 +89,8 @@ export default function DeviceFingerprintDialog({ account, onClose }: DeviceFing
         if (!account) return;
         setActionLoading('restore');
         try {
-            const msg = await accountService.restoreOriginalDevice();
-            setActionMessage(msg || t('accounts.device_fingerprint_dialog.restored'));
+            await accountService.restoreOriginalDevice();
+            setActionMessage(t('accounts.device_fingerprint_dialog.original_bound'));
             setConfirmProfile(null);
             setConfirmType(null);
             await fetchDevice(account);

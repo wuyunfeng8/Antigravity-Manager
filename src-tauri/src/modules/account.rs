@@ -187,6 +187,42 @@ mod tests {
     }
 
     #[test]
+    fn migration_keeps_source_when_pointer_cannot_be_written() {
+        let _guard = TEST_MUTEX.lock().unwrap();
+        let old_env = std::env::var("ABV_DATA_DIR").ok();
+        let old_pointer_env = std::env::var("ABV_DATA_DIR_POINTER_FILE").ok();
+        let source = TestDataDir::new();
+        let destination_parent = TestDataDir::new();
+        fs::write(source.path().join("marker.txt"), "must-survive").unwrap();
+        let destination = destination_parent.path().join("destination");
+        let bad_pointer = destination_parent.path().join("missing-parent/pointer");
+        std::env::set_var("ABV_DATA_DIR", source.path());
+        std::env::set_var("ABV_DATA_DIR_POINTER_FILE", bad_pointer);
+
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            assert!(migrate_data_dir(destination).is_err());
+            assert_eq!(
+                fs::read_to_string(source.path().join("marker.txt")).unwrap(),
+                "must-survive"
+            );
+        }));
+        match old_env {
+            Some(value) => std::env::set_var("ABV_DATA_DIR", value),
+            None => std::env::remove_var("ABV_DATA_DIR"),
+        }
+        match old_pointer_env {
+            Some(value) => std::env::set_var("ABV_DATA_DIR_POINTER_FILE", value),
+            None => std::env::remove_var("ABV_DATA_DIR_POINTER_FILE"),
+        }
+        if let Ok(mut guard) = data_dir_override_slot().write() {
+            *guard = None;
+        }
+        if let Err(panic) = result {
+            std::panic::resume_unwind(panic);
+        }
+    }
+
+    #[test]
     fn test_load_account_index_with_bom_prefix() {
         let _guard = TEST_MUTEX.lock().unwrap();
         let dir = TestDataDir::new();
@@ -691,7 +727,7 @@ fn read_location_pointer() -> Option<PathBuf> {
 
 fn write_location_pointer(dir: &Path) -> Result<(), String> {
     let pointer = location_pointer_path()?;
-    fs::write(&pointer, format_data_dir_path(dir).as_bytes())
+    crate::utils::fs::write_atomic(&pointer, format_data_dir_path(dir).as_bytes())
         .map_err(|e| format!("写入数据目录指针失败: {}", e))
 }
 
@@ -710,13 +746,20 @@ fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<(), String> {
         let file_type = entry
             .file_type()
             .map_err(|e| format!("读取数据目录项类型失败: {}", e))?;
-        if file_type.is_dir() {
+        if file_type.is_symlink() {
+            return Err(format!(
+                "数据目录包含符号链接，无法安全迁移: {}",
+                from.display()
+            ));
+        } else if file_type.is_dir() {
             copy_dir_recursive(&from, &to)?;
-        } else {
+        } else if file_type.is_file() {
             if let Some(parent) = to.parent() {
                 fs::create_dir_all(parent).map_err(|e| format!("创建目标子目录失败: {}", e))?;
             }
             fs::copy(&from, &to).map_err(|e| format!("复制文件失败 {}: {}", from.display(), e))?;
+        } else {
+            return Err(format!("数据目录包含不支持的文件类型: {}", from.display()));
         }
     }
     Ok(())
@@ -732,7 +775,9 @@ fn apply_data_dir(dir: &Path) -> Result<(), String> {
     ensure_dir(&dir)?;
     if is_default_data_dir(&dir) {
         if let Ok(pointer) = location_pointer_path() {
-            let _ = fs::remove_file(pointer);
+            if pointer.exists() {
+                fs::remove_file(pointer).map_err(|e| format!("清理旧数据目录指针失败: {}", e))?;
+            }
         }
     } else {
         write_location_pointer(&dir)?;
@@ -812,23 +857,19 @@ pub fn migrate_data_dir(new_dir: PathBuf) -> Result<PathBuf, String> {
         if !dir_is_empty(&new_dir)? {
             return Err("目标目录不是空文件夹，请选择空目录或新路径".to_string());
         }
-        copy_dir_recursive(&old_dir, &new_dir)?;
-        let _ = fs::remove_dir_all(&old_dir);
     } else if let Some(parent) = new_dir.parent() {
         fs::create_dir_all(parent).map_err(|e| format!("创建目标父目录失败: {}", e))?;
-        match fs::rename(&old_dir, &new_dir) {
-            Ok(()) => {}
-            Err(_) => {
-                copy_dir_recursive(&old_dir, &new_dir)?;
-                let _ = fs::remove_dir_all(&old_dir);
-            }
-        }
     } else {
         return Err("目标路径无效".to_string());
     }
 
+    // Keep the source intact until the destination and its persistent pointer are ready.
+    copy_dir_recursive(&old_dir, &new_dir)?;
     let resolved = resolve_existing_path(&new_dir);
     apply_data_dir(&resolved)?;
+    if let Err(e) = fs::remove_dir_all(&old_dir) {
+        crate::modules::logger::log_warn(&format!("新目录已启用，旧目录清理失败: {}", e));
+    }
     Ok(resolved)
 }
 
@@ -1590,7 +1631,11 @@ pub fn bind_device_profile(account_id: &str, mode: &str) -> Result<DeviceProfile
     };
 
     let mut account = load_account(account_id)?;
-    let _ = device::save_global_original(&profile);
+    if let Ok(storage_path) = device::get_storage_path(None) {
+        if let Ok(original) = device::read_profile(&storage_path) {
+            device::save_global_original(&original)?;
+        }
+    }
     apply_profile_to_account(&mut account, profile.clone(), Some(mode.to_string()), true)?;
 
     Ok(profile)
@@ -1603,7 +1648,11 @@ pub fn bind_device_profile_with_profile(
     label: Option<String>,
 ) -> Result<DeviceProfile, String> {
     let mut account = load_account(account_id)?;
-    let _ = crate::modules::device::save_global_original(&profile);
+    if let Ok(storage_path) = crate::modules::device::get_storage_path(None) {
+        if let Ok(original) = crate::modules::device::read_profile(&storage_path) {
+            crate::modules::device::save_global_original(&original)?;
+        }
+    }
     apply_profile_to_account(&mut account, profile.clone(), label, true)?;
 
     Ok(profile)

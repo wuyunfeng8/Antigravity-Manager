@@ -121,10 +121,13 @@ pub fn backup_storage(storage_path: &Path) -> Result<PathBuf, String> {
         .parent()
         .ok_or_else(|| "failed_to_get_storage_parent_dir".to_string())?;
     let backup_path = dir.join(format!(
-        "storage.json.backup_{}",
-        Local::now().format("%Y%m%d_%H%M%S")
+        "storage.json.backup_{}_{}",
+        Local::now().format("%Y%m%d_%H%M%S"),
+        Uuid::new_v4()
     ));
-    fs::copy(storage_path, &backup_path).map_err(|e| format!("backup_failed: {}", e))?;
+    let content = fs::read(storage_path).map_err(|e| format!("backup_read_failed: {}", e))?;
+    crate::utils::fs::write_atomic(&backup_path, &content)
+        .map_err(|e| format!("backup_failed: {}", e))?;
     Ok(backup_path)
 }
 
@@ -162,6 +165,16 @@ pub fn read_profile(storage_path: &Path) -> Result<DeviceProfile, String> {
 
 /// Write device profile to storage.json
 pub fn write_profile(storage_path: &Path, profile: &DeviceProfile) -> Result<(), String> {
+    let data_dir = get_data_dir()?;
+    write_profile_file(storage_path, profile, &data_dir)?;
+    sync_state_service_machine_id_value(&profile.dev_device_id)
+}
+
+fn write_profile_file(
+    storage_path: &Path,
+    profile: &DeviceProfile,
+    data_dir: &Path,
+) -> Result<(), String> {
     if !storage_path.exists() {
         return Err(format!("storage_json_missing: {:?}", storage_path));
     }
@@ -227,12 +240,16 @@ pub fn write_profile(storage_path: &Path, profile: &DeviceProfile) -> Result<(),
 
     let updated =
         serde_json::to_string_pretty(&json).map_err(|e| format!("serialize_failed: {}", e))?;
-    fs::write(storage_path, updated)
+    if load_global_original_in_dir(data_dir).is_none() {
+        if let Ok(original) = read_profile(storage_path) {
+            save_global_original_in_dir(data_dir, &original)?;
+        }
+    }
+    backup_storage(storage_path)?;
+    crate::utils::fs::write_atomic(storage_path, updated.as_bytes())
         .map_err(|e| format!("write_failed ({:?}): {}", storage_path, e))?;
     logger::log_info(&format!("device_profile_written to {:?}", storage_path));
 
-    // Sync ItemTable.storage.serviceMachineId in state.vscdb
-    let _ = sync_state_service_machine_id_value(&profile.dev_device_id);
     Ok(())
 }
 
@@ -252,11 +269,12 @@ pub fn sync_service_machine_id(storage_path: &Path, service_id: &str) -> Result<
 
     let updated =
         serde_json::to_string_pretty(&json).map_err(|e| format!("serialize_failed: {}", e))?;
-    fs::write(storage_path, updated).map_err(|e| format!("write_failed: {}", e))?;
+    backup_storage(storage_path)?;
+    crate::utils::fs::write_atomic(storage_path, updated.as_bytes())
+        .map_err(|e| format!("write_failed: {}", e))?;
     logger::log_info("service_machine_id_synced");
 
-    let _ = sync_state_service_machine_id_value(service_id);
-    Ok(())
+    sync_state_service_machine_id_value(service_id)
 }
 
 /// Read serviceMachineId from storage.json (fallback to devDeviceId), sync back if missing and sync state.vscdb
@@ -304,7 +322,9 @@ pub fn sync_service_machine_id_from_storage(storage_path: &Path) -> Result<(), S
     if dirty {
         let updated =
             serde_json::to_string_pretty(&json).map_err(|e| format!("serialize_failed: {}", e))?;
-        fs::write(storage_path, updated).map_err(|e| format!("write_failed: {}", e))?;
+        backup_storage(storage_path)?;
+        crate::utils::fs::write_atomic(storage_path, updated.as_bytes())
+            .map_err(|e| format!("write_failed: {}", e))?;
         logger::log_info("service_machine_id_added");
     }
 
@@ -335,28 +355,30 @@ fn sync_state_service_machine_id_value(service_id: &str) -> Result<(), String> {
 
 /// Load/Save global original profile (shared across all accounts)
 pub fn load_global_original() -> Option<DeviceProfile> {
-    if let Ok(dir) = get_data_dir() {
-        let path = dir.join(GLOBAL_BASELINE);
-        if path.exists() {
-            if let Ok(content) = fs::read_to_string(&path) {
-                if let Ok(profile) = serde_json::from_str::<DeviceProfile>(&content) {
-                    return Some(profile);
-                }
-            }
-        }
-    }
-    None
+    get_data_dir()
+        .ok()
+        .and_then(|dir| load_global_original_in_dir(&dir))
 }
 
 pub fn save_global_original(profile: &DeviceProfile) -> Result<(), String> {
     let dir = get_data_dir()?;
+    save_global_original_in_dir(&dir, profile)
+}
+
+fn load_global_original_in_dir(dir: &Path) -> Option<DeviceProfile> {
+    let content = fs::read_to_string(dir.join(GLOBAL_BASELINE)).ok()?;
+    serde_json::from_str(&content).ok()
+}
+
+fn save_global_original_in_dir(dir: &Path, profile: &DeviceProfile) -> Result<(), String> {
     let path = dir.join(GLOBAL_BASELINE);
     if path.exists() {
         return Ok(()); // already exists, don't overwrite
     }
     let content =
         serde_json::to_string_pretty(profile).map_err(|e| format!("serialize_failed: {}", e))?;
-    fs::write(&path, content).map_err(|e| format!("write_failed: {}", e))
+    crate::utils::fs::write_atomic(&path, content.as_bytes())
+        .map_err(|e| format!("write_failed: {}", e))
 }
 
 /// List storage.json backups in current directory (descending by time)
@@ -399,7 +421,9 @@ pub fn restore_backup(storage_path: &Path, use_oldest: bool) -> Result<PathBuf, 
     };
     // backup current first
     let _ = backup_storage(storage_path)?;
-    fs::copy(&target, storage_path).map_err(|e| format!("restore_failed: {}", e))?;
+    let content = fs::read(&target).map_err(|e| format!("restore_read_failed: {}", e))?;
+    crate::utils::fs::write_atomic(storage_path, &content)
+        .map_err(|e| format!("restore_failed: {}", e))?;
     logger::log_info(&format!("storage_json_restored: {:?}", target));
     Ok(target)
 }
@@ -437,4 +461,65 @@ fn new_standard_machine_id() -> String {
         }
     }
     id
+}
+
+#[cfg(test)]
+mod safety_tests {
+    use super::*;
+
+    #[test]
+    fn profile_write_keeps_full_backup_and_original_baseline() {
+        let temp = tempfile::tempdir().unwrap();
+        let storage_path = temp.path().join("storage.json");
+        let data_dir = temp.path().join("amt");
+        fs::create_dir(&data_dir).unwrap();
+        let original = DeviceProfile {
+            machine_id: "original-machine".into(),
+            mac_machine_id: "original-mac".into(),
+            dev_device_id: "original-device".into(),
+            sqm_id: "original-sqm".into(),
+        };
+        let original_file = serde_json::json!({
+            "telemetry": {
+                "machineId": original.machine_id,
+                "macMachineId": original.mac_machine_id,
+                "devDeviceId": original.dev_device_id,
+                "sqmId": original.sqm_id,
+            },
+            "unrelatedSetting": "preserve-me"
+        })
+        .to_string();
+        fs::write(&storage_path, &original_file).unwrap();
+        let replacement = DeviceProfile {
+            machine_id: "new-machine".into(),
+            mac_machine_id: "new-mac".into(),
+            dev_device_id: "new-device".into(),
+            sqm_id: "new-sqm".into(),
+        };
+
+        write_profile_file(&storage_path, &replacement, &data_dir).unwrap();
+        let backups = list_backups(&storage_path).unwrap();
+        assert_eq!(backups.len(), 1);
+        assert_eq!(fs::read_to_string(&backups[0]).unwrap(), original_file);
+        assert_eq!(
+            load_global_original_in_dir(&data_dir).unwrap().machine_id,
+            "original-machine"
+        );
+        let updated: Value = serde_json::from_slice(&fs::read(&storage_path).unwrap()).unwrap();
+        assert_eq!(updated["telemetry"]["machineId"], "new-machine");
+        assert_eq!(updated["unrelatedSetting"], "preserve-me");
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            assert_eq!(
+                fs::metadata(&storage_path).unwrap().permissions().mode() & 0o777,
+                0o600
+            );
+            assert_eq!(
+                fs::metadata(&backups[0]).unwrap().permissions().mode() & 0o777,
+                0o600
+            );
+        }
+    }
 }
