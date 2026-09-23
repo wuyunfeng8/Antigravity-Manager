@@ -1,5 +1,5 @@
 cask "antigravity-tools" do
-  version "1.0.1"
+  version "1.1.0"
 
   name "AMT"
   desc "Antigravity account quota radar and relay manager"
@@ -7,8 +7,8 @@ cask "antigravity-tools" do
 
   on_macos do
     arch intel: "x64", arm: "aarch64"
-    sha256 arm: "a388ee3f9ede0cb827069dc62a9aeeb99bb63950a526cb8f3951fe0d67f3da3a",
-           intel: "5a9831589110f3c788ceeb892b82edae721efb7bc53ae4a9e151f3b2d1cc09af"
+    sha256 arm: "e96d716cb1be2755e87db7928f816a76b5b0e99d4aa7d41b1efc3bc0219e2afb",
+           intel: "817e7582e81bfebcc6459d72dec27e0738b75deedd09ffa559f972c503a09e9b"
 
     url "https://github.com/wuyunfeng8/Antigravity-Manager/releases/download/v#{version}/AMT_#{version}_#{arch}.dmg"
 
