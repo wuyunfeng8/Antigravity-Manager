@@ -149,22 +149,25 @@
     "toast": {},
     "add": {
       "title": "新增新帳號",
+      "description": "支援 Google OAuth 一鍵授權、Refresh Token 或本地環境掃描",
       "tabs": {
         "oauth": "OAuth 授權",
         "token": "Refresh Token",
-        "import": "從資料庫匯入"
+        "import": "本地掃描"
       },
       "oauth": {
         "recommend": "推薦方式",
         "desc": "將開啟預設瀏覽器進行 Google 登入授權，自動獲取並儲存 Token。",
-        "btn_start": "開始 OAuth 授權",
+        "btn_start": "在瀏覽器中授權登入",
         "btn_waiting": "正在等待授權...",
-        "btn_finish": "我已授權，繼續",
+        "btn_cancel_waiting": "取消等待",
+        "btn_finish": "我已在瀏覽器授權，完成匯入",
         "copy_link": "複製授權連結",
         "copied": "已複製",
-        "link_label": "授權連結",
+        "link_label": "方式一：手動複製授權連結",
         "link_click_to_copy": "點選複製",
-        "manual_hint": "瀏覽器沒有自動跳轉？請在此處貼上回調連結或 Authorization Code：",
+        "manual_toggle": "遇到跳轉問題？展開手動授權",
+        "manual_hint": "方式二：貼上回調連結或 Authorization Code",
         "manual_placeholder": "在此處貼上連結或代碼...",
         "error_no_flow": "未找到活躍的授權流程，請重新開始 OAuth 授權。",
         "web_hint": "將在新視窗中開啟 Google 登入頁",

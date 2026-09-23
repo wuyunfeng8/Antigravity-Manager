@@ -152,22 +152,25 @@
     "toast": {},
     "add": {
       "title": "添加新账号",
+      "description": "支持 Google OAuth 一键授权、Refresh Token 或本地环境扫描",
       "tabs": {
         "oauth": "OAuth 授权",
         "token": "Refresh Token",
-        "import": "从数据库导入"
+        "import": "本地扫描"
       },
       "oauth": {
         "recommend": "推荐方式",
         "desc": "将打开默认浏览器进行 Google 登录授权，自动获取并保存 Token。",
-        "btn_start": "开始 OAuth 授权",
+        "btn_start": "在浏览器中授权登录",
         "btn_waiting": "正在等待授权...",
-        "btn_finish": "我已授权，继续",
+        "btn_cancel_waiting": "取消等待",
+        "btn_finish": "我已在浏览器授权，完成导入",
         "copy_link": "复制授权链接",
         "copied": "已复制",
-        "link_label": "授权链接",
+        "link_label": "方式一：手动复制授权链接",
         "link_click_to_copy": "点击复制",
-        "manual_hint": "浏览器没有自动跳转？请在此处粘贴回调链接或 Authorization Code：",
+        "manual_toggle": "遇到跳转问题？展开手动授权",
+        "manual_hint": "方式二：粘贴回调链接或 Authorization Code",
         "manual_placeholder": "粘贴回调链接或 Code...",
         "error_no_flow": "请先点击“开始 OAuth 授权”",
         "web_hint": "将在新窗口中打开 Google 登录页",

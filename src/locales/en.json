@@ -152,22 +152,25 @@
     "toast": {},
     "add": {
       "title": "Add Account",
+      "description": "Supports Google OAuth, Refresh Token, or local environment scan",
       "tabs": {
         "oauth": "OAuth",
         "token": "Refresh Token",
-        "import": "Import DB"
+        "import": "Local Scan"
       },
       "oauth": {
         "recommend": "Recommended",
         "desc": "Opens default browser for Google login to auto-fetch and save Token.",
-        "btn_start": "Start OAuth",
+        "btn_start": "Authorize in Browser",
         "btn_waiting": "Waiting for auth...",
+        "btn_cancel_waiting": "Cancel Waiting",
         "btn_finish": "I already authorized",
         "copy_link": "Copy Auth Link",
         "copied": "Copied",
-        "link_label": "Authorization URL",
+        "link_label": "Method 1: Copy auth link manually",
         "link_click_to_copy": "Click to copy",
-        "manual_hint": "Browser didn't redirect? Paste the full callback URL or raw Code here:",
+        "manual_toggle": "Having redirect issues? Manual authorization",
+        "manual_hint": "Method 2: Paste callback URL or Authorization Code",
         "manual_placeholder": "Paste callback URL or code...",
         "error_no_flow": "Please click 'Start OAuth' first",
         "web_hint": "Google login page will open in a new window",
