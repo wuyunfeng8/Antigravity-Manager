@@ -1,6 +1,51 @@
 use crate::modules::{db, device, process, version};
 use std::fs;
+use std::path::{Path, PathBuf};
 use std::process::Command;
+
+fn backup_state_database(path: &Path) -> Result<PathBuf, String> {
+    let name = path
+        .file_name()
+        .ok_or_else(|| "Invalid Antigravity database path".to_string())?
+        .to_string_lossy();
+    let backup = path.with_file_name(format!("{}.backup.{}", name, uuid::Uuid::new_v4()));
+    let source =
+        rusqlite::Connection::open_with_flags(path, rusqlite::OpenFlags::SQLITE_OPEN_READ_ONLY)
+            .map_err(|e| format!("Failed to open state database for backup: {}", e))?;
+    let mut options = fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    options
+        .open(&backup)
+        .map_err(|e| format!("Failed to create private database backup: {}", e))?;
+    if let Err(error) = source.backup(rusqlite::DatabaseName::Main, &backup, None) {
+        let _ = fs::remove_file(&backup);
+        return Err(format!("Failed to back up state database: {}", error));
+    }
+    Ok(backup)
+}
+
+fn ensure_token_matches(actual: &str, expected: &str) -> Result<(), String> {
+    if actual == expected {
+        Ok(())
+    } else {
+        Err("Antigravity credential readback did not match the selected account".to_string())
+    }
+}
+
+fn verify_keyring_account(account: &crate::models::Account) -> Result<(), String> {
+    let actual = read_from_system_keyring_direct()?;
+    ensure_token_matches(&actual.refresh_token, &account.token.refresh_token)
+}
+
+fn verify_database_account(path: &PathBuf, account: &crate::models::Account) -> Result<(), String> {
+    let actual = crate::modules::migration::extract_refresh_token_from_file(path)?;
+    ensure_token_matches(&actual, &account.token.refresh_token)
+}
 
 pub trait SystemIntegration: Send + Sync {
     /// 当切换账号时执行的系统层操作（如杀进程、写入文件、注入数据库）
@@ -198,88 +243,53 @@ impl SystemIntegration for DesktopIntegration {
             }
         }
 
-        if use_keyring {
-            // ================== 最新版 Antigravity 原生应用逻辑 (>= 2.0.0) ==================
-            // 2.1 写入系统 Keychain/Keyring
-            if let Err(keyring_err) = write_to_system_keyring(account) {
-                // 如果写入系统 Keyring 失败（例如 Linux 下未安装 secret-tool 或无桌面会话 D-Bus）
-                // 检查本地是否存在可用的 SQLite 数据库，若存在则自动降级回退到 SQLite 注入，确保账号切换顺利完成
-                let db_fallback = if let Ok(db_path) = db::get_db_path(effective_target) {
-                    if db_path.exists() {
-                        crate::modules::logger::log_warn(&format!(
-                            "[Desktop] Keyring write failed ({}), but found SQLite DB at {:?}. Falling back to SQLite token injection.",
-                            keyring_err, db_path
-                        ));
-                        let backup_path = db_path.with_extension("vscdb.backup");
-                        let _ = fs::copy(&db_path, &backup_path);
-                        let _ = db::inject_token(
-                            &db_path,
-                            &account.token.access_token,
-                            &account.token.refresh_token,
-                            account.token.expiry_timestamp,
-                            &account.email,
-                            account.token.is_gcp_tos,
-                            account.token.project_id.as_deref(),
-                            account.token.id_token.as_deref(),
-                            account.token.oauth_client_key.as_deref(),
-                            effective_target,
-                        );
-                        if let Some(ref profile) = account.device_profile {
-                            let _ = db::write_service_machine_id(&db_path, &profile.mac_machine_id);
-                        }
-                        true
-                    } else {
-                        false
+        let write_result = (|| -> Result<(), String> {
+            if use_keyring {
+                write_to_system_keyring(account)?;
+                verify_keyring_account(account)?;
+                if let Ok(storage_path) = device::get_storage_path(effective_target) {
+                    if let Some(ref profile) = account.device_profile {
+                        device::write_profile(&storage_path, profile)?;
                     }
-                } else {
-                    false
-                };
-
-                if !db_fallback {
-                    return Err(keyring_err);
                 }
-            }
-
-            // 2.2 原生应用可能没有 storage.json，但如果有的话，我们也可以尝试安全地写入设备 Profile，以兼容指纹信息
-            if let Ok(storage_path) = device::get_storage_path(effective_target) {
+            } else {
+                let storage_path = device::get_storage_path(effective_target)?;
+                let db_path = db::get_db_path(effective_target)?;
+                if !db_path.is_file() {
+                    return Err("Antigravity state database does not exist".to_string());
+                }
+                backup_state_database(&db_path)?;
+                db::inject_token(
+                    &db_path,
+                    &account.token.access_token,
+                    &account.token.refresh_token,
+                    account.token.expiry_timestamp,
+                    &account.email,
+                    account.token.is_gcp_tos,
+                    account.token.project_id.as_deref(),
+                    account.token.id_token.as_deref(),
+                    account.token.oauth_client_key.as_deref(),
+                    effective_target,
+                )?;
                 if let Some(ref profile) = account.device_profile {
-                    let _ = device::write_profile(&storage_path, profile);
+                    db::write_service_machine_id(&db_path, &profile.mac_machine_id)?;
+                    device::write_profile(&storage_path, profile)?;
                 }
+                verify_database_account(&db_path, account)?;
             }
-        } else {
-            // ================== 原有 Antigravity 旧版或定制 IDE 逻辑 (< 2.0.0) ==================
-            // 2.1 获取存储路径
-            let storage_path = device::get_storage_path(effective_target)?;
-
-            // 2.2 写入设备 Profile
-            if let Some(ref profile) = account.device_profile {
-                device::write_profile(&storage_path, profile)?;
-            }
-
-            // 2.3 数据库处理与 Token 注入
-            let db_path = db::get_db_path(effective_target)?;
-            if db_path.exists() {
-                let backup_path = db_path.with_extension("vscdb.backup");
-                let _ = fs::copy(&db_path, &backup_path);
-            }
-
-            db::inject_token(
-                &db_path,
-                &account.token.access_token,
-                &account.token.refresh_token,
-                account.token.expiry_timestamp,
-                &account.email,
-                account.token.is_gcp_tos,
-                account.token.project_id.as_deref(),
-                account.token.id_token.as_deref(),
-                account.token.oauth_client_key.as_deref(),
+            Ok(())
+        })();
+        if let Err(error) = write_result {
+            // A failed write must not leave the client closed without attempting recovery.
+            let restart = process::start_antigravity_with_fallback_path(
                 effective_target,
-            )?;
-
-            // 2.4 同步 Service Machine ID 到数据库
-            if let Some(ref profile) = account.device_profile {
-                let _ = db::write_service_machine_id(&db_path, &profile.mac_machine_id);
-            }
+                active_exe_path.as_deref(),
+                active_args.as_deref(),
+            );
+            return Err(match restart {
+                Ok(()) => error,
+                Err(restart_error) => format!("{}; restart also failed: {}", error, restart_error),
+            });
         }
 
         // 3. 重启外部进程（优先使用预快照路径与启动参数）
@@ -349,22 +359,11 @@ fn write_to_system_keyring(account: &crate::models::Account) -> Result<(), Strin
         let encoded_payload = STANDARD.encode(&payload_json);
         let full_keyring_value = format!("go-keyring-base64:{}", encoded_payload);
 
-        // 2.1 macOS Keychain Access
-        // 删除旧的
-        let _ = Command::new("security")
-            .args([
-                "delete-generic-password",
-                "-s",
-                "gemini",
-                "-a",
-                "antigravity",
-            ])
-            .output();
-
-        // 写入新的 (-A 参数允许所有本地应用免密码、无感直接读取凭据)
+        // Update in place. Deleting first could leave the user signed out if the write fails.
         let output = Command::new("security")
             .args([
                 "add-generic-password",
+                "-U",
                 "-s",
                 "gemini",
                 "-a",
@@ -413,7 +412,6 @@ fn write_to_system_keyring(account: &crate::models::Account) -> Result<(), Strin
         #[link(name = "advapi32")]
         extern "system" {
             fn CredWriteW(credential: *const CREDENTIALW, flags: u32) -> i32;
-            fn CredDeleteW(target_name: *const u16, type_: u32, flags: u32) -> i32;
         }
 
         let target = "gemini:antigravity";
@@ -449,9 +447,6 @@ fn write_to_system_keyring(account: &crate::models::Account) -> Result<(), Strin
         };
 
         unsafe {
-            // Delete first to ensure we write clean
-            let _ = CredDeleteW(target_wide.as_ptr(), 1, 0);
-
             let res = CredWriteW(&cred, 0);
             if res == 0 {
                 let err = std::io::Error::last_os_error();
@@ -547,9 +542,6 @@ fn write_to_system_keyring(account: &crate::models::Account) -> Result<(), Strin
         // 2. 同时写入默认集合（保证其他依赖 default collection 的系统工具也能读取）
         let default_res = store_to_collection(None, payload_json.as_bytes());
 
-        // 尝试优先同步写入本地文件凭据 (~/.gemini/oauth_creds.json)
-        let _ = write_to_file_credentials(account);
-
         // 若两者均失败，则返回错误；若至少一个成功，则记录并继续
         if login_res.is_err() && default_res.is_err() {
             return Err(login_res.unwrap_err());
@@ -568,104 +560,6 @@ fn write_to_system_keyring(account: &crate::models::Account) -> Result<(), Strin
     crate::modules::logger::log_info(
         "[Desktop] Successfully wrote token to system credential store.",
     );
-
-    // 同步写入 ~/.gemini/ 目录下的文件凭据，兼容 SSH 会话、容器环境和无 Keyring/D-Bus 场景
-    if let Err(e) = write_to_file_credentials(account) {
-        crate::modules::logger::log_warn(&format!("[Desktop] File credential sync warning: {}", e));
-    }
-
-    Ok(())
-}
-
-/// 辅助方法：同步写入本地文件凭据 (~/.gemini/oauth_creds.json 以及 ~/.gemini/google_accounts.json)
-/// 用于在 SSH 会话、容器环境或无系统 Keyring / D-Bus 的场景下保障 CLI/工具的凭据兼容性
-fn write_to_file_credentials(account: &crate::models::Account) -> Result<(), String> {
-    let home = match dirs::home_dir() {
-        Some(h) => h,
-        None => return Err("Failed to resolve user home directory".to_string()),
-    };
-    let gemini_dir = home.join(".gemini");
-
-    if !gemini_dir.exists() {
-        if let Err(e) = std::fs::create_dir_all(&gemini_dir) {
-            crate::modules::logger::log_warn(&format!(
-                "[Desktop] Failed to create .gemini directory: {}",
-                e
-            ));
-            return Err(format!("Failed to create .gemini directory: {}", e));
-        }
-    }
-
-    let expiry_ms = if account.token.expiry_timestamp > 10_000_000_000 {
-        account.token.expiry_timestamp
-    } else {
-        account.token.expiry_timestamp * 1000
-    };
-
-    #[derive(serde::Serialize)]
-    struct OAuthCredsFile {
-        access_token: String,
-        refresh_token: String,
-        token_type: String,
-        expiry_date: i64,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        id_token: Option<String>,
-        scope: String,
-    }
-
-    let creds = OAuthCredsFile {
-        access_token: account.token.access_token.clone(),
-        refresh_token: account.token.refresh_token.clone(),
-        token_type: "Bearer".to_string(),
-        expiry_date: expiry_ms,
-        id_token: account.token.id_token.clone(),
-        scope: "https://www.googleapis.com/auth/userinfo.email openid https://www.googleapis.com/auth/cloud-platform https://www.googleapis.com/auth/userinfo.profile".to_string(),
-    };
-
-    let creds_path = gemini_dir.join("oauth_creds.json");
-    let json_str = serde_json::to_string_pretty(&creds)
-        .map_err(|e| format!("Failed to serialize oauth_creds JSON: {}", e))?;
-
-    if let Err(e) = std::fs::write(&creds_path, json_str) {
-        crate::modules::logger::log_warn(&format!(
-            "[Desktop] Failed to write oauth_creds.json: {}",
-            e
-        ));
-        return Err(format!("Failed to write oauth_creds.json: {}", e));
-    }
-
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let _ = std::fs::set_permissions(&creds_path, std::fs::Permissions::from_mode(0o600));
-    }
-
-    #[derive(serde::Serialize)]
-    struct GoogleAccountsFile {
-        active: String,
-        old: Vec<String>,
-    }
-
-    let accounts_info = GoogleAccountsFile {
-        active: account.email.clone(),
-        old: vec![],
-    };
-
-    let accounts_path = gemini_dir.join("google_accounts.json");
-    if let Ok(accounts_json_str) = serde_json::to_string_pretty(&accounts_info) {
-        let _ = std::fs::write(&accounts_path, accounts_json_str);
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            let _ =
-                std::fs::set_permissions(&accounts_path, std::fs::Permissions::from_mode(0o600));
-        }
-    }
-
-    crate::modules::logger::log_info(&format!(
-        "[Desktop] Successfully synced file-based credentials to ~/.gemini/oauth_creds.json for: {}",
-        account.email
-    ));
 
     Ok(())
 }
@@ -696,6 +590,17 @@ fn read_from_file_credentials() -> Result<crate::modules::migration::ImportedOAu
 
 /// 辅助方法：从宿主操作系统的 Keychain/Credentials Manager 读取 Token
 pub fn read_from_system_keyring() -> Result<crate::modules::migration::ImportedOAuthState, String> {
+    read_from_system_keyring_inner(true)
+}
+
+fn read_from_system_keyring_direct() -> Result<crate::modules::migration::ImportedOAuthState, String>
+{
+    read_from_system_keyring_inner(false)
+}
+
+fn read_from_system_keyring_inner(
+    allow_file_fallback: bool,
+) -> Result<crate::modules::migration::ImportedOAuthState, String> {
     #[cfg(target_os = "macos")]
     {
         use base64::{engine::general_purpose::STANDARD, Engine as _};
@@ -712,8 +617,10 @@ pub fn read_from_system_keyring() -> Result<crate::modules::migration::ImportedO
             .map_err(|e| format!("Failed to execute security command: {}", e))?;
 
         if !output.status.success() {
-            if let Ok(file_state) = read_from_file_credentials() {
-                return Ok(file_state);
+            if allow_file_fallback {
+                if let Ok(file_state) = read_from_file_credentials() {
+                    return Ok(file_state);
+                }
             }
             return Err("No credential found in macOS Keychain".to_string());
         }
@@ -779,8 +686,10 @@ pub fn read_from_system_keyring() -> Result<crate::modules::migration::ImportedO
         unsafe {
             let res = CredReadW(target_wide.as_ptr(), 1, 0, &mut cred_ptr);
             if res == 0 || cred_ptr.is_null() {
-                if let Ok(file_state) = read_from_file_credentials() {
-                    return Ok(file_state);
+                if allow_file_fallback {
+                    if let Ok(file_state) = read_from_file_credentials() {
+                        return Ok(file_state);
+                    }
                 }
                 return Err("No credential found in Windows Credential Manager".to_string());
             }
@@ -805,8 +714,10 @@ pub fn read_from_system_keyring() -> Result<crate::modules::migration::ImportedO
         {
             Ok(out) => out,
             Err(e) => {
-                if let Ok(file_state) = read_from_file_credentials() {
-                    return Ok(file_state);
+                if allow_file_fallback {
+                    if let Ok(file_state) = read_from_file_credentials() {
+                        return Ok(file_state);
+                    }
                 }
                 if e.kind() == std::io::ErrorKind::NotFound {
                     return Err(
@@ -823,8 +734,10 @@ pub fn read_from_system_keyring() -> Result<crate::modules::migration::ImportedO
         };
 
         if !output.status.success() {
-            if let Ok(file_state) = read_from_file_credentials() {
-                return Ok(file_state);
+            if allow_file_fallback {
+                if let Ok(file_state) = read_from_file_credentials() {
+                    return Ok(file_state);
+                }
             }
             return Err("No credential found in Linux secret-tool".to_string());
         }
@@ -909,6 +822,51 @@ impl SystemIntegration for SystemManager {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn credential_readback_requires_exact_selected_token() {
+        assert!(ensure_token_matches("selected", "selected").is_ok());
+        assert!(ensure_token_matches("previous", "selected").is_err());
+    }
+
+    #[test]
+    fn database_backup_keeps_private_original_copy() {
+        let temp = tempfile::tempdir().unwrap();
+        let database = temp.path().join("state.vscdb");
+        let source = rusqlite::Connection::open(&database).unwrap();
+        source.pragma_update(None, "journal_mode", "WAL").unwrap();
+        source
+            .execute(
+                "CREATE TABLE ItemTable (key TEXT PRIMARY KEY, value TEXT)",
+                [],
+            )
+            .unwrap();
+        source
+            .execute(
+                "INSERT INTO ItemTable VALUES (?1, ?2)",
+                ["test", "original"],
+            )
+            .unwrap();
+        let backup = backup_state_database(&database).unwrap();
+        let copy = rusqlite::Connection::open(&backup).unwrap();
+        let value: String = copy
+            .query_row(
+                "SELECT value FROM ItemTable WHERE key = 'test'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(value, "original");
+        assert_ne!(database, backup);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            assert_eq!(
+                fs::metadata(&backup).unwrap().permissions().mode() & 0o777,
+                0o600
+            );
+        }
+    }
 
     #[test]
     fn test_parse_keyring_payload_nested_token() {

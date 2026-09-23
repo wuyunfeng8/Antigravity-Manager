@@ -166,7 +166,7 @@ export default function Accounts() {
     try {
       await switchAccount(account.id);
       await fetchAccounts();
-      showToast(t("accounts.toast.switch_success", { defaultValue: `已接力到 ${accountName(account)}` }), "success");
+      showToast(t("accounts.toast.switch_success", { email: accountName(account) }), "success");
     } catch (error) {
       showToast(`${t("common.error")}: ${error}`, "error");
     } finally {

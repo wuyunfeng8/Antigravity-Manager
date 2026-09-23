@@ -114,6 +114,9 @@ pub fn inject_token(
     _target_ide: Option<&str>,
 ) -> Result<String, String> {
     crate::modules::logger::log_info("Starting Token injection...");
+    if !db_path.is_file() {
+        return Err("Antigravity state database does not exist".to_string());
+    }
 
     // 如果使用的是本项目的内置 Client ID (antigravity_enterprise 实际上是标准版)
     // 则强制关闭 GCP TOS 标志，以确保 IDE 使用标准 Client ID 进行刷新
@@ -154,7 +157,12 @@ fn inject_new_format(
     project_id: Option<&str>,
     id_token: Option<&str>,
 ) -> Result<String, String> {
-    let conn = Connection::open(db_path).map_err(|e| format!("Failed to open database: {}", e))?;
+    let mut conn =
+        Connection::open_with_flags(db_path, rusqlite::OpenFlags::SQLITE_OPEN_READ_WRITE)
+            .map_err(|e| format!("Failed to open database: {}", e))?;
+    let tx = conn
+        .transaction()
+        .map_err(|e| format!("Failed to start state transaction: {}", e))?;
 
     // Create OAuthTokenInfo (binary)
     let oauth_info = protobuf::create_oauth_info(
@@ -169,7 +177,7 @@ fn inject_new_format(
     use base64::{engine::general_purpose, Engine as _};
     use rusqlite::OptionalExtension;
 
-    let current_topic = conn
+    let current_topic = tx
         .query_row(
             "SELECT value FROM ItemTable WHERE key = ?",
             ["antigravityUnifiedStateSync.oauthToken"],
@@ -177,7 +185,12 @@ fn inject_new_format(
         )
         .optional()
         .map_err(|e| format!("Failed to read oauthToken: {}", e))?
-        .map(|val| general_purpose::STANDARD.decode(val).unwrap_or_default())
+        .map(|val| {
+            general_purpose::STANDARD
+                .decode(val)
+                .map_err(|e| format!("Failed to decode existing OAuth state: {}", e))
+        })
+        .transpose()?
         .unwrap_or_default();
 
     let mut topic =
@@ -189,22 +202,22 @@ fn inject_new_format(
 
     let topic_b64 = general_purpose::STANDARD.encode(&topic);
 
-    conn.execute(
+    tx.execute(
         "INSERT OR REPLACE INTO ItemTable (key, value) VALUES (?, ?)",
         ["antigravityUnifiedStateSync.oauthToken", &topic_b64],
     )
     .map_err(|e| format!("Failed to write new format: {}", e))?;
 
-    inject_user_status(&conn, email)?;
+    inject_user_status(&tx, email)?;
 
     if let Some(project_id) = project_id.map(str::trim).filter(|pid| !pid.is_empty()) {
-        inject_enterprise_project_preference(&conn, project_id)?;
+        inject_enterprise_project_preference(&tx, project_id)?;
     } else {
-        clear_enterprise_project_preference(&conn)?;
+        clear_enterprise_project_preference(&tx)?;
     }
 
     // Inject Onboarding flag
-    conn.execute(
+    tx.execute(
         "INSERT OR REPLACE INTO ItemTable (key, value) VALUES (?, ?)",
         ["antigravityOnboarding", "true"],
     )
@@ -212,10 +225,14 @@ fn inject_new_format(
 
     // Fix for missing history: Delete the old format state to prevent the IDE from reading a stale UserID
     // which causes history fetching to fail.
-    let _ = conn.execute(
+    tx.execute(
         "DELETE FROM ItemTable WHERE key = ?",
         ["jetskiStateSync.agentManagerInitState"],
-    );
+    )
+    .map_err(|e| format!("Failed to clear legacy OAuth state: {}", e))?;
+
+    tx.commit()
+        .map_err(|e| format!("Failed to commit state transaction: {}", e))?;
 
     Ok("Token injection successful (new format)".to_string())
 }
@@ -264,7 +281,11 @@ pub fn write_service_machine_id(
     db_path: &std::path::Path,
     service_machine_id: &str,
 ) -> Result<(), String> {
-    let conn = Connection::open(db_path).map_err(|e| format!("Failed to open database: {}", e))?;
+    if !db_path.is_file() {
+        return Err("Antigravity state database does not exist".to_string());
+    }
+    let conn = Connection::open_with_flags(db_path, rusqlite::OpenFlags::SQLITE_OPEN_READ_WRITE)
+        .map_err(|e| format!("Failed to open database: {}", e))?;
 
     conn.execute(
         "INSERT OR REPLACE INTO ItemTable (key, value) VALUES (?, ?)",
@@ -278,4 +299,65 @@ pub fn write_service_machine_id(
     ));
 
     Ok(())
+}
+
+#[cfg(test)]
+mod safety_tests {
+    use super::*;
+
+    #[test]
+    fn injection_rejects_missing_or_corrupt_database_without_replacing_state() {
+        let temp = tempfile::tempdir().unwrap();
+        let missing = temp.path().join("missing.vscdb");
+        assert!(inject_token(
+            &missing,
+            "access",
+            "refresh",
+            1,
+            "test@example.com",
+            false,
+            None,
+            None,
+            None,
+            Some("classic")
+        )
+        .is_err());
+        assert!(!missing.exists());
+
+        let path = temp.path().join("state.vscdb");
+        let conn = Connection::open(&path).unwrap();
+        conn.execute(
+            "CREATE TABLE ItemTable (key TEXT PRIMARY KEY, value TEXT)",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO ItemTable VALUES (?1, ?2)",
+            ["antigravityUnifiedStateSync.oauthToken", "invalid-base64!"],
+        )
+        .unwrap();
+        drop(conn);
+        assert!(inject_token(
+            &path,
+            "access",
+            "refresh",
+            1,
+            "test@example.com",
+            false,
+            None,
+            None,
+            None,
+            Some("classic")
+        )
+        .is_err());
+        let conn = Connection::open(&path).unwrap();
+        let existing: String = conn
+            .query_row(
+                "SELECT value FROM ItemTable WHERE key = ?1",
+                ["antigravityUnifiedStateSync.oauthToken"],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(existing, "invalid-base64!");
+    }
 }

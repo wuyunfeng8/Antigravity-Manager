@@ -150,7 +150,9 @@
       "footer_source": "数据权威源自 Google Antigravity 原生 loadCodeAssist 凭据雷达",
       "close": "完成"
     },
-    "toast": {},
+    "toast": {
+      "switch_success": "已写入 {{email}} 并启动 Antigravity，请核对客户端登录账号"
+    },
     "add": {
       "title": "添加新账号",
       "flow": {

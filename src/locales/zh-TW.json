@@ -147,7 +147,9 @@
       "footer_source": "數據權威源自 Google Antigravity 原生 loadCodeAssist 憑據雷達",
       "close": "完成"
     },
-    "toast": {},
+    "toast": {
+      "switch_success": "已寫入 {{email}} 並啟動 Antigravity，請核對用戶端登入帳號"
+    },
     "add": {
       "title": "新增新帳號",
       "flow": {

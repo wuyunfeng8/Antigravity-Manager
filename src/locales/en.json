@@ -150,7 +150,9 @@
       "footer_source": "Authoritative data from Google Antigravity loadCodeAssist",
       "close": "Done"
     },
-    "toast": {},
+    "toast": {
+      "switch_success": "Wrote {{email}} and started Antigravity. Confirm the signed-in account in the app."
+    },
     "add": {
       "title": "Add Account",
       "flow": {
