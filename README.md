@@ -63,7 +63,7 @@ AMT 是面向 Google Antigravity 用户的桌面账号中枢。它把账号入�
 前往 [GitHub Releases](https://github.com/wuyunfeng8/Antigravity-Manager/releases)，选择对应平台的安装包：
 
 - macOS：`.dmg`
-- Windows：`.exe` / `.msi`
+- Windows：`.exe`
 - Linux：`.deb` / `.rpm` / `.AppImage`
 
 ### macOS / Linux 安装脚本
@@ -78,7 +78,7 @@ curl -fsSL https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main
 irm https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main/install.ps1 | iex
 ```
 
-### Homebrew
+### Homebrew（macOS）
 
 ```bash
 brew tap wuyunfeng8/antigravity-manager https://github.com/wuyunfeng8/Antigravity-Manager

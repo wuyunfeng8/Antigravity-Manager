@@ -107,7 +107,7 @@ function Install-App {
     } else {
         try {
             $ProgressPreference = 'Continue'
-            Invoke-WebRequest -Uri $script:DownloadUrl -OutFile $downloadPath -UseBasicParsing
+            Invoke-WebRequest -Uri $script:DownloadUrl -OutFile $downloadPath -UseBasicParsing -ErrorAction Stop
         } catch {
             Script-Error "Download failed: $_"
             Script-Error "URL: $($script:DownloadUrl)"
@@ -121,7 +121,25 @@ function Install-App {
         return $false
     }
 
-    Success "Downloaded to $downloadPath"
+    if ($DryRun) {
+        Info "Would verify SHA-256 from the release SHA256SUMS file"
+    } else {
+        try {
+            $checksumUrl = "https://github.com/$Repo/releases/download/v$($script:ReleaseVersion)/SHA256SUMS"
+            $checksums = (Invoke-WebRequest -Uri $checksumUrl -UseBasicParsing -ErrorAction Stop).Content
+            $escapedName = [regex]::Escape($script:Filename)
+            $match = [regex]::Match($checksums, "(?m)^([a-fA-F0-9]{64})\s+$escapedName$")
+            if (-not $match.Success) { throw "Installer checksum is missing" }
+            $expected = $match.Groups[1].Value.ToLowerInvariant()
+            $actual = (Get-FileHash -Path $downloadPath -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($actual -ne $expected) { throw "Installer checksum mismatch" }
+        } catch {
+            Script-Error "Checksum verification failed: $_"
+            return $false
+        }
+    }
+
+    Success "Downloaded and verified $downloadPath"
 
     Info "Running installer..."
 
@@ -129,7 +147,8 @@ function Install-App {
         Write-ColorOutput "Yellow" "[DRY-RUN] Start-Process -FilePath $downloadPath -Wait"
     } else {
         try {
-            Start-Process -FilePath $downloadPath -Wait
+            $installer = Start-Process -FilePath $downloadPath -Wait -PassThru -ErrorAction Stop
+            if ($installer.ExitCode -ne 0) { throw "Installer exited with code $($installer.ExitCode)" }
         } catch {
             Script-Error "Installation failed: $_"
             return $false

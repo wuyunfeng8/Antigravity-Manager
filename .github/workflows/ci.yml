@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_call:
   push:
     branches: [main, master]
   pull_request:
@@ -30,13 +31,16 @@ jobs:
           cache: "npm"
 
       - name: Install frontend dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
 
       - name: TypeScript check
         run: npx tsc --noEmit
 
       - name: Build frontend
         run: npm run build
+
+      - name: Check release artifact gate
+        run: node scripts/prepare-release.test.mjs
 
   # Rust 代码检查
   check-rust:
@@ -127,7 +131,7 @@ jobs:
           cache: "npm"
 
       - name: Install frontend dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
 
       - name: Disable updater artifacts in unsigned CI builds
         shell: pwsh

@@ -63,7 +63,7 @@ Add accounts  →  Inspect real quotas  →  Pick a recommended account  →  Re
 Open [GitHub Releases](https://github.com/wuyunfeng8/Antigravity-Manager/releases) and choose the package for your platform:
 
 - macOS: `.dmg`
-- Windows: `.exe` / `.msi`
+- Windows: `.exe`
 - Linux: `.deb` / `.rpm` / `.AppImage`
 
 ### macOS / Linux install script
@@ -78,7 +78,7 @@ curl -fsSL https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main
 irm https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main/install.ps1 | iex
 ```
 
-### Homebrew
+### Homebrew (macOS)
 
 ```bash
 brew tap wuyunfeng8/antigravity-manager https://github.com/wuyunfeng8/Antigravity-Manager

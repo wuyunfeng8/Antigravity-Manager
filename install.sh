@@ -202,7 +202,23 @@ download_installer() {
         error "Download failed. Check your network or try a different version."
     fi
 
-    success "Downloaded to $DOWNLOAD_PATH"
+    local checksums_url="https://github.com/${REPO}/releases/download/v${RELEASE_VERSION}/SHA256SUMS"
+    if [[ "${DRY_RUN:-0}" == "1" ]]; then
+        info "Would verify SHA-256 from $checksums_url"
+        return
+    fi
+    curl -fSL --max-time 30 -o "${TEMP_DIR}/SHA256SUMS" "$checksums_url"
+    local expected actual
+    expected=$(awk -v file="$FILENAME" '$2 == file { print $1 }' "${TEMP_DIR}/SHA256SUMS")
+    [[ "$expected" =~ ^[0-9a-fA-F]{64}$ ]] || error "Release checksum for $FILENAME is missing or invalid."
+    if [[ "$PLATFORM" == "macos" ]]; then
+        actual=$(shasum -a 256 "$DOWNLOAD_PATH" | awk '{print $1}')
+    else
+        actual=$(sha256sum "$DOWNLOAD_PATH" | awk '{print $1}')
+    fi
+    [[ "$actual" == "$expected" ]] || error "Download checksum mismatch; installation stopped."
+
+    success "Downloaded and verified $DOWNLOAD_PATH"
 }
 
 # Install on Linux
@@ -228,25 +244,6 @@ install_linux() {
 
             if [[ ":$PATH:" != *":${install_dir}:"* ]]; then
                 warn "Add ${install_dir} to your PATH to run antigravity-tools from anywhere"
-
-                local shell_name rc_file export_line
-                shell_name="$(basename "${SHELL:-/bin/bash}")"
-                case "$shell_name" in
-                    zsh)  rc_file="$HOME/.zshrc" ;;
-                    fish) rc_file="$HOME/.config/fish/config.fish" ;;
-                    *)    rc_file="$HOME/.bashrc" ;;
-                esac
-
-                export_line="export PATH=\"${install_dir}:\$PATH\""
-                [[ "$shell_name" == "fish" ]] && export_line="fish_add_path ${install_dir}"
-
-                if [[ -f "$rc_file" ]] && grep -qF "$install_dir" "$rc_file" 2>/dev/null; then
-                    info "PATH entry already in $rc_file"
-                else
-                    run echo "$export_line" >> "$rc_file"
-                    info "Added ${install_dir} to PATH in $rc_file"
-                    warn "Run: source $rc_file  (or restart terminal)"
-                fi
             fi
             ;;
     esac
@@ -262,7 +259,6 @@ install_macos() {
         echo -e "${YELLOW}[DRY-RUN]${NC} hdiutil attach $DOWNLOAD_PATH -nobrowse -noautoopen"
         echo -e "${YELLOW}[DRY-RUN]${NC} cp -R <mount>/${APP_NAME}.app /Applications/"
         echo -e "${YELLOW}[DRY-RUN]${NC} hdiutil detach <mount>"
-        echo -e "${YELLOW}[DRY-RUN]${NC} sudo xattr -rd com.apple.quarantine /Applications/${APP_NAME}.app"
         return
     fi
 
@@ -275,19 +271,25 @@ install_macos() {
         error "Failed to mount DMG. Output: $mount_output"
     fi
 
-    # Copy app to /Applications
-    if [[ -d "/Applications/${APP_NAME}.app" ]]; then
-        info "Removing existing installation..."
-        rm -rf "/Applications/${APP_NAME}.app"
+    # Stage the new app before replacing the existing installation.
+    local staged_app="/Applications/.${APP_NAME}.app.install.$$"
+    local backup_app="/Applications/.${APP_NAME}.app.backup.$$"
+    if ! cp -R "${mount_point}/${APP_NAME}.app" "$staged_app"; then
+        hdiutil detach "$mount_point" -quiet 2>/dev/null || true
+        error "Failed to stage the new app. The existing installation is unchanged."
     fi
-    cp -R "${mount_point}/${APP_NAME}.app" /Applications/
+    if [[ -d "/Applications/${APP_NAME}.app" ]]; then
+        mv "/Applications/${APP_NAME}.app" "$backup_app"
+    fi
+    if ! mv "$staged_app" "/Applications/${APP_NAME}.app"; then
+        if [[ -d "$backup_app" ]]; then mv "$backup_app" "/Applications/${APP_NAME}.app"; fi
+        hdiutil detach "$mount_point" -quiet 2>/dev/null || true
+        error "Failed to install the new app. The previous installation was restored."
+    fi
+    if [[ -d "$backup_app" ]]; then rm -rf "$backup_app"; fi
 
     # Unmount DMG
     hdiutil detach "$mount_point" -quiet 2>/dev/null || true
-
-    # Remove quarantine attribute to avoid "app is damaged" error
-    info "Removing quarantine attribute..."
-    sudo xattr -rd com.apple.quarantine "/Applications/${APP_NAME}.app" 2>/dev/null || true
 
     success "${APP_NAME} installed to /Applications!"
 }
