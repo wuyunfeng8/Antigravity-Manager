@@ -3,6 +3,11 @@
 > Complete version history for Antigravity Tools. Return to project home at [README_EN.md](README_EN.md).
 
 *   **Version History**:
+    *   **v1.0.1 (2026-09-23)**:
+        -   **First public release of the independent AMT project**: Focused on Antigravity account management, real quotas, recommended relay, device identities, and native client switching; removed the legacy gateway and proxy features.
+        -   **Account experience**: Simplified core quota display, improved account addition and import, and refined card layout, expansion, and action feedback.
+        -   **Release setup**: Aligned installation links, updater URLs, and the Release workflow with this repository.
+        -   **Version migration**: Install this release manually if you have a 4.7.x development build; automatic updates do not treat a higher version number as older than 1.0.1.
     *   **v4.7.12 (2026-09-21)**:
         -   **[Cross-Model Thinking Signature Fallback & Retroactive Cache Purification] Eliminate 400 Validation Interceptions & 503 Deadlocks on Model Switching (PR #3496, Fixes #3494)**:
             -   **Inbound Pipeline Heterogeneous Signature Guard**: Enforces protocol-agnostic signature verification in `InboundThinkingPipeline`. When detecting incompatible foreign thinking signatures across model switches (e.g. Claude to Gemini), automatically down-ranks them to standard sentinels (`skip_thought_signature_validator`) and purges dirty signatures from `functionCall` parts, stopping HTTP 400 validation failures before egress.
