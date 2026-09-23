@@ -316,8 +316,8 @@
     "advanced": {
       "title": "高级设置",
       "export_path": "默认导出路径",
-      "export_path_placeholder": "未设置 (每次询问)",
-      "default_export_path_desc": "设置后，导出文件将直接保存到该目录，不再弹出选择框",
+      "export_path_placeholder": "未设置（使用系统默认目录）",
+      "default_export_path_desc": "导出时默认打开此目录，仍需确认文件名和保存位置",
       "select_btn": "选择",
       "open_btn": "打开",
       "migrate_btn": "更改并迁移",

@@ -317,8 +317,8 @@
     "advanced": {
       "title": "進階設定",
       "export_path": "預設匯出路徑",
-      "export_path_placeholder": "未設定 (每次詢問)",
-      "default_export_path_desc": "設定後，匯出檔案將直接儲存到該目錄，不再彈出選擇框",
+      "export_path_placeholder": "未設定（使用系統預設目錄）",
+      "default_export_path_desc": "匯出時預設開啟此目錄，仍需確認檔名與儲存位置",
       "select_btn": "選擇",
       "open_btn": "開啟",
       "data_dir": "資料目錄",

@@ -530,13 +530,22 @@ pub async fn export_accounts_to_file(
         "amt_accounts.json".to_string()
     };
     let (sender, receiver) = tokio::sync::oneshot::channel();
-    app.dialog()
+    let mut dialog = app
+        .dialog()
         .file()
         .add_filter("JSON", &["json"])
-        .set_file_name(suggested_name)
-        .save_file(move |path| {
-            let _ = sender.send(path);
-        });
+        .set_file_name(suggested_name);
+    if let Ok(config) = modules::load_app_config() {
+        if let Some(directory) = config.default_export_path {
+            let path = PathBuf::from(directory);
+            if path.is_dir() {
+                dialog = dialog.set_directory(path);
+            }
+        }
+    }
+    dialog.save_file(move |path| {
+        let _ = sender.send(path);
+    });
     let Some(selected) = receiver.await.map_err(|e| e.to_string())? else {
         return Ok(false);
     };

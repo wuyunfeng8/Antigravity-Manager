@@ -316,8 +316,8 @@
     "advanced": {
       "title": "Advanced Settings",
       "export_path": "Default Export Path",
-      "export_path_placeholder": "Not set (Ask every time)",
-      "default_export_path_desc": "Files will be saved directly to this folder without asking",
+      "export_path_placeholder": "Not set (Use system default folder)",
+      "default_export_path_desc": "Open this folder by default when exporting; confirm the file name and location each time",
       "select_btn": "Select",
       "open_btn": "Open",
       "migrate_btn": "Change & Migrate",
