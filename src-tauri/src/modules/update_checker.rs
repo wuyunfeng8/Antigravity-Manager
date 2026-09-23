@@ -34,6 +34,34 @@ pub struct UpdateSettings {
     pub check_interval_hours: u64,
 }
 
+const MIN_CHECK_INTERVAL_HOURS: u64 = 1;
+const MAX_CHECK_INTERVAL_HOURS: u64 = 168;
+
+pub fn with_update_preferences(
+    mut settings: UpdateSettings,
+    auto_check: bool,
+    check_interval_hours: u64,
+) -> Result<UpdateSettings, String> {
+    if !(MIN_CHECK_INTERVAL_HOURS..=MAX_CHECK_INTERVAL_HOURS).contains(&check_interval_hours) {
+        return Err("Check interval must be between 1 and 168 hours".to_string());
+    }
+    settings.auto_check = auto_check;
+    settings.check_interval_hours = check_interval_hours;
+    Ok(settings)
+}
+
+fn normalize_update_settings(mut settings: UpdateSettings, now: u64) -> UpdateSettings {
+    if !(MIN_CHECK_INTERVAL_HOURS..=MAX_CHECK_INTERVAL_HOURS)
+        .contains(&settings.check_interval_hours)
+    {
+        settings.check_interval_hours = DEFAULT_CHECK_INTERVAL_HOURS;
+    }
+    if settings.last_check_time > now {
+        settings.last_check_time = 0;
+    }
+    settings
+}
+
 fn default_check_interval() -> u64 {
     DEFAULT_CHECK_INTERVAL_HOURS
 }
@@ -398,11 +426,16 @@ pub fn should_check_for_updates(settings: &UpdateSettings) -> bool {
 
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
+        .unwrap_or_default()
         .as_secs();
 
-    let elapsed_hours = (now - settings.last_check_time) / 3600;
-    let interval = if settings.check_interval_hours > 0 {
+    let elapsed_hours = now
+        .checked_sub(settings.last_check_time)
+        .unwrap_or(u64::MAX)
+        / 3600;
+    let interval = if (MIN_CHECK_INTERVAL_HOURS..=MAX_CHECK_INTERVAL_HOURS)
+        .contains(&settings.check_interval_hours)
+    {
         settings.check_interval_hours
     } else {
         DEFAULT_CHECK_INTERVAL_HOURS
@@ -423,11 +456,22 @@ pub fn load_update_settings() -> Result<UpdateSettings, String> {
     let content = std::fs::read_to_string(&settings_path)
         .map_err(|e| format!("Failed to read settings file: {}", e))?;
 
-    serde_json::from_str(&content).map_err(|e| format!("Failed to parse settings: {}", e))
+    let settings: UpdateSettings =
+        serde_json::from_str(&content).map_err(|e| format!("Failed to parse settings: {}", e))?;
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    Ok(normalize_update_settings(settings, now))
 }
 
 /// Save update settings to config file
 pub fn save_update_settings(settings: &UpdateSettings) -> Result<(), String> {
+    if !(MIN_CHECK_INTERVAL_HOURS..=MAX_CHECK_INTERVAL_HOURS)
+        .contains(&settings.check_interval_hours)
+    {
+        return Err("Check interval must be between 1 and 168 hours".to_string());
+    }
     let data_dir = crate::modules::account::get_data_dir()
         .map_err(|e| format!("Failed to get data dir: {}", e))?;
     let settings_path = data_dir.join("update_settings.json");
@@ -435,7 +479,7 @@ pub fn save_update_settings(settings: &UpdateSettings) -> Result<(), String> {
     let content = serde_json::to_string_pretty(settings)
         .map_err(|e| format!("Failed to serialize settings: {}", e))?;
 
-    std::fs::write(&settings_path, content)
+    crate::utils::fs::write_atomic(&settings_path, content.as_bytes())
         .map_err(|e| format!("Failed to write settings file: {}", e))
 }
 
@@ -444,7 +488,7 @@ pub fn update_last_check_time() -> Result<(), String> {
     let mut settings = load_update_settings()?;
     settings.last_check_time = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .unwrap()
+        .unwrap_or_default()
         .as_secs();
     save_update_settings(&settings)
 }
@@ -577,5 +621,43 @@ mod tests {
 
         settings.auto_check = false;
         assert!(!should_check_for_updates(&settings));
+
+        settings.auto_check = true;
+        settings.last_check_time = u64::MAX;
+        assert!(should_check_for_updates(&settings));
+    }
+
+    #[test]
+    fn update_preferences_validate_interval_and_preserve_last_check() {
+        let settings = UpdateSettings {
+            last_check_time: 12345,
+            ..UpdateSettings::default()
+        };
+        assert!(with_update_preferences(settings.clone(), true, 0).is_err());
+        assert!(with_update_preferences(settings.clone(), true, 169).is_err());
+        for interval in [1, 168] {
+            let updated = with_update_preferences(settings.clone(), false, interval).unwrap();
+            assert!(!updated.auto_check);
+            assert_eq!(updated.check_interval_hours, interval);
+            assert_eq!(updated.last_check_time, 12345);
+        }
+    }
+
+    #[test]
+    fn old_invalid_update_settings_are_normalized() {
+        let mut settings = UpdateSettings {
+            check_interval_hours: 0,
+            last_check_time: 200,
+            ..UpdateSettings::default()
+        };
+        let normalized = normalize_update_settings(settings.clone(), 100);
+        assert_eq!(normalized.check_interval_hours, 24);
+        assert_eq!(normalized.last_check_time, 0);
+
+        settings.check_interval_hours = 169;
+        settings.last_check_time = 50;
+        let normalized = normalize_update_settings(settings, 100);
+        assert_eq!(normalized.check_interval_hours, 24);
+        assert_eq!(normalized.last_check_time, 50);
     }
 }

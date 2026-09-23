@@ -10,6 +10,7 @@
         -   **Release gate**: Missing platform artifacts or updater signatures stop publication. Installers verify SHA256SUMS. Production signing, cross-platform installation, and real-account switching still require pre-release acceptance.
         -   **Languages**: The interface and tray now ship only Simplified Chinese and English. Old Traditional Chinese settings migrate to Simplified Chinese; other removed languages migrate to English.
         -   **Settings**: Removed obsolete CLI and IDE switch-path controls while keeping the desktop app path. A saved IDE path remains a background process-safety guard.
+        -   **Update checks**: Grouped the toggle and interval, validated the 1–168 hour range, preserved the last-check timestamp when saving preferences, and recorded it only after a successful version check.
 
     *   **v1.0.1 (2026-09-23)**:
         -   **First public release of the independent AMT project**: Focused on Antigravity account management, real quotas, recommended relay, device identities, and native client switching; removed the legacy gateway and proxy features.

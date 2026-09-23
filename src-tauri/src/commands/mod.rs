@@ -738,9 +738,16 @@ pub async fn get_update_settings() -> Result<crate::modules::update_checker::Upd
 /// 保存更新设置
 #[tauri::command]
 pub async fn save_update_settings(
-    settings: crate::modules::update_checker::UpdateSettings,
+    auto_check: bool,
+    check_interval_hours: u64,
 ) -> Result<(), String> {
-    crate::modules::update_checker::save_update_settings(&settings)
+    let settings = crate::modules::update_checker::load_update_settings()?;
+    let updated = crate::modules::update_checker::with_update_preferences(
+        settings,
+        auto_check,
+        check_interval_hours,
+    )?;
+    crate::modules::update_checker::save_update_settings(&updated)
 }
 
 /// 预热所有可用账号

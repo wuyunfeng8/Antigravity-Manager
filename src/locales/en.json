@@ -295,9 +295,11 @@
       "auto_check_update_desc": "Automatically check for new versions on startup",
       "auto_check_update_enabled": "Auto check enabled",
       "auto_check_update_disabled": "Auto check disabled",
-      "update_check_interval": "Check Interval (hours)",
-      "update_check_interval_desc": "Set auto-check interval (1-168 hours)",
-      "update_check_interval_saved": "Check interval settings saved"
+      "update_check_interval": "Check interval (hours)",
+      "update_check_interval_desc": "Checks only at startup; enter 1–168 hours, then save",
+      "update_check_interval_saved": "Check interval saved",
+      "update_check_interval_invalid": "Enter a whole number from 1 to 168",
+      "update_settings_load_failed": "Could not load update settings"
     },
     "account": {
       "title": "Account Settings",

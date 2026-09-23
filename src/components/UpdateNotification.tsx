@@ -40,6 +40,9 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onClose 
     try {
       // 1. Check for updates via backend
       const info = await invoke<UpdateInfo>('check_for_updates');
+      await invoke('update_last_check_time').catch(() => {
+        // Keep the successful version result visible if persisting the timestamp fails.
+      });
       if (!info.has_update) {
         onClose();
         return;

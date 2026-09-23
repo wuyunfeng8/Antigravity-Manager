@@ -1,4 +1,4 @@
-import { useState, useEffect, startTransition } from 'react';
+import { useState, useEffect, useRef, startTransition } from 'react';
 import { Save, Github, User, ExternalLink, RefreshCw, Network, Globe } from 'lucide-react';
 import { request as invoke } from '../utils/request';
 import { open } from '@tauri-apps/plugin-dialog';
@@ -40,6 +40,20 @@ function normalizeDataDirDisplay(path: string): string {
     return trimmed;
 }
 
+interface UpdateCheckSettings {
+    auto_check: boolean;
+    last_check_time: number;
+    check_interval_hours: number;
+}
+
+function parseUpdateInterval(value: string): number | null {
+    const trimmed = value.trim();
+    const hours = Number(trimmed);
+    return /^\d{1,3}$/.test(trimmed) && Number.isInteger(hours) && hours >= 1 && hours <= 168
+        ? hours
+        : null;
+}
+
 function Settings() {
     const { t, i18n } = useTranslation();
     const { config, loadConfig, saveConfig, updateLanguage, updateTheme } = useConfigStore();
@@ -62,6 +76,23 @@ function Settings() {
             monitored_models: []
         },
     });
+    const [updateSettings, setUpdateSettings] = useState<UpdateCheckSettings | null>(null);
+    const [updateSettingsLoadFailed, setUpdateSettingsLoadFailed] = useState(false);
+    const [updateIntervalDraft, setUpdateIntervalDraft] = useState('24');
+    const [isSavingUpdateSettings, setIsSavingUpdateSettings] = useState(false);
+    const updateSaveInFlight = useRef(false);
+
+    const loadUpdateSettings = async () => {
+        setUpdateSettingsLoadFailed(false);
+        try {
+            const settings = await invoke<UpdateCheckSettings>('get_update_settings');
+            setUpdateSettings(settings);
+            setUpdateIntervalDraft(String(settings.check_interval_hours));
+        } catch (error) {
+            setUpdateSettingsLoadFailed(true);
+            console.error('Failed to load update settings:', error);
+        }
+    };
 
     // Dialog state
     const [dataDirPath, setDataDirPath] = useState<string>('~/.antigravity_tools/');
@@ -101,15 +132,7 @@ function Settings() {
             .catch(err => console.error('Failed to get data dir:', err));
 
         // 加载更新设置
-        invoke<{ auto_check: boolean; last_check_time: number; check_interval_hours: number }>('get_update_settings')
-            .then(settings => {
-                setFormData(prev => ({
-                    ...prev,
-                    auto_check_update: settings.auto_check,
-                    update_check_interval: settings.check_interval_hours
-                }));
-            })
-            .catch(err => console.error('Failed to load update settings:', err));
+        void loadUpdateSettings();
 
         // 获取真实的开机自启状态
         invoke<boolean>('is_auto_launch_enabled')
@@ -131,6 +154,43 @@ function Settings() {
             setFormData(config);
         }
     }, [config]);
+
+    const persistUpdateSettings = async (next: UpdateCheckSettings, successMessage: string): Promise<boolean> => {
+        if (updateSaveInFlight.current) return false;
+        updateSaveInFlight.current = true;
+        setIsSavingUpdateSettings(true);
+        try {
+            await invoke('save_update_settings', {
+                autoCheck: next.auto_check,
+                checkIntervalHours: next.check_interval_hours,
+            });
+            setUpdateSettings(next);
+            showToast(successMessage, 'success');
+            return true;
+        } catch (error) {
+            showToast(`${t('common.error')}: ${error}`, 'error');
+            return false;
+        } finally {
+            updateSaveInFlight.current = false;
+            setIsSavingUpdateSettings(false);
+        }
+    };
+
+    const commitUpdateInterval = async (value: string) => {
+        if (!updateSettings || updateSaveInFlight.current) return;
+        const hours = parseUpdateInterval(value);
+        if (hours === null) {
+            showToast(t('settings.general.update_check_interval_invalid'), 'error');
+            return;
+        }
+        setUpdateIntervalDraft(String(hours));
+        if (hours === updateSettings.check_interval_hours) return;
+        const saved = await persistUpdateSettings(
+            { ...updateSettings, check_interval_hours: hours },
+            t('settings.general.update_check_interval_saved'),
+        );
+        if (!saved) setUpdateIntervalDraft(String(updateSettings.check_interval_hours));
+    };
 
     // 删除自动启用调试控制台的逻辑 - 改为用户手动控制
 
@@ -465,63 +525,87 @@ function Settings() {
                             </div>
 
                             {/* 自动检查更新 */}
-                            <>
-                                <div className="flex items-center justify-between p-4 bg-muted/40 rounded-lg border border-border">
+                            <div className="rounded-xl border border-border bg-muted/40 p-4">
+                                <div className="flex items-center justify-between gap-4">
                                     <div>
                                         <div className="font-medium text-foreground">{t('settings.general.auto_check_update')}</div>
-                                        <p className="text-xs text-muted-foreground mt-1">{t('settings.general.auto_check_update_desc')}</p>
+                                        <p className="mt-1 text-xs text-muted-foreground">{t('settings.general.auto_check_update_desc')}</p>
                                     </div>
                                     <Switch
                                         aria-label={t('settings.general.auto_check_update')}
-                                        checked={formData.auto_check_update ?? true}
-                                        onCheckedChange={async (enabled) => {
-                                            try {
-                                                await invoke('save_update_settings', {
-                                                    settings: {
-                                                        auto_check: enabled,
-                                                        last_check_time: 0,
-                                                        check_interval_hours: formData.update_check_interval ?? 24
-                                                    }
-                                                });
-                                                setFormData({ ...formData, auto_check_update: enabled });
-                                                showToast(enabled ? t('settings.general.auto_check_update_enabled') : t('settings.general.auto_check_update_disabled'), 'success');
-                                            } catch (error) {
-                                                showToast(`${t('common.error')}: ${error}`, 'error');
+                                        checked={updateSettings?.auto_check ?? false}
+                                        disabled={!updateSettings || isSavingUpdateSettings}
+                                        onCheckedChange={(enabled) => {
+                                            if (!updateSettings) return;
+                                            const hours = parseUpdateInterval(updateIntervalDraft);
+                                            if (hours === null) {
+                                                showToast(t('settings.general.update_check_interval_invalid'), 'error');
+                                                return;
                                             }
+                                            void persistUpdateSettings(
+                                                { ...updateSettings, auto_check: enabled, check_interval_hours: hours },
+                                                t(enabled ? 'settings.general.auto_check_update_enabled' : 'settings.general.auto_check_update_disabled'),
+                                            ).then((saved) => {
+                                                if (saved) setUpdateIntervalDraft(String(hours));
+                                            });
                                         }}
                                     />
                                 </div>
 
-                                {/* 检查间隔 */}
-                                {formData.auto_check_update && (
-                                    <div className="ml-4 space-y-1.5">
-                                        <Label className="block text-sm font-medium text-foreground">{t('settings.general.update_check_interval')}</Label>
-                                        <Input
-                                            type="number"
-                                            className="w-32 h-9 text-sm"
-                                            min="1"
-                                            max="168"
-                                            value={formData.update_check_interval ?? 24}
-                                            onChange={(e) => setFormData({ ...formData, update_check_interval: parseInt(e.target.value) })}
-                                            onBlur={async () => {
-                                                try {
-                                                    await invoke('save_update_settings', {
-                                                        settings: {
-                                                            auto_check: formData.auto_check_update ?? true,
-                                                            last_check_time: 0,
-                                                            check_interval_hours: formData.update_check_interval ?? 24
-                                                        }
-                                                    });
-                                                    showToast(t('settings.general.update_check_interval_saved'), 'success');
-                                                } catch (error) {
-                                                    showToast(`${t('common.error')}: ${error}`, 'error');
-                                                }
-                                            }}
-                                        />
-                                        <p className="text-xs text-muted-foreground">{t('settings.general.update_check_interval_desc')}</p>
+                                {!updateSettings && (
+                                    <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground" role={updateSettingsLoadFailed ? 'alert' : 'status'}>
+                                        <span>{updateSettingsLoadFailed ? t('settings.general.update_settings_load_failed') : t('common.loading')}</span>
+                                        {updateSettingsLoadFailed && (
+                                            <Button variant="outline" size="sm" onClick={() => void loadUpdateSettings()}>
+                                                {t('common.retry')}
+                                            </Button>
+                                        )}
                                     </div>
                                 )}
-                            </>
+
+                                {updateSettings?.auto_check && (
+                                    <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+                                        <div>
+                                            <Label htmlFor="update-check-interval" className="text-sm font-medium text-foreground">
+                                                {t('settings.general.update_check_interval')}
+                                            </Label>
+                                            <p id="update-check-interval-help" className="mt-1 text-xs text-muted-foreground">
+                                                {t('settings.general.update_check_interval_desc')}
+                                            </p>
+                                        </div>
+                                        <div className="flex shrink-0 items-center gap-2">
+                                            <Input
+                                                id="update-check-interval"
+                                                aria-describedby="update-check-interval-help"
+                                                type="text"
+                                                inputMode="numeric"
+                                                pattern="[0-9]*"
+                                                maxLength={3}
+                                                className="h-9 w-20 text-center tabular-nums"
+                                                value={updateIntervalDraft}
+                                                disabled={isSavingUpdateSettings}
+                                                onChange={(event) => {
+                                                    if (/^\d{0,3}$/.test(event.target.value)) {
+                                                        setUpdateIntervalDraft(event.target.value);
+                                                    }
+                                                }}
+                                                onKeyDown={(event) => {
+                                                    if (event.key === 'Enter') void commitUpdateInterval(event.currentTarget.value);
+                                                    if (event.key === 'Escape') setUpdateIntervalDraft(String(updateSettings.check_interval_hours));
+                                                }}
+                                            />
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                disabled={isSavingUpdateSettings || updateIntervalDraft === String(updateSettings.check_interval_hours)}
+                                                onClick={() => void commitUpdateInterval(updateIntervalDraft)}
+                                            >
+                                                {t('common.save')}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 

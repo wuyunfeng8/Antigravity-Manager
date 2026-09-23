@@ -114,7 +114,6 @@ function App() {
 
         if (shouldCheck) {
           setShowUpdateNotification(true);
-          await invoke('update_last_check_time');
         }
       } catch (error) {
         console.error('Failed to check update settings:', error);

@@ -295,9 +295,11 @@
       "auto_check_update_desc": "启动时自动检查新版本",
       "auto_check_update_enabled": "已启用自动检查更新",
       "auto_check_update_disabled": "已禁用自动检查更新",
-      "update_check_interval": "检查间隔(小时)",
-      "update_check_interval_desc": "设置自动检查更新的时间间隔(1-168 小时)",
-      "update_check_interval_saved": "已保存检查间隔设置"
+      "update_check_interval": "检查间隔（小时）",
+      "update_check_interval_desc": "仅在启动时检查；1–168 小时，输入后保存",
+      "update_check_interval_saved": "已保存检查间隔设置",
+      "update_check_interval_invalid": "请输入 1–168 之间的整数",
+      "update_settings_load_failed": "加载更新设置失败"
     },
     "account": {
       "title": "账号设置",
