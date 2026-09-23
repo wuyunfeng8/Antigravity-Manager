@@ -1,4 +1,7 @@
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
+use rand::{rngs::OsRng, RngCore};
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
 // Google OAuth configuration
 const CLIENT_ID: &str = "1071006060591-tmhssin2h21lcre235vtolojh4g403ep.apps.googleusercontent.com";
@@ -107,8 +110,8 @@ fn build_registry() -> OAuthClientRegistry {
             let parts: Vec<&str> = trimmed.split('|').map(|v| v.trim()).collect();
             if parts.len() < 3 {
                 crate::modules::logger::log_warn(&format!(
-                    "Ignored invalid OAuth client entry in {}: {}",
-                    OAUTH_CLIENTS_ENV, trimmed
+                    "Ignored invalid OAuth client entry in {}",
+                    OAUTH_CLIENTS_ENV
                 ));
                 continue;
             }
@@ -116,8 +119,8 @@ fn build_registry() -> OAuthClientRegistry {
             let key = normalize_client_key(parts[0]);
             if key.is_empty() || parts[1].is_empty() || parts[2].is_empty() {
                 crate::modules::logger::log_warn(&format!(
-                    "Ignored incomplete OAuth client entry in {}: {}",
-                    OAUTH_CLIENTS_ENV, trimmed
+                    "Ignored incomplete OAuth client entry in {}",
+                    OAUTH_CLIENTS_ENV
                 ));
                 continue;
             }
@@ -330,6 +333,7 @@ pub fn get_auth_url_with_client(
     redirect_uri: &str,
     state: &str,
     client_key: Option<&str>,
+    code_challenge: &str,
 ) -> Result<(String, String), String> {
     let client = select_auth_client(client_key)?;
 
@@ -352,6 +356,8 @@ pub fn get_auth_url_with_client(
         ("prompt", "consent"),
         ("include_granted_scopes", "true"),
         ("state", state),
+        ("code_challenge", code_challenge),
+        ("code_challenge_method", "S256"),
     ];
 
     let url = url::Url::parse_with_params(AUTH_URL, &params)
@@ -359,10 +365,19 @@ pub fn get_auth_url_with_client(
     Ok((url.to_string(), client.key))
 }
 
+pub fn new_pkce_pair() -> (String, String) {
+    let mut random = [0u8; 32];
+    OsRng.fill_bytes(&mut random);
+    let verifier = URL_SAFE_NO_PAD.encode(random);
+    let challenge = URL_SAFE_NO_PAD.encode(Sha256::digest(verifier.as_bytes()));
+    (verifier, challenge)
+}
+
 async fn exchange_code_once(
     code: &str,
     redirect_uri: &str,
     client_cfg: &OAuthClientConfig,
+    code_verifier: &str,
 ) -> Result<TokenResponse, (Option<reqwest::StatusCode>, String)> {
     let client = crate::utils::http::get_long_standard_client();
 
@@ -372,6 +387,7 @@ async fn exchange_code_once(
         ("code", code),
         ("redirect_uri", redirect_uri),
         ("grant_type", "authorization_code"),
+        ("code_verifier", code_verifier),
     ];
 
     tracing::debug!(
@@ -443,6 +459,7 @@ pub async fn exchange_code_with_client(
     code: &str,
     redirect_uri: &str,
     preferred_client_key: Option<&str>,
+    code_verifier: &str,
 ) -> Result<TokenResponse, String> {
     let candidates = get_candidate_clients(preferred_client_key);
     if candidates.is_empty() {
@@ -452,7 +469,7 @@ pub async fn exchange_code_with_client(
     let mut attempt_errors: Vec<String> = Vec::new();
 
     for (idx, client_cfg) in candidates.iter().enumerate() {
-        match exchange_code_once(code, redirect_uri, client_cfg).await {
+        match exchange_code_once(code, redirect_uri, client_cfg, code_verifier).await {
             Ok(token_res) => {
                 if idx > 0 {
                     crate::modules::logger::log_info(&format!(
@@ -724,10 +741,23 @@ mod tests {
     fn test_get_auth_url_contains_state() {
         let redirect_uri = "http://localhost:8080/callback";
         let state = "test-state-123456";
-        let (url, _) = get_auth_url_with_client(redirect_uri, state, None).unwrap();
+        let (_, challenge) = new_pkce_pair();
+        let (url, _) = get_auth_url_with_client(redirect_uri, state, None, &challenge).unwrap();
 
         assert!(url.contains("state=test-state-123456"));
         assert!(url.contains("redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fcallback"));
         assert!(url.contains("response_type=code"));
+        assert!(url.contains("code_challenge_method=S256"));
+        assert!(url.contains("code_challenge="));
+    }
+
+    #[test]
+    fn pkce_verifier_matches_s256_challenge() {
+        let (verifier, challenge) = new_pkce_pair();
+        assert!(verifier.len() >= 43);
+        assert_eq!(
+            URL_SAFE_NO_PAD.encode(Sha256::digest(verifier.as_bytes())),
+            challenge
+        );
     }
 }

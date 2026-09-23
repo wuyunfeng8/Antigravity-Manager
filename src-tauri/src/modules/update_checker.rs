@@ -239,16 +239,13 @@ async fn create_client() -> Result<reqwest::Client, String> {
 
     // Load config to check for upstream proxy
     if let Some(proxy_url) = get_upstream_proxy_url() {
-        logger::log_info(&format!(
-            "Update checker using upstream proxy: {}",
-            proxy_url
-        ));
+        logger::log_info("Update checker using upstream proxy");
         match reqwest::Proxy::all(&proxy_url) {
             Ok(proxy) => {
                 builder = builder.proxy(proxy);
             }
-            Err(e) => {
-                logger::log_warn(&format!("Failed to parse proxy URL '{}': {}", proxy_url, e));
+            Err(_) => {
+                logger::log_warn("Failed to parse proxy URL");
             }
         }
     }

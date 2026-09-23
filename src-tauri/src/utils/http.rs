@@ -28,13 +28,10 @@ fn create_base_client(timeout_secs: u64) -> Client {
             match Proxy::all(&proxy_config.url) {
                 Ok(proxy) => {
                     builder = builder.proxy(proxy);
-                    tracing::info!(
-                        "HTTP shared client enabled upstream proxy: {}",
-                        proxy_config.url
-                    );
+                    tracing::info!("HTTP shared client enabled upstream proxy");
                 }
-                Err(e) => {
-                    tracing::error!("invalid_proxy_url: {}, error: {}", proxy_config.url, e);
+                Err(_) => {
+                    tracing::error!("invalid_proxy_url");
                 }
             }
         }
@@ -66,13 +63,10 @@ fn create_standard_client(timeout_secs: u64) -> Client {
             match Proxy::all(&proxy_config.url) {
                 Ok(proxy) => {
                     builder = builder.proxy(proxy);
-                    tracing::info!(
-                        "HTTP standard client enabled upstream proxy: {}",
-                        proxy_config.url
-                    );
+                    tracing::info!("HTTP standard client enabled upstream proxy");
                 }
-                Err(e) => {
-                    tracing::error!("invalid_proxy_url: {}, error: {}", proxy_config.url, e);
+                Err(_) => {
+                    tracing::error!("invalid_proxy_url");
                 }
             }
         }

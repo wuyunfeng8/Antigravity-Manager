@@ -12,6 +12,7 @@ struct OAuthFlowState {
     redirect_uri: String,
     state: String,
     client_key: String,
+    code_verifier: String,
     cancel_tx: watch::Sender<bool>,
     code_tx: mpsc::Sender<Result<String, String>>,
     code_rx: Option<mpsc::Receiver<Result<String, String>>>,
@@ -135,10 +136,12 @@ async fn ensure_oauth_flow_prepared(
     };
 
     let state_str = uuid::Uuid::new_v4().to_string();
+    let (code_verifier, code_challenge) = oauth::new_pkce_pair();
     let (auth_url, resolved_client_key) = oauth::get_auth_url_with_client(
         &redirect_uri,
         &state_str,
         requested_client_key.as_deref(),
+        &code_challenge,
     )?;
 
     // Cancellation signal (supports multiple consumers)
@@ -345,6 +348,7 @@ async fn ensure_oauth_flow_prepared(
             redirect_uri,
             state: state_str,
             client_key: resolved_client_key,
+            code_verifier,
             cancel_tx,
             code_tx,
             code_rx: Some(code_rx),
@@ -399,7 +403,7 @@ pub async fn start_oauth_flow(
     }
 
     // Take code_rx to wait for it
-    let (mut code_rx, redirect_uri, client_key) = {
+    let (mut code_rx, redirect_uri, client_key, code_verifier) = {
         let mut lock = get_oauth_flow_state()
             .lock()
             .map_err(|_| "OAuth state lock corrupted".to_string())?;
@@ -410,7 +414,12 @@ pub async fn start_oauth_flow(
             .code_rx
             .take()
             .ok_or_else(|| "OAuth authorization already in progress".to_string())?;
-        (rx, state.redirect_uri.clone(), state.client_key.clone())
+        (
+            rx,
+            state.redirect_uri.clone(),
+            state.client_key.clone(),
+            state.code_verifier.clone(),
+        )
     };
 
     // Wait for code (if user has already authorized, this returns immediately)
@@ -426,7 +435,7 @@ pub async fn start_oauth_flow(
     }
 
     let code = code_result?;
-    oauth::exchange_code_with_client(&code, &redirect_uri, Some(&client_key)).await
+    oauth::exchange_code_with_client(&code, &redirect_uri, Some(&client_key), &code_verifier).await
 }
 
 /// Завершить OAuth flow без открытия браузера.
@@ -439,7 +448,7 @@ pub async fn complete_oauth_flow(
     let _ = ensure_oauth_flow_prepared(app_handle, None).await?;
 
     // Take receiver to wait for code
-    let (mut code_rx, redirect_uri, client_key) = {
+    let (mut code_rx, redirect_uri, client_key, code_verifier) = {
         let mut lock = get_oauth_flow_state()
             .lock()
             .map_err(|_| "OAuth state lock corrupted".to_string())?;
@@ -450,7 +459,12 @@ pub async fn complete_oauth_flow(
             .code_rx
             .take()
             .ok_or_else(|| "OAuth authorization already in progress".to_string())?;
-        (rx, state.redirect_uri.clone(), state.client_key.clone())
+        (
+            rx,
+            state.redirect_uri.clone(),
+            state.client_key.clone(),
+            state.code_verifier.clone(),
+        )
     };
 
     let code_result = match code_rx.recv().await {
@@ -463,7 +477,7 @@ pub async fn complete_oauth_flow(
     }
 
     let code = code_result?;
-    oauth::exchange_code_with_client(&code, &redirect_uri, Some(&client_key)).await
+    oauth::exchange_code_with_client(&code, &redirect_uri, Some(&client_key), &code_verifier).await
 }
 
 /// Manually submit an OAuth code to complete the flow.
@@ -476,11 +490,8 @@ pub async fn submit_oauth_code(
     let tx = {
         let lock = get_oauth_flow_state().lock().map_err(|e| e.to_string())?;
         if let Some(state) = lock.as_ref() {
-            // Verify state if provided
-            if let Some(provided_state) = state_input {
-                if provided_state != state.state {
-                    return Err("OAuth state mismatch (CSRF protection)".to_string());
-                }
+            if state_input.as_deref() != Some(state.state.as_str()) {
+                return Err("OAuth state mismatch (CSRF protection)".to_string());
             }
             state.code_tx.clone()
         } else {
