@@ -2,6 +2,11 @@ name: CI
 
 on:
   workflow_call:
+    inputs:
+      macos_only:
+        type: boolean
+        required: false
+        default: false
   push:
     branches: [main, master]
   pull_request:
@@ -53,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest, windows-2025, macos-latest]
+        platform: ${{ fromJSON(inputs.macos_only && '["macos-latest"]' || '["ubuntu-latest", "windows-2025", "macos-latest"]') }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -107,7 +112,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [ubuntu-latest, windows-2025, macos-latest]
+        platform: ${{ fromJSON(inputs.macos_only && '["macos-latest"]' || '["ubuntu-latest", "windows-2025", "macos-latest"]') }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

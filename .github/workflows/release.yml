@@ -11,6 +11,8 @@ env:
 jobs:
   verify:
     uses: ./.github/workflows/ci.yml
+    with:
+      macos_only: true
 
   build-tauri:
     needs: verify
