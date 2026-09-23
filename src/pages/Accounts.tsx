@@ -248,7 +248,7 @@ export default function Accounts() {
               <span className="hidden sm:inline">{t("relay.refresh")}</span>
             </Button>
           )}
-          <AddAccountDialog onAdd={addAccount} showText triggerClass="h-10 rounded-xl bg-slate-950 px-4 text-xs font-bold text-white hover:bg-slate-800 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400" />
+          <AddAccountDialog onAdd={addAccount} showText triggerClass="h-10 rounded-xl bg-slate-950 px-4 text-xs font-bold text-white hover:bg-slate-800 hover:text-white dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400 dark:hover:text-slate-950" />
         </div>
       </header>
 
