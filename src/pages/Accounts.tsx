@@ -28,6 +28,7 @@ import { request as invoke } from "../utils/request";
 
 type Filter = "all" | "ready" | "risk";
 type QuotaWindow = "5h" | "weekly";
+const TWO_COLUMN_QUERY = "(min-width: 1024px)";
 
 function accountName(account: Account): string {
   return account.custom_label || account.name || account.email.split("@")[0];
@@ -112,6 +113,10 @@ export default function Accounts() {
   const [deviceAccount, setDeviceAccount] = useState<Account | null>(null);
   const [errorAccount, setErrorAccount] = useState<Account | null>(null);
   const [deleteAccountId, setDeleteAccountId] = useState<string | null>(null);
+  const [expandedAccountIds, setExpandedAccountIds] = useState<Set<string>>(new Set());
+  const [twoColumns, setTwoColumns] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia(TWO_COLUMN_QUERY).matches
+  );
 
   useEffect(() => {
     void Promise.all([fetchAccounts(), fetchCurrentAccount()]);
@@ -120,6 +125,14 @@ export default function Accounts() {
   useEffect(() => {
     localStorage.setItem("accounts_quota_window", quotaWindow);
   }, [quotaWindow]);
+
+  useEffect(() => {
+    const media = window.matchMedia(TWO_COLUMN_QUERY);
+    const updateLayout = () => setTwoColumns(media.matches);
+    updateLayout();
+    media.addEventListener("change", updateLayout);
+    return () => media.removeEventListener("change", updateLayout);
+  }, []);
 
   const bestStandby = useMemo(() => {
     return accounts
@@ -137,6 +150,12 @@ export default function Accounts() {
       return true;
     });
   }, [accounts, currentAccount?.id, filter, query]);
+
+  const cardColumns = useMemo<[Account[], Account[]]>(() => {
+    const columns: [Account[], Account[]] = [[], []];
+    filteredAccounts.forEach((account, index) => columns[index % 2].push(account));
+    return columns;
+  }, [filteredAccounts]);
 
   const riskCount = accounts.filter(isRiskAccount).length;
   const readyCount = accounts.filter((account) => account.id !== currentAccount?.id && !isRiskAccount(account)).length;
@@ -225,6 +244,33 @@ export default function Accounts() {
       setDeleteAccountId(null);
     }
   };
+
+  const renderAccountCard = (account: Account) => (
+    <AccountCard
+      key={account.id}
+      account={account}
+      isCurrent={account.id === currentAccount?.id}
+      isBestStandby={account.id === bestStandby?.id}
+      isRefreshing={refreshingIds.has(account.id)}
+      isSwitching={switchingId === account.id}
+      showResets={expandedAccountIds.has(account.id)}
+      onToggleResets={() => setExpandedAccountIds((current) => {
+        const next = new Set(current);
+        if (next.has(account.id)) next.delete(account.id);
+        else next.add(account.id);
+        return next;
+      })}
+      quotaWindow={quotaWindow}
+      onSwitch={(targetIde) => handleSwitch(account, targetIde)}
+      onRefresh={() => handleRefresh(account)}
+      onViewDevice={() => setDeviceAccount(account)}
+      onViewError={() => setErrorAccount(account)}
+      onWarmup={() => handleWarmup(account)}
+      onUpdateLabel={(label) => updateAccountLabel(account.id, label)}
+      onExport={() => handleExport(account)}
+      onDelete={() => setDeleteAccountId(account.id)}
+    />
+  );
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden px-5 pb-5 pt-10 sm:px-7 sm:pb-7">
@@ -332,27 +378,19 @@ export default function Accounts() {
 
         <div className="scrollbar-none mt-4 min-h-0 flex-1 overflow-y-auto px-1 pt-1.5 pb-2">
           {filteredAccounts.length > 0 ? (
-            <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-2">
-              {filteredAccounts.map((account) => (
-                <AccountCard
-                  key={account.id}
-                  account={account}
-                  isCurrent={account.id === currentAccount?.id}
-                  isBestStandby={account.id === bestStandby?.id}
-                  isRefreshing={refreshingIds.has(account.id)}
-                  isSwitching={switchingId === account.id}
-                  quotaWindow={quotaWindow}
-                  onSwitch={(targetIde) => handleSwitch(account, targetIde)}
-                  onRefresh={() => handleRefresh(account)}
-                  onViewDevice={() => setDeviceAccount(account)}
-                  onViewError={() => setErrorAccount(account)}
-                  onWarmup={() => handleWarmup(account)}
-                  onUpdateLabel={(label) => updateAccountLabel(account.id, label)}
-                  onExport={() => handleExport(account)}
-                  onDelete={() => setDeleteAccountId(account.id)}
-                />
-              ))}
-            </div>
+            twoColumns ? (
+              <div className="grid grid-cols-2 items-start gap-3">
+                {cardColumns.map((column, index) => (
+                  <div key={index} className="flex min-w-0 flex-col gap-3">
+                    {column.map(renderAccountCard)}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {filteredAccounts.map(renderAccountCard)}
+              </div>
+            )
           ) : (
             <Card className="flex h-full min-h-48 items-center justify-center rounded-3xl border-dashed bg-card/50">
               <CardContent className="p-8 text-center">

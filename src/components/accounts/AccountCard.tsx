@@ -41,6 +41,8 @@ interface AccountCardProps {
   isBestStandby?: boolean;
   isRefreshing: boolean;
   isSwitching?: boolean;
+  showResets: boolean;
+  onToggleResets: () => void;
   quotaWindow?: "5h" | "weekly";
   onSwitch: (targetIde?: string) => void;
   onRefresh: () => void;
@@ -82,6 +84,8 @@ export default function AccountCard({
   isBestStandby = false,
   isRefreshing,
   isSwitching = false,
+  showResets,
+  onToggleResets,
   quotaWindow = "5h",
   onSwitch,
   onRefresh,
@@ -95,7 +99,6 @@ export default function AccountCard({
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [label, setLabel] = useState(account.custom_label || "");
-  const [showResets, setShowResets] = useState(false);
   const tier = getAccountTier(account).toUpperCase();
   const risky = Boolean(account.disabled || account.validation_blocked || account.quota?.is_forbidden);
   const riskLabel = getValidationBlockedStatusLabel(account.validation_blocked_reason, t)
@@ -262,7 +265,7 @@ export default function AccountCard({
 
       <div className="mt-auto flex items-center justify-between gap-2 pt-1.5">
         <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px] text-muted-foreground"
-          aria-expanded={showResets} onClick={() => setShowResets((value) => !value)}>
+          aria-expanded={showResets} onClick={onToggleResets}>
           {t(showResets ? "relay.card.hide_resets" : "relay.card.show_resets")}
           <ChevronDown className={cn("h-3 w-3 transition-transform", showResets && "rotate-180")} />
         </Button>
