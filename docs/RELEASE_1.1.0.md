@@ -8,6 +8,8 @@
 - [ ] 确认内置 Google OAuth 客户端的归属及公开分发使用权限。现有客户端并非本项目可证明持有；PKCE 增强授权码安全，但不能保证该客户端长期有效，也不能代替平台授权。
 - [ ] 以安全渠道配置 `TAURI_SIGNING_PRIVATE_KEY`、`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`、`APPLE_CERTIFICATE`、`APPLE_CERTIFICATE_PASSWORD`、`APPLE_ID`、`APPLE_PASSWORD`、`APPLE_TEAM_ID`。不得把值写进仓库、日志或 Issue。
 
+2026-09-23 只读核对：本仓库有 40 个当前文件与原项目同路径文件字节一致，其中 17 个是源码；内置 OAuth 客户端也与原项目相同。已从候选分支移除未确认应用分发许可的 Effra 字体，但旧 Git 历史仍包含该资产。GitHub 的两项 Tauri 更新签名 Secret 已配置，五项 Apple 签名/公证配置缺失；用户确认目前没有 Apple Developer 账号。当前 Release 工作流因此会阻止 macOS 正式发布。
+
 ## 自动门禁
 
 - [ ] `node scripts/check-version.mjs 1.1.0`、`npm ci --legacy-peer-deps`、`npm run build` 通过。
