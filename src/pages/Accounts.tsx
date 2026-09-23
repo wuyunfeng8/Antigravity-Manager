@@ -332,7 +332,7 @@ export default function Accounts() {
 
         <div className="scrollbar-none mt-4 min-h-0 flex-1 overflow-y-auto px-1 pt-1.5 pb-2">
           {filteredAccounts.length > 0 ? (
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-2">
               {filteredAccounts.map((account) => (
                 <AccountCard
                   key={account.id}
