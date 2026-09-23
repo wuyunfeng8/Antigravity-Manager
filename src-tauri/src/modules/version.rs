@@ -1,7 +1,9 @@
 use crate::modules::process;
 #[cfg(any(target_os = "macos", target_os = "linux"))]
 use std::fs;
-use std::path::{Path, PathBuf};
+#[cfg(target_os = "macos")]
+use std::path::Path;
+use std::path::PathBuf;
 
 /// Antigravity 版本信息
 #[derive(Debug, Clone)]
@@ -208,7 +210,7 @@ fn get_version_linux(exe_path: &PathBuf) -> Result<AntigravityVersion, String> {
         if result.status.success() {
             let raw_version = String::from_utf8_lossy(&result.stdout).trim().to_string();
             if !raw_version.is_empty() {
-                let version = extract_semver(&raw_version).unwrap_or_else(|| {
+                let version = crate::constants::parse_version(&raw_version).unwrap_or_else(|| {
                     raw_version
                         .lines()
                         .next()
