@@ -261,7 +261,7 @@ export default function AccountCard({
       )}
 
       <div className="mt-auto flex items-center justify-between gap-2 pt-1.5">
-        <Button variant="ghost" size="sm" className="h-7 gap-1 px-1 text-[11px] text-muted-foreground"
+        <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-[11px] text-muted-foreground"
           aria-expanded={showResets} onClick={() => setShowResets((value) => !value)}>
           {t(showResets ? "relay.card.hide_resets" : "relay.card.show_resets")}
           <ChevronDown className={cn("h-3 w-3 transition-transform", showResets && "rotate-180")} />
