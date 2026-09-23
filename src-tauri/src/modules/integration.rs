@@ -543,17 +543,19 @@ fn write_to_system_keyring(account: &crate::models::Account) -> Result<(), Strin
         let default_res = store_to_collection(None, payload_json.as_bytes());
 
         // 若两者均失败，则返回错误；若至少一个成功，则记录并继续
-        if login_res.is_err() && default_res.is_err() {
-            return Err(login_res.unwrap_err());
-        } else if let Err(e) = login_res {
-            crate::modules::logger::log_warn(&format!(
-                "[Desktop] Failed to write token to 'login' collection, falling back to default collection: {}",
-                e
-            ));
-        } else {
-            crate::modules::logger::log_info(
-                "[Desktop] Successfully synced credential to Secret Service 'login' collection.",
-            );
+        match (login_res, default_res) {
+            (Err(error), Err(_)) => return Err(error),
+            (Err(error), Ok(())) => {
+                crate::modules::logger::log_warn(&format!(
+                    "[Desktop] Failed to write token to 'login' collection, falling back to default collection: {}",
+                    error
+                ));
+            }
+            (Ok(()), _) => {
+                crate::modules::logger::log_info(
+                    "[Desktop] Successfully synced credential to Secret Service 'login' collection.",
+                );
+            }
         }
     }
 
@@ -743,7 +745,7 @@ fn read_from_system_keyring_inner(
         }
 
         let payload_str = String::from_utf8_lossy(&output.stdout).trim().to_string();
-        return parse_keyring_payload(&payload_str);
+        parse_keyring_payload(&payload_str)
     }
 
     #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
