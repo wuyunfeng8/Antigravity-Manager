@@ -9,7 +9,7 @@ export interface ScheduledWarmupConfig {
 }
 
 export interface AppConfig {
-    language: string;
+    language: 'zh' | 'en';
     theme: string;
     auto_refresh: boolean;
     refresh_interval: number;

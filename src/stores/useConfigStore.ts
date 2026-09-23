@@ -13,7 +13,7 @@ interface ConfigState {
     loadConfig: () => Promise<void>;
     saveConfig: (config: AppConfig, silent?: boolean) => Promise<void>;
     updateTheme: (theme: string) => Promise<void>;
-    updateLanguage: (language: string) => Promise<void>;
+    updateLanguage: (language: AppConfig['language']) => Promise<void>;
 }
 
 export const useConfigStore = create<ConfigState>((set, get) => ({
@@ -54,7 +54,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
         await get().saveConfig(newConfig, true);
     },
 
-    updateLanguage: async (language: string) => {
+    updateLanguage: async (language: AppConfig['language']) => {
         const { config } = get();
         if (!config || config.language === language) return;
 

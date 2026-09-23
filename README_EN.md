@@ -55,6 +55,7 @@ Add accounts  →  Inspect real quotas  →  Pick a recommended account  →  Re
 - Clear account verification, 403, and OAuth-expiration states.
 - System tray, compact quota view, scheduled refresh, and weekly quota warmup.
 - Data-directory migration, client cache cleanup, network proxy, and debug console.
+- Interface languages: Simplified Chinese and English.
 
 ## Installation
 

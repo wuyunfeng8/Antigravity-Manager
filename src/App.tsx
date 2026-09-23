@@ -48,11 +48,14 @@ function App() {
 
   // Sync language from config (仅在不同步时通过 startTransition 非阻塞调度)
   useEffect(() => {
+    if (config?.language) {
+      document.documentElement.dir = 'ltr';
+      document.documentElement.lang = config.language;
+    }
     if (config?.language && i18n.language !== config.language) {
       startTransition(() => {
         i18n.changeLanguage(config.language);
       });
-      document.documentElement.dir = config.language === 'ar' ? 'rtl' : 'ltr';
     }
   }, [config?.language, i18n]);
 

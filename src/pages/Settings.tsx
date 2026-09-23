@@ -442,8 +442,10 @@ function Settings() {
                                 <Select
                                     value={formData.language}
                                     onValueChange={(newLang) => {
+                                        if (newLang !== 'zh' && newLang !== 'en') return;
                                         setFormData({ ...formData, language: newLang });
-                                        document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+                                        document.documentElement.dir = 'ltr';
+                                        document.documentElement.lang = newLang;
                                         startTransition(() => {
                                             i18n.changeLanguage(newLang);
                                         });
@@ -453,15 +455,7 @@ function Settings() {
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="zh">简体中文</SelectItem>
-                                        <SelectItem value="zh-TW">繁體中文</SelectItem>
                                         <SelectItem value="en">English</SelectItem>
-                                        <SelectItem value="ja">日本語</SelectItem>
-                                        <SelectItem value="tr">Türkçe</SelectItem>
-                                        <SelectItem value="vi">Tiếng Việt</SelectItem>
-                                        <SelectItem value="pt">Português</SelectItem>
-                                        <SelectItem value="ko">한국어</SelectItem>
-                                        <SelectItem value="ru">Русский</SelectItem>
-                                        <SelectItem value="ar">العربية</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
