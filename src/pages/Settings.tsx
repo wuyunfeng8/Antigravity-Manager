@@ -20,7 +20,6 @@ import { Switch } from '../components/ui/switch';
 import { Card, CardContent } from '../components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Label } from '../components/ui/label';
-import { InfoTooltip } from '../components/ui/help-tooltip';
 
 
 
@@ -623,10 +622,7 @@ function Settings() {
                                             <User size={20} />
                                         </div>
                                         <div>
-                                            <div className="flex items-center font-bold text-foreground">
-                                                {t('settings.account.auto_sync')}
-                                                <InfoTooltip label={t('tooltips.auto_sync')} content={t('tooltips.auto_sync')} />
-                                            </div>
+                                            <div className="font-bold text-foreground">{t('settings.account.auto_sync')}</div>
                                             <p className="text-xs text-muted-foreground mt-0.5">{t('settings.account.auto_sync_desc')}</p>
                                         </div>
                                     </div>
@@ -708,10 +704,7 @@ function Settings() {
 
                                 {/* 数据目录 */}
                                 <div>
-                                    <div className="mb-1 flex items-center">
-                                        <Label className="text-sm font-medium text-foreground">{t('settings.advanced.data_dir')}</Label>
-                                        <InfoTooltip label={t('tooltips.data_dir')} content={t('tooltips.data_dir')} />
-                                    </div>
+                                    <Label className="mb-1 block text-sm font-medium text-foreground">{t('settings.advanced.data_dir')}</Label>
                                     <div className="flex gap-2">
                                         <Input
                                             type="text"
@@ -905,10 +898,7 @@ function Settings() {
                                                 <Globe size={18} />
                                             </div>
                                             <div>
-                                                <div className="flex items-center text-sm font-bold text-foreground">
-                                                    {t('settings.network_proxy.title')}
-                                                    <InfoTooltip label={t('tooltips.network_proxy')} content={t('tooltips.network_proxy')} />
-                                                </div>
+                                                <div className="text-sm font-bold text-foreground">{t('settings.network_proxy.title')}</div>
                                                 <p className="text-xs text-muted-foreground mt-0.5 leading-tight max-w-[280px]">
                                                     {t('settings.network_proxy.desc_short')}
                                                 </p>

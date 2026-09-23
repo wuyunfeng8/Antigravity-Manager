@@ -235,13 +235,11 @@ const DebugConsole: React.FC<DebugConsoleProps> = ({ embedded = false }) => {
                     </HelpTooltip>
 
                     {!embedded && (
-                        <HelpTooltip content={t('tooltips.debug_close')}>
-                            <Button variant="ghost" size="iconSm" onClick={close}
-                                className="h-7 w-7 text-muted-foreground hover:text-foreground ml-1"
-                                aria-label={t('tooltips.debug_close')}>
-                                <X size={13} />
-                            </Button>
-                        </HelpTooltip>
+                        <Button variant="ghost" size="iconSm" onClick={close}
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground ml-1"
+                            aria-label={t('common.close')}>
+                            <X size={13} />
+                        </Button>
                     )}
                 </div>
             </div>

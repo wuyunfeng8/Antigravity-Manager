@@ -14,7 +14,7 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
-import { DisabledReasonTooltip, HelpTooltip } from "../components/ui/help-tooltip";
+import { DisabledReasonTooltip } from "../components/ui/help-tooltip";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { findQuotaModel, ModelCategory } from "../config/modelConfig";
 import { exportAccounts } from "../services/accountService";
@@ -323,12 +323,8 @@ export default function Accounts() {
             </Tabs>
             <Tabs value={quotaWindow} onValueChange={(value) => setQuotaWindow(value as QuotaWindow)}>
               <TabsList className="h-9 rounded-xl">
-                <HelpTooltip content={t("tooltips.quota_5h")}>
-                  <TabsTrigger className="rounded-lg px-3 text-xs" value="5h">5H</TabsTrigger>
-                </HelpTooltip>
-                <HelpTooltip content={t("tooltips.quota_weekly")}>
-                  <TabsTrigger className="rounded-lg px-3 text-xs" value="weekly">{t('relay.weekly')}</TabsTrigger>
-                </HelpTooltip>
+                <TabsTrigger className="rounded-lg px-3 text-xs" value="5h">5H</TabsTrigger>
+                <TabsTrigger className="rounded-lg px-3 text-xs" value="weekly">{t('relay.weekly')}</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>

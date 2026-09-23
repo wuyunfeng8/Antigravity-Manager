@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
-import { HelpTooltip, InfoTooltip } from '../ui/help-tooltip';
+import { HelpTooltip } from '../ui/help-tooltip';
 
 interface DeviceFingerprintDialogProps {
     account: Account | null;
@@ -162,7 +162,6 @@ export default function DeviceFingerprintDialog({ account, onClose }: DeviceFing
                     <DialogHeader className="px-6 py-4 border-b bg-muted/30 flex flex-row items-center justify-between">
                         <div className="flex items-center gap-3">
                             <DialogTitle className="text-base font-bold">{t('accounts.device_fingerprint_dialog.title')}</DialogTitle>
-                            <InfoTooltip label={t('tooltips.device_identity')} content={t('tooltips.device_identity')} />
                             <Badge variant="secondary" className="font-mono text-xs">
                                 {account.email}
                             </Badge>

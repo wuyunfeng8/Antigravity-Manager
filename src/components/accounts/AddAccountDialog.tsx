@@ -548,11 +548,7 @@ function AddAccountDialog({
               {!candidate.available && <Badge variant="warning">{t('accounts.add.flow.unavailable')}</Badge>}
             </Button>
           ))}
-          {selectedIds.length ? importSelectedButton : (
-            <DisabledReasonTooltip reason={t('tooltips.import_none')} className="w-full">
-              {importSelectedButton}
-            </DisabledReasonTooltip>
-          )}
+          {importSelectedButton}
         </div>
       )}
       {localResult && (

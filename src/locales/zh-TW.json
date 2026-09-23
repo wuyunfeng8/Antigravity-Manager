@@ -496,29 +496,17 @@
     }
   },
   "tooltips": {
-    "card_more": "裝置身份、標籤、匯出和刪除等低頻操作",
     "card_refresh": "只更新此帳號的配額",
-    "card_resets": "展開三類模型各自的配額重置時間",
     "card_switch_unavailable": "帳號需先完成驗證或恢復正常，暫時無法切換",
     "refresh_all_empty": "帳號池為空，請先新增帳號再更新配額",
     "relay_unavailable": "目前沒有健康的備用帳號可接力",
-    "quota_5h": "顯示 5 小時滑動配額；切換檢視不會改變實際額度",
-    "quota_weekly": "顯示 7 天週配額；切換檢視不會改變實際額度",
     "mini_refresh": "只更新目前帳號的配額",
     "mini_full": "返回完整帳號管理視窗",
     "debug_pause_scroll": "暫停自動捲動，方便查看較舊日誌",
     "debug_resume_scroll": "繼續自動捲動至最新日誌",
     "debug_clear": "清空目前調試日誌快取，不影響帳號資料",
-    "debug_close": "關閉調試控制台",
     "fingerprint_delete": "刪除此筆歷史裝置身份，不影響目前生效的身份",
-    "device_identity": "帳號綁定的裝置身份會在切換該帳號時套用；無法保證避免平台風控",
-    "auto_sync": "識別 Antigravity 目前登入帳號並在 AMT 標記為目前；不會主動切換 IDE",
-    "warmup": "預熱不會增加配額；重置後會發出一次請求，可能產生少量消耗",
-    "network_proxy": "只改變 AMT 的對外網路路徑，不會修改 Antigravity IDE 的代理設定",
-    "data_dir": "遷移會修改本機檔案；請確認目標目錄並先備份",
-    "oauth_link_pending": "授權連結仍在準備中，請稍候",
-    "import_none": "請先選擇至少一個可匯入帳號",
-    "dismiss_update": "關閉此更新提示"
+    "oauth_link_pending": "授權連結仍在準備中，請稍候"
   },
   "relay": {
     "eyebrow": "ANTIGRAVITY RELAY",

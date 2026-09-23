@@ -495,29 +495,17 @@
     }
   },
   "tooltips": {
-    "card_more": "Device identity, label, export, delete, and other occasional actions",
     "card_refresh": "Refresh quota for this account only",
-    "card_resets": "Show separate reset times for the three model groups",
     "card_switch_unavailable": "Verify or recover this account before switching to it",
     "refresh_all_empty": "Add an account before refreshing quotas",
     "relay_unavailable": "No healthy backup account is available for relay",
-    "quota_5h": "Show the five-hour rolling quota; changing the view does not change your quota",
-    "quota_weekly": "Show the seven-day quota; changing the view does not change your quota",
     "mini_refresh": "Refresh the current account's quota only",
     "mini_full": "Open the full account manager",
     "debug_pause_scroll": "Pause automatic scrolling to inspect older logs",
     "debug_resume_scroll": "Resume scrolling to the newest logs",
     "debug_clear": "Clear the current debug log buffer without affecting accounts",
-    "debug_close": "Close the debug console",
     "fingerprint_delete": "Delete this historical device identity without changing the active one",
-    "device_identity": "The account's device identity is applied when switching to it; this cannot guarantee protection from platform risk checks",
-    "auto_sync": "Detect the account signed in to Antigravity and mark it current in AMT; does not switch the IDE",
-    "warmup": "Warmup does not increase quota; it sends one request after reset and may consume a small amount",
-    "network_proxy": "Changes only AMT's outbound network path, not Antigravity IDE's proxy settings",
-    "data_dir": "Migration changes local files; confirm the destination and back up data first",
-    "oauth_link_pending": "The authorization link is being prepared",
-    "import_none": "Select at least one available account to import",
-    "dismiss_update": "Dismiss this update notice"
+    "oauth_link_pending": "The authorization link is being prepared"
   },
   "relay": {
     "eyebrow": "ANTIGRAVITY RELAY",

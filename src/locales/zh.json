@@ -495,29 +495,17 @@
     }
   },
   "tooltips": {
-    "card_more": "设备身份、标签、导出和删除等低频操作",
     "card_refresh": "仅刷新这个账号的配额",
-    "card_resets": "展开三类模型各自的配额重置时间",
     "card_switch_unavailable": "账号需要先完成验证或恢复健康状态，暂不可切换",
     "refresh_all_empty": "账号池为空，先添加账号才能刷新配额",
     "relay_unavailable": "暂无健康的备选账号，添加或恢复账号后才能接力",
-    "quota_5h": "显示 5 小时滑动配额；切换视图不改变真实额度",
-    "quota_weekly": "显示 7 天周配额；切换视图不改变真实额度",
     "mini_refresh": "仅刷新当前账号的配额",
     "mini_full": "返回完整账号管理窗口",
     "debug_pause_scroll": "暂停自动滚动，方便查看旧日志",
     "debug_resume_scroll": "继续自动滚动到最新日志",
     "debug_clear": "清空当前调试日志缓存，不影响账号数据",
-    "debug_close": "关闭调试控制台",
     "fingerprint_delete": "删除这条历史设备身份，不影响当前生效的身份",
-    "device_identity": "账号绑定的设备身份会在切换该账号时应用；它不能保证避免平台风控",
-    "auto_sync": "识别 Antigravity 当前登录账号，并在 AMT 中标记为当前；不会主动切换 IDE",
-    "warmup": "预热不会增加配额；它会在重置后发起一次请求，可能产生少量消耗",
-    "network_proxy": "只改变 AMT 的出站网络路径，不会修改 Antigravity IDE 的代理设置",
-    "data_dir": "迁移会修改本地文件；确认弹窗会列出目标目录，建议先备份",
-    "oauth_link_pending": "授权链接尚在准备，请稍候",
-    "import_none": "请先选择至少一个可导入账号",
-    "dismiss_update": "关闭此更新提示"
+    "oauth_link_pending": "授权链接尚在准备，请稍候"
   },
   "relay": {
     "eyebrow": "ANTIGRAVITY RELAY",

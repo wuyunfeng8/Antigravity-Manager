@@ -6,7 +6,6 @@ import { MODEL_CONFIG } from '../../config/modelConfig';
 import { Switch } from '../ui/switch';
 import { Label } from '../ui/label';
 import { cn } from '../../utils/cn';
-import { InfoTooltip } from '../ui/help-tooltip';
 
 interface SmartWarmupProps {
     config: ScheduledWarmupConfig;
@@ -67,9 +66,8 @@ const SmartWarmup: React.FC<SmartWarmupProps> = ({ config, onChange }) => {
                         <Sparkles size={20} />
                     </div>
                     <div>
-                        <div className="flex items-center font-bold text-foreground">
+                        <div className="font-bold text-foreground">
                             {t('settings.warmup.title', '7天周配额智能预热')}
-                            <InfoTooltip label={t('tooltips.warmup')} content={t('tooltips.warmup')} />
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">
                             {t('settings.warmup.desc', '在各账号的 7 天周配额到达重置时间后自动唤醒 1 次，启动当周计时器，零多余消耗。')}

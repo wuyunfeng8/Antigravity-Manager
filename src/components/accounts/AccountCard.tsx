@@ -187,14 +187,12 @@ export default function AccountCard({
           )}
           <Badge variant="outline" className={cn("px-1.5 text-[10px] font-bold", tierClass(tier))}>{tier}</Badge>
           <DropdownMenu>
-            <HelpTooltip content={t("tooltips.card_more")}>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="iconSm" className="ml-0.5 h-7 w-7 rounded-lg text-muted-foreground"
-                  aria-label={t("relay.actions.more")}>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-            </HelpTooltip>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="iconSm" className="ml-0.5 h-7 w-7 rounded-lg text-muted-foreground"
+                aria-label={t("relay.actions.more")}>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={onViewDevice}><Fingerprint className="mr-2 h-4 w-4" />{t("relay.actions.device")}</DropdownMenuItem>
               <DropdownMenuItem onClick={() => setEditing(true)}><Pencil className="mr-2 h-4 w-4" />{t("relay.actions.label")}</DropdownMenuItem>
@@ -263,13 +261,11 @@ export default function AccountCard({
       )}
 
       <div className="mt-auto flex items-center justify-between gap-2 pt-1.5">
-        <HelpTooltip content={t("tooltips.card_resets")}>
-          <Button variant="ghost" size="sm" className="h-7 gap-1 px-1 text-[11px] text-muted-foreground"
-            aria-expanded={showResets} onClick={() => setShowResets((value) => !value)}>
-            {t(showResets ? "relay.card.hide_resets" : "relay.card.show_resets")}
-            <ChevronDown className={cn("h-3 w-3 transition-transform", showResets && "rotate-180")} />
-          </Button>
-        </HelpTooltip>
+        <Button variant="ghost" size="sm" className="h-7 gap-1 px-1 text-[11px] text-muted-foreground"
+          aria-expanded={showResets} onClick={() => setShowResets((value) => !value)}>
+          {t(showResets ? "relay.card.hide_resets" : "relay.card.show_resets")}
+          <ChevronDown className={cn("h-3 w-3 transition-transform", showResets && "rotate-180")} />
+        </Button>
         <div className="flex shrink-0 items-center gap-1">
           {switchButton && (risky
             ? <DisabledReasonTooltip reason={t("tooltips.card_switch_unavailable")}>{switchButton}</DisabledReasonTooltip>
