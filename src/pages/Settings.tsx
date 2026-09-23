@@ -1114,7 +1114,7 @@ function Settings() {
                                 </div>
                             </div>
 
-                            <div className="text-center text-[10px] text-muted-foreground mt-auto pb-2">
+                            <div className="mt-10 px-4 pb-2 text-center text-[10px] text-muted-foreground sm:mt-12">
                                 {t('settings.about.copyright')}
                             </div>
                         </div>
