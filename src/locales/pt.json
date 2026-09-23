@@ -393,14 +393,10 @@
   },
   "tray": {
     "current": "Atual",
-    "quota": "Cota",
-    "switch_next": "Alternar para Próxima Conta",
     "refresh_current": "Atualizar Cota Atual",
     "show_window": "Mostrar Janela Principal",
     "quit": "Sair do Aplicativo",
-    "no_account": "Sem Conta",
-    "unknown_quota": "Desconhecido (Clique para Atualizar)",
-    "forbidden": "Conta Proibida"
+    "no_account": "Sem Conta"
   },
   "update_notification": {
     "title": "Nova versão disponível",

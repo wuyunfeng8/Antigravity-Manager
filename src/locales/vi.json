@@ -385,14 +385,10 @@
   },
   "tray": {
     "current": "Hiện tại",
-    "quota": "Hạn mức",
-    "switch_next": "Chuyển sang Tài khoản Kế",
     "refresh_current": "Làm mới Hạn mức Hiện tại",
     "show_window": "Hiện Cửa sổ Chính",
     "quit": "Thoát Ứng dụng",
-    "no_account": "Không có Tài khoản",
-    "unknown_quota": "Chưa rõ (Click để Làm mới)",
-    "forbidden": "Tài khoản Bị chặn (403)"
+    "no_account": "Không có Tài khoản"
   },
   "update_notification": {
     "title": "Có phiên bản mới",

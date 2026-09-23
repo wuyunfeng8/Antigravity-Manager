@@ -462,14 +462,17 @@
   },
   "tray": {
     "current": "當前",
-    "quota": "額度",
-    "switch_next": "切換下一個帳號",
-    "refresh_current": "重新整理當前帳號額度",
-    "show_window": "顯示主視窗",
-    "quit": "退出應用 (Exit)",
+    "relay_to": "推薦接力",
+    "no_relay": "暫無可接力帳號",
+    "switching": "切換中…",
+    "refreshing": "重新整理中…",
+    "refresh_current": "重新整理目前額度",
+    "show_window": "開啟主視窗",
+    "quit": "結束 AMT",
     "no_account": "無帳號",
-    "unknown_quota": "未知 (點選重新整理)",
-    "forbidden": "帳號被封禁"
+    "account_attention": "需處理",
+    "switch_failed": "切換失敗 · 開啟主視窗查看",
+    "refresh_failed": "重新整理失敗 · 開啟主視窗查看"
   },
   "update_notification": {
     "title": "發現新版本",

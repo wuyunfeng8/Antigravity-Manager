@@ -383,14 +383,10 @@
   },
   "tray": {
     "current": "الحالي",
-    "quota": "الحصة",
-    "switch_next": "التبديل للحساب التالي",
     "refresh_current": "تحديث الحصة الحالية",
     "show_window": "إظهار النافذة الرئيسية",
     "quit": "إنهاء التطبيق",
-    "no_account": "لا يوجد حساب",
-    "unknown_quota": "مجهول (انقر للتحديث)",
-    "forbidden": "الحساب محظور"
+    "no_account": "لا يوجد حساب"
   },
   "update_notification": {
     "title": "إصدار جديد متاح",

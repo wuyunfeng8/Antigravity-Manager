@@ -461,14 +461,17 @@
   },
   "tray": {
     "current": "Current",
-    "quota": "Quota",
-    "switch_next": "Switch to Next Account",
-    "refresh_current": "Refresh Current Quota",
-    "show_window": "Show Main Window",
-    "quit": "Quit Application",
+    "relay_to": "Relay to",
+    "no_relay": "No relay account",
+    "switching": "Switching...",
+    "refreshing": "Refreshing...",
+    "refresh_current": "Refresh Quota",
+    "show_window": "Open Main Window",
+    "quit": "Quit AMT",
     "no_account": "No Account",
-    "unknown_quota": "Unknown (Click to Refresh)",
-    "forbidden": "Account Forbidden"
+    "account_attention": "Needs attention",
+    "switch_failed": "Switch failed · Open main window",
+    "refresh_failed": "Refresh failed · Open main window"
   },
   "update_notification": {
     "title": "Updating...",

@@ -385,14 +385,10 @@
   },
   "tray": {
     "current": "Actual",
-    "quota": "Cuota",
-    "switch_next": "Cambiar a la Siguiente Cuenta",
     "refresh_current": "Actualizar Cuota Actual",
     "show_window": "Mostrar Ventana Principal",
     "quit": "Salir de la Aplicación",
-    "no_account": "Sin Cuenta",
-    "unknown_quota": "Desconocido (Clic para Actualizar)",
-    "forbidden": "Cuenta Prohibida"
+    "no_account": "Sin Cuenta"
   },
   "update_notification": {
     "title": "Nueva versión disponible",

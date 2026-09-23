@@ -47,14 +47,17 @@ fn supported_language(locale: &str) -> Option<&'static str> {
 #[derive(Debug, Clone)]
 pub struct TrayTexts {
     pub current: String,
-    pub quota: String,
-    pub switch_next: String,
+    pub relay_to: String,
+    pub no_relay: String,
+    pub switching: String,
+    pub refreshing: String,
     pub refresh_current: String,
     pub show_window: String,
     pub quit: String,
     pub no_account: String,
-    pub unknown_quota: String,
-    pub forbidden: String,
+    pub account_attention: String,
+    pub switch_failed: String,
+    pub refresh_failed: String,
 }
 
 /// Load translations from JSON
@@ -102,14 +105,22 @@ pub fn get_tray_texts(lang: &str) -> TrayTexts {
             .get("current")
             .cloned()
             .unwrap_or_else(|| "Current".to_string()),
-        quota: t
-            .get("quota")
+        relay_to: t
+            .get("relay_to")
             .cloned()
-            .unwrap_or_else(|| "Quota".to_string()),
-        switch_next: t
-            .get("switch_next")
+            .unwrap_or_else(|| "Relay to".to_string()),
+        no_relay: t
+            .get("no_relay")
             .cloned()
-            .unwrap_or_else(|| "Switch to Next Account".to_string()),
+            .unwrap_or_else(|| "No relay account".to_string()),
+        switching: t
+            .get("switching")
+            .cloned()
+            .unwrap_or_else(|| "Switching...".to_string()),
+        refreshing: t
+            .get("refreshing")
+            .cloned()
+            .unwrap_or_else(|| "Refreshing...".to_string()),
         refresh_current: t
             .get("refresh_current")
             .cloned()
@@ -126,14 +137,18 @@ pub fn get_tray_texts(lang: &str) -> TrayTexts {
             .get("no_account")
             .cloned()
             .unwrap_or_else(|| "No Account".to_string()),
-        unknown_quota: t
-            .get("unknown_quota")
+        account_attention: t
+            .get("account_attention")
             .cloned()
-            .unwrap_or_else(|| "Unknown".to_string()),
-        forbidden: t
-            .get("forbidden")
+            .unwrap_or_else(|| "Needs attention".to_string()),
+        switch_failed: t
+            .get("switch_failed")
             .cloned()
-            .unwrap_or_else(|| "Account Forbidden".to_string()),
+            .unwrap_or_else(|| "Switch failed · Open main window".to_string()),
+        refresh_failed: t
+            .get("refresh_failed")
+            .cloned()
+            .unwrap_or_else(|| "Refresh failed · Open main window".to_string()),
     }
 }
 

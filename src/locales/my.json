@@ -383,14 +383,10 @@
   },
   "tray": {
     "current": "Semasa",
-    "quota": "Kuota",
-    "switch_next": "Tukar ke Akaun Seterusnya",
     "refresh_current": "Muat Semula Kuota Semasa",
     "show_window": "Tunjukkan Tetingkap Utama",
     "quit": "Keluar Aplikasi",
-    "no_account": "Tiada Akaun",
-    "unknown_quota": "Tidak diketahui (Klik untuk Muat Semula)",
-    "forbidden": "Akaun Dilarang"
+    "no_account": "Tiada Akaun"
   },
   "update_notification": {
     "title": "Versi Baharu Tersedia",

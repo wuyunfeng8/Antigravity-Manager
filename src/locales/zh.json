@@ -461,14 +461,17 @@
   },
   "tray": {
     "current": "当前",
-    "quota": "额度",
-    "switch_next": "切换下一个账号",
-    "refresh_current": "刷新当前账号额度",
-    "show_window": "显示主窗口",
-    "quit": "退出应用 (Exit)",
+    "relay_to": "推荐接力",
+    "no_relay": "暂无可接力账号",
+    "switching": "切换中…",
+    "refreshing": "刷新中…",
+    "refresh_current": "刷新当前额度",
+    "show_window": "打开主窗口",
+    "quit": "退出 AMT",
     "no_account": "无账号",
-    "unknown_quota": "未知 (点击刷新)",
-    "forbidden": "账号被封禁"
+    "account_attention": "需处理",
+    "switch_failed": "切换失败 · 打开主窗口查看",
+    "refresh_failed": "刷新失败 · 打开主窗口查看"
   },
   "update_notification": {
     "title": "发现新版本",
