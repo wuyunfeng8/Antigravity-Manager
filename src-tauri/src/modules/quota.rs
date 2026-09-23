@@ -17,11 +17,6 @@ const QUOTA_SUMMARY_ENDPOINTS: [&str; 3] = [
     "https://cloudcode-pa.googleapis.com/v1internal:retrieveUserQuotaSummary",
 ];
 
-/// Critical retry threshold: considered near recovery when quota reaches 95%
-const NEAR_READY_THRESHOLD: i32 = 95;
-const MAX_RETRIES: u32 = 3;
-const RETRY_DELAY_SECS: u64 = 30;
-
 #[derive(Debug, Serialize, Deserialize)]
 struct QuotaResponse {
     models: std::collections::HashMap<String, ModelInfo>,
@@ -131,12 +126,6 @@ struct Tier {
 /// Get shared HTTP Client (15s timeout) for pure info fetching (No JA3)
 async fn create_standard_client(_account_id: Option<&str>) -> rquest::Client {
     crate::utils::http::get_standard_client()
-}
-
-/// Get shared HTTP Client (60s timeout) for pure info fetching (No JA3)
-#[allow(dead_code)]
-async fn create_long_standard_client(_account_id: Option<&str>) -> rquest::Client {
-    crate::utils::http::get_long_standard_client()
 }
 
 const CLOUD_CODE_LOAD_PROJECT_ENDPOINTS: [&str; 3] = [
@@ -594,7 +583,6 @@ async fn fetch_quota_summary(
                                     reset_time: b.reset_time.unwrap_or_default(),
                                     observed_at: Some(chrono::Utc::now().timestamp_millis()),
                                     cycle_start: None,
-                                    cycle_tokens: None,
                                     display_name: b.display_name,
                                     description: b.description,
                                 })
@@ -617,28 +605,6 @@ async fn fetch_quota_summary(
     }
 
     None
-}
-
-/// Internal fetch quota logic
-#[allow(dead_code)]
-pub async fn fetch_quota_inner(
-    access_token: &str,
-    email: &str,
-) -> crate::error::AppResult<(QuotaData, Option<String>)> {
-    fetch_quota_with_cache(access_token, email, None, None).await
-}
-
-/// Batch fetch all account quotas (backup functionality)
-#[allow(dead_code)]
-pub async fn fetch_all_quotas(
-    accounts: Vec<(String, String, String)>,
-) -> Vec<(String, crate::error::AppResult<QuotaData>)> {
-    let mut results = Vec::new();
-    for (id, email, access_token) in accounts {
-        let res = fetch_quota(&access_token, &email, Some(&id)).await;
-        results.push((email, res.map(|(q, _)| q)));
-    }
-    results
 }
 
 /// Get valid token (auto-refresh if expired)
@@ -734,192 +700,6 @@ pub async fn warmup_model_directly(
         model_name, email
     ));
     false
-}
-
-/// Smart warmup for all accounts
-pub async fn warm_up_all_accounts() -> Result<String, String> {
-    let mut retry_count = 0;
-
-    loop {
-        let all_accounts = crate::modules::account::list_accounts().unwrap_or_default();
-        // [FIX] 过滤掉禁用反代的账号
-        let target_accounts: Vec<_> = all_accounts.into_iter().filter(|a| !a.disabled).collect();
-
-        if target_accounts.is_empty() {
-            return Ok("No accounts available".to_string());
-        }
-
-        crate::modules::logger::log_info(&format!(
-            "[Warmup] Screening models for {} accounts...",
-            target_accounts.len()
-        ));
-
-        let mut warmup_items = Vec::new();
-        let mut has_near_ready_models = false;
-
-        // Concurrently fetch quotas (batch size 5)
-        let batch_size = 5;
-        for batch in target_accounts.chunks(batch_size) {
-            let mut handles = Vec::new();
-            for account in batch {
-                let account = account.clone();
-                let handle = tokio::spawn(async move {
-                    let (token, pid) = match get_valid_token_for_warmup(&account).await {
-                        Ok(t) => t,
-                        Err(_) => return None,
-                    };
-                    let quota = fetch_quota_with_cache(
-                        &token,
-                        &account.email,
-                        Some(&pid),
-                        Some(&account.id),
-                    )
-                    .await
-                    .ok();
-                    Some((account.id.clone(), account.email.clone(), token, pid, quota))
-                });
-                handles.push(handle);
-            }
-
-            for handle in handles {
-                if let Ok(Some((id, email, token, pid, Some((fresh_quota, _))))) = handle.await {
-                    // [FIX] 预热阶段检测到 403 时，使用统一禁用逻辑，确保账号文件和索引同时更新
-                    if fresh_quota.is_forbidden {
-                        crate::modules::logger::log_warn(&format!(
-                            "[Warmup] Account {} returned 403 Forbidden during quota fetch, marking as forbidden",
-                            email
-                        ));
-                        let _ = crate::modules::account::mark_account_forbidden(
-                            &id,
-                            "Warmup: 403 Forbidden - quota fetch denied",
-                        );
-                        continue;
-                    }
-                    let mut account_warmed_series = std::collections::HashSet::new();
-                    for m in fresh_quota.models {
-                        if m.percentage >= 100 {
-                            let model_to_ping = m.name.clone();
-
-                            // Removed hardcoded whitelist - now warms up any model at 100%
-                            if !account_warmed_series.contains(&model_to_ping) {
-                                warmup_items.push((
-                                    id.clone(),
-                                    email.clone(),
-                                    model_to_ping.clone(),
-                                    token.clone(),
-                                    pid.clone(),
-                                    m.percentage,
-                                ));
-                                account_warmed_series.insert(model_to_ping);
-                            }
-                        } else if m.percentage >= NEAR_READY_THRESHOLD {
-                            has_near_ready_models = true;
-                        }
-                    }
-                }
-            }
-        }
-
-        if !warmup_items.is_empty() {
-            let total_before = warmup_items.len();
-
-            // Filter out models warmed up within 4 hours
-            warmup_items.retain(|(_, email, model, _, _, _)| {
-                let history_key = format!("{}:{}:100", email, model);
-                !crate::modules::scheduler::check_cooldown(&history_key, 14400)
-            });
-
-            if warmup_items.is_empty() {
-                let skipped = total_before;
-                crate::modules::logger::log_info(&format!(
-                    "[Warmup] Returning to frontend: All models in cooldown, skipped {}",
-                    skipped
-                ));
-                return Ok(format!(
-                    "All models are in cooldown, skipped {} items",
-                    skipped
-                ));
-            }
-
-            let total = warmup_items.len();
-            let skipped = total_before - total;
-
-            if skipped > 0 {
-                crate::modules::logger::log_info(&format!(
-                    "[Warmup] Skipped {} models in cooldown, preparing to warmup {}",
-                    skipped, total
-                ));
-            }
-
-            crate::modules::logger::log_info(&format!(
-                "[Warmup] 🔥 Starting manual warmup for {} models",
-                total
-            ));
-
-            tokio::spawn(async move {
-                let mut success = 0;
-                let batch_size = 3;
-                let now_ts = chrono::Utc::now().timestamp();
-
-                for (batch_idx, batch) in warmup_items.chunks(batch_size).enumerate() {
-                    let mut handles = Vec::new();
-
-                    for (id, email, model, token, pid, pct) in batch.iter() {
-                        let id = id.clone();
-                        let email = email.clone();
-                        let model = model.clone();
-                        let token = token.clone();
-                        let pid = pid.clone();
-                        let pct = *pct;
-
-                        let handle = tokio::spawn(async move {
-                            let result =
-                                warmup_model_directly(&token, &model, &pid, &email, pct, Some(&id))
-                                    .await;
-                            (result, email, model)
-                        });
-                        handles.push(handle);
-                    }
-
-                    for handle in handles {
-                        if let Ok((true, email, model)) = handle.await {
-                            success += 1;
-                            let history_key = format!("{}:{}:100", email, model);
-                            crate::modules::scheduler::record_warmup_history(&history_key, now_ts);
-                        }
-                    }
-
-                    if batch_idx < warmup_items.len().div_ceil(batch_size) - 1 {
-                        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-                    }
-                }
-
-                crate::modules::logger::log_info(&format!(
-                    "[Warmup] Warmup task completed: success {}/{}",
-                    success, total
-                ));
-                tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-                let _ = crate::modules::account::refresh_all_quotas_logic().await;
-            });
-            crate::modules::logger::log_info(&format!(
-                "[Warmup] Returning to frontend: Warmup task triggered for {} models",
-                total
-            ));
-            return Ok(format!("Warmup task triggered for {} models", total));
-        }
-
-        if has_near_ready_models && retry_count < MAX_RETRIES {
-            retry_count += 1;
-            crate::modules::logger::log_info(&format!(
-                "[Warmup] Critical recovery model detected, waiting {}s to retry ({}/{})",
-                RETRY_DELAY_SECS, retry_count, MAX_RETRIES
-            ));
-            tokio::time::sleep(tokio::time::Duration::from_secs(RETRY_DELAY_SECS)).await;
-            continue;
-        }
-
-        return Ok("No models need warmup".to_string());
-    }
 }
 
 /// Warmup for single account

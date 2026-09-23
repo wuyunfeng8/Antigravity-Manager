@@ -398,17 +398,6 @@ pub async fn import_from_v1() -> Result<Vec<Account>, String> {
     Ok(imported_accounts)
 }
 
-/// Import account from custom database path
-pub async fn import_from_custom_db_path(path_str: String) -> Result<Account, String> {
-    let path = PathBuf::from(path_str);
-    if !path.exists() {
-        return Err(format!("File does not exist: {:?}", path));
-    }
-
-    let oauth_state = extract_oauth_state_from_file(&path)?;
-    import_oauth_state(oauth_state).await
-}
-
 pub async fn import_oauth_state(oauth_state: ImportedOAuthState) -> Result<Account, String> {
     use crate::modules::oauth;
 

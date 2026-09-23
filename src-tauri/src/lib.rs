@@ -384,7 +384,6 @@ pub fn run() {
             // Import / Sync commands
             commands::import_v1_accounts,
             commands::import_from_db,
-            commands::import_custom_db,
             commands::scan_local_accounts,
             commands::import_selected_local_accounts,
             commands::clear_local_account_scan,
@@ -414,7 +413,6 @@ pub fn run() {
             commands::autostart::toggle_auto_launch,
             commands::autostart::is_auto_launch_enabled,
             // Warmup & Account label
-            commands::warm_up_all_accounts,
             commands::warm_up_account,
             commands::update_account_label,
             // Debug console

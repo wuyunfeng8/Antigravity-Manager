@@ -112,7 +112,6 @@ pub fn get_state_db_path() -> Result<PathBuf, String> {
 }
 
 /// Backup storage.json, returns backup file path
-#[allow(dead_code)]
 pub fn backup_storage(storage_path: &Path) -> Result<PathBuf, String> {
     if !storage_path.exists() {
         return Err(format!("storage_json_missing: {:?}", storage_path));
@@ -132,7 +131,6 @@ pub fn backup_storage(storage_path: &Path) -> Result<PathBuf, String> {
 }
 
 /// Read current device profile from storage.json
-#[allow(dead_code)]
 pub fn read_profile(storage_path: &Path) -> Result<DeviceProfile, String> {
     let content = fs::read_to_string(storage_path)
         .map_err(|e| format!("read_failed ({:?}): {}", storage_path, e))?;
@@ -253,84 +251,6 @@ fn write_profile_file(
     Ok(())
 }
 
-/// Only sync serviceMachineId, don't change other fields
-#[allow(dead_code)]
-pub fn sync_service_machine_id(storage_path: &Path, service_id: &str) -> Result<(), String> {
-    let content = fs::read_to_string(storage_path).map_err(|e| format!("read_failed: {}", e))?;
-    let mut json: Value =
-        serde_json::from_str(&content).map_err(|e| format!("parse_failed: {}", e))?;
-
-    if let Some(map) = json.as_object_mut() {
-        map.insert(
-            "storage.serviceMachineId".to_string(),
-            Value::String(service_id.to_string()),
-        );
-    }
-
-    let updated =
-        serde_json::to_string_pretty(&json).map_err(|e| format!("serialize_failed: {}", e))?;
-    backup_storage(storage_path)?;
-    crate::utils::fs::write_atomic(storage_path, updated.as_bytes())
-        .map_err(|e| format!("write_failed: {}", e))?;
-    logger::log_info("service_machine_id_synced");
-
-    sync_state_service_machine_id_value(service_id)
-}
-
-/// Read serviceMachineId from storage.json (fallback to devDeviceId), sync back if missing and sync state.vscdb
-#[allow(dead_code)]
-pub fn sync_service_machine_id_from_storage(storage_path: &Path) -> Result<(), String> {
-    if !storage_path.exists() {
-        return Err("storage_json_missing".to_string());
-    }
-    let content = fs::read_to_string(storage_path).map_err(|e| format!("read_failed: {}", e))?;
-    let mut json: Value =
-        serde_json::from_str(&content).map_err(|e| format!("parse_failed: {}", e))?;
-
-    let service_id = json
-        .get("storage.serviceMachineId")
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string())
-        .or_else(|| {
-            json.get("telemetry")
-                .and_then(|t| t.get("devDeviceId"))
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string())
-        })
-        .or_else(|| {
-            json.get("telemetry.devDeviceId")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string())
-        })
-        .ok_or("missing_ids_in_storage")?;
-
-    let mut dirty = false;
-    if json
-        .get("storage.serviceMachineId")
-        .and_then(|v| v.as_str())
-        .is_none()
-    {
-        if let Some(map) = json.as_object_mut() {
-            map.insert(
-                "storage.serviceMachineId".to_string(),
-                Value::String(service_id.clone()),
-            );
-            dirty = true;
-        }
-    }
-
-    if dirty {
-        let updated =
-            serde_json::to_string_pretty(&json).map_err(|e| format!("serialize_failed: {}", e))?;
-        backup_storage(storage_path)?;
-        crate::utils::fs::write_atomic(storage_path, updated.as_bytes())
-            .map_err(|e| format!("write_failed: {}", e))?;
-        logger::log_info("service_machine_id_added");
-    }
-
-    sync_state_service_machine_id_value(&service_id)
-}
-
 fn sync_state_service_machine_id_value(service_id: &str) -> Result<(), String> {
     let db_path = get_state_db_path()?;
     if !db_path.exists() {
@@ -382,7 +302,7 @@ fn save_global_original_in_dir(dir: &Path, profile: &DeviceProfile) -> Result<()
 }
 
 /// List storage.json backups in current directory (descending by time)
-#[allow(dead_code)]
+#[cfg(test)]
 pub fn list_backups(storage_path: &Path) -> Result<Vec<PathBuf>, String> {
     let dir = storage_path
         .parent()
@@ -405,27 +325,6 @@ pub fn list_backups(storage_path: &Path) -> Result<Vec<PathBuf>, String> {
         mb.cmp(&ma)
     });
     Ok(backups)
-}
-
-/// Restore backup to storage.json. If use_oldest=true, use oldest backup, else use latest.
-#[allow(dead_code)]
-pub fn restore_backup(storage_path: &Path, use_oldest: bool) -> Result<PathBuf, String> {
-    let backups = list_backups(storage_path)?;
-    if backups.is_empty() {
-        return Err("no_backups_found".to_string());
-    }
-    let target = if use_oldest {
-        backups.last().unwrap().clone()
-    } else {
-        backups.first().unwrap().clone()
-    };
-    // backup current first
-    let _ = backup_storage(storage_path)?;
-    let content = fs::read(&target).map_err(|e| format!("restore_read_failed: {}", e))?;
-    crate::utils::fs::write_atomic(storage_path, &content)
-        .map_err(|e| format!("restore_failed: {}", e))?;
-    logger::log_info(&format!("storage_json_restored: {:?}", target));
-    Ok(target)
 }
 
 /// Generate a new set of device fingerprints (Cursor/VSCode style)

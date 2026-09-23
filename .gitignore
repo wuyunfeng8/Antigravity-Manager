@@ -52,5 +52,6 @@ scripts/_*.json
 scripts/dump_quota_raw.py
 scripts/dump_full.py
 scripts/probe_weekly.py
-scripts/probe_quota_summary.pyDOCKER_DEPLOYMENT.md
+scripts/probe_quota_summary.py
+DOCKER_DEPLOYMENT.md
 pnpm-lock.yaml

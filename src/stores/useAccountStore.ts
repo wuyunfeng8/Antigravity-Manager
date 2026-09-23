@@ -25,7 +25,6 @@ interface AccountState {
     importSelectedLocalAccounts: (candidateIds: string[]) => Promise<accountService.LocalImportResult>;
     clearLocalAccountScan: () => Promise<void>;
     syncAccountFromDb: () => Promise<void>;
-    warmUpAccounts: () => Promise<string>;
     warmUpAccount: (accountId: string) => Promise<string>;
     updateAccountLabel: (accountId: string, label: string) => Promise<void>;
 }
@@ -189,20 +188,6 @@ export const useAccountStore = create<AccountState>((set, get) => ({
             }
         } catch (error) {
             console.error('[AccountStore] Sync from DB failed:', error);
-        }
-    },
-
-    warmUpAccounts: async () => {
-        set({ loading: true, error: null });
-        try {
-            const result = await accountService.warmUpAllAccounts();
-            set({ loading: false });
-            return result;
-        } catch (error) {
-            set({ error: String(error), loading: false });
-            throw error;
-        } finally {
-            await get().fetchAccounts();
         }
     },
 

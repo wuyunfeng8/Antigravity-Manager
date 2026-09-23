@@ -17,9 +17,6 @@ pub struct QuotaBucket {
     /// First observed early reset, in seconds; normal cycles start seven days before reset.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cycle_start: Option<i64>,
-    /// Usage recorded by this instance, populated only when returning the account list.
-    #[serde(skip_deserializing, skip_serializing_if = "Option::is_none")]
-    pub cycle_tokens: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub display_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

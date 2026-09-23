@@ -48,15 +48,3 @@ export function findQuotaModel<T extends { name: string }>(models: T[] | undefin
   }
   return undefined;
 }
-
-export function getModelDisplayName(model: { name: string; display_name?: string } | null | undefined, fallback = ""): string {
-  if (!model) return fallback;
-  if (model.display_name) return model.display_name;
-  const name = model.name.toLowerCase();
-  if (/claude|opus|sonnet|haiku/.test(name)) return "Claude";
-  if (/gpt|openai|o1|o3/.test(name)) return "GPT";
-  if (name.includes("flash")) return "Gemini Flash";
-  if (name.includes("pro")) return "Gemini Pro";
-  if (name.startsWith("gemini")) return "Gemini";
-  return model.name || fallback;
-}

@@ -360,21 +360,6 @@ pub async fn import_from_db(
 }
 
 #[tauri::command]
-#[allow(dead_code)]
-pub async fn import_custom_db(app: tauri::AppHandle, path: String) -> Result<AccountView, String> {
-    // 调用重构后的自定义导入函数
-    let mut account = modules::migration::import_from_custom_db_path(path).await?;
-
-    // 自动触发刷新额度
-    let _ = internal_refresh_account_quota(&app, &mut account).await;
-
-    // 刷新托盘图标展示
-    crate::modules::tray::update_tray_menus(&app);
-
-    Ok(account.into())
-}
-
-#[tauri::command]
 pub async fn scan_local_accounts(
     custom_db_path: Option<String>,
 ) -> Result<Vec<modules::migration::LocalAccountPreview>, String> {
@@ -748,12 +733,6 @@ pub async fn save_update_settings(
         check_interval_hours,
     )?;
     crate::modules::update_checker::save_update_settings(&updated)
-}
-
-/// 预热所有可用账号
-#[tauri::command]
-pub async fn warm_up_all_accounts() -> Result<String, String> {
-    modules::quota::warm_up_all_accounts().await
 }
 
 /// 预热指定账号

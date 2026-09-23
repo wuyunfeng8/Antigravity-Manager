@@ -33,4 +33,4 @@ export const MODEL_CONFIG: Record<string, ModelConfig> = {
   },
 };
 
-export { getModelDisplayName, findQuotaModel, type ModelCategory } from "../utils/modelCategory";
+export { findQuotaModel, type ModelCategory } from "../utils/modelCategory";

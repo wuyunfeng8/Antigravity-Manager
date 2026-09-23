@@ -63,10 +63,6 @@ enum VersionSource {
     LocalInstallation,
     KnownStableFallback,
     RemoteAPI,
-    #[allow(dead_code)]
-    ChangelogWeb,
-    #[allow(dead_code)]
-    CargoToml,
 }
 
 /// Helper struct for version info
