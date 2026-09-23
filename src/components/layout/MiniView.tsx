@@ -11,6 +11,7 @@ import { findQuotaModel } from '../../config/modelConfig';
 import { getVersion } from '@tauri-apps/api/app';
 import { useConfigStore } from '../../stores/useConfigStore';
 import { Button } from '../ui/button';
+import { HelpTooltip } from '../ui/help-tooltip';
 import { Badge } from '../ui/badge';
 import { Progress } from '../ui/progress';
 import { Account, getAccountTier } from '../../types/account';
@@ -162,23 +163,19 @@ export default function MiniView() {
                         className="flex items-center gap-1 no-drag shrink-0"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
-                        <Button
-                            variant="ghost"
-                            size="iconSm"
-                            onClick={handleRefresh}
-                            title={t('common.refresh', 'Refresh')}
-                        >
-                            <RefreshCw size={14} className={cn(isRefreshing && "animate-spin text-primary")} />
-                        </Button>
+                        <HelpTooltip content={t('tooltips.mini_refresh')}>
+                            <Button variant="ghost" size="iconSm" onClick={handleRefresh}
+                                aria-label={t('common.refresh', 'Refresh')}>
+                                <RefreshCw size={14} className={cn(isRefreshing && "animate-spin text-primary")} />
+                            </Button>
+                        </HelpTooltip>
                         <div className="w-px h-3 bg-border mx-1" />
-                        <Button
-                            variant="ghost"
-                            size="iconSm"
-                            onClick={handleMaximize}
-                            title={t('common.maximize', 'Full View')}
-                        >
-                            <Maximize2 size={14} />
-                        </Button>
+                        <HelpTooltip content={t('tooltips.mini_full')}>
+                            <Button variant="ghost" size="iconSm" onClick={handleMaximize}
+                                aria-label={t('common.maximize', 'Full View')}>
+                                <Maximize2 size={14} />
+                            </Button>
+                        </HelpTooltip>
                     </div>
                 </div>
 

@@ -14,6 +14,7 @@ import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
+import { DisabledReasonTooltip, HelpTooltip } from "../components/ui/help-tooltip";
 import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { findQuotaModel, ModelCategory } from "../config/modelConfig";
 import { exportAccounts } from "../services/accountService";
@@ -234,10 +235,19 @@ export default function Accounts() {
           <p className="mt-1 text-xs text-muted-foreground">{t('relay.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-10 rounded-xl" onClick={handleRefreshAll} disabled={refreshingAll || accounts.length === 0}>
-            <RefreshCw className={cn("mr-2 h-4 w-4", refreshingAll && "animate-spin")} />
-            <span className="hidden sm:inline">{t('relay.refresh')}</span>
-          </Button>
+          {accounts.length === 0 ? (
+            <DisabledReasonTooltip reason={t("tooltips.refresh_all_empty")}>
+              <Button variant="outline" size="sm" className="h-10 rounded-xl" disabled aria-label={t("relay.refresh")}>
+                <RefreshCw className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t("relay.refresh")}</span>
+              </Button>
+            </DisabledReasonTooltip>
+          ) : (
+            <Button variant="outline" size="sm" className="h-10 rounded-xl" onClick={handleRefreshAll} disabled={refreshingAll} aria-label={t("relay.refresh")}>
+              <RefreshCw className={cn("h-4 w-4 sm:mr-2", refreshingAll && "animate-spin")} />
+              <span className="hidden sm:inline">{t("relay.refresh")}</span>
+            </Button>
+          )}
           <AddAccountDialog onAdd={addAccount} showText triggerClass="h-10 rounded-xl bg-slate-950 px-4 text-xs font-bold text-white hover:bg-slate-800 dark:bg-emerald-500 dark:text-slate-950 dark:hover:bg-emerald-400" />
         </div>
       </header>
@@ -274,10 +284,18 @@ export default function Accounts() {
                   : t('relay.none_hint')}
               </div>
             </div>
-            <Button className="mt-5 w-full rounded-xl bg-emerald-600 text-white hover:bg-emerald-700" disabled={!bestStandby || switchingId === bestStandby.id} onClick={() => bestStandby && handleSwitch(bestStandby)}>
-              <RadioTower className={cn("mr-2 h-4 w-4", bestStandby && switchingId === bestStandby.id && "animate-pulse")} />
-              {bestStandby && switchingId === bestStandby.id ? t('relay.relaying') : t('relay.relay_now')}
-            </Button>
+            {!bestStandby ? (
+              <DisabledReasonTooltip reason={t("tooltips.relay_unavailable")} className="w-full">
+                <Button className="mt-5 w-full rounded-xl bg-emerald-600 text-white hover:bg-emerald-700" disabled>
+                  <RadioTower className="mr-2 h-4 w-4" />{t("relay.relay_now")}
+                </Button>
+              </DisabledReasonTooltip>
+            ) : (
+              <Button className="mt-5 w-full rounded-xl bg-emerald-600 text-white hover:bg-emerald-700" disabled={switchingId === bestStandby.id} onClick={() => handleSwitch(bestStandby)}>
+                <RadioTower className={cn("mr-2 h-4 w-4", switchingId === bestStandby.id && "animate-pulse")} />
+                {switchingId === bestStandby.id ? t("relay.relaying") : t("relay.relay_now")}
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -305,8 +323,12 @@ export default function Accounts() {
             </Tabs>
             <Tabs value={quotaWindow} onValueChange={(value) => setQuotaWindow(value as QuotaWindow)}>
               <TabsList className="h-9 rounded-xl">
-                <TabsTrigger className="rounded-lg px-3 text-xs" value="5h">5H</TabsTrigger>
-                <TabsTrigger className="rounded-lg px-3 text-xs" value="weekly">{t('relay.weekly')}</TabsTrigger>
+                <HelpTooltip content={t("tooltips.quota_5h")}>
+                  <TabsTrigger className="rounded-lg px-3 text-xs" value="5h">5H</TabsTrigger>
+                </HelpTooltip>
+                <HelpTooltip content={t("tooltips.quota_weekly")}>
+                  <TabsTrigger className="rounded-lg px-3 text-xs" value="weekly">{t('relay.weekly')}</TabsTrigger>
+                </HelpTooltip>
               </TabsList>
             </Tabs>
           </div>

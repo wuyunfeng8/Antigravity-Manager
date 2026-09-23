@@ -20,6 +20,7 @@ import { Switch } from '../components/ui/switch';
 import { Card, CardContent } from '../components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Label } from '../components/ui/label';
+import { InfoTooltip } from '../components/ui/help-tooltip';
 
 
 
@@ -518,6 +519,7 @@ function Settings() {
                                         <p className="text-xs text-muted-foreground mt-1">{t('settings.general.auto_check_update_desc')}</p>
                                     </div>
                                     <Switch
+                                        aria-label={t('settings.general.auto_check_update')}
                                         checked={formData.auto_check_update ?? true}
                                         onCheckedChange={async (enabled) => {
                                             try {
@@ -586,6 +588,7 @@ function Settings() {
                                         </div>
                                     </div>
                                     <Switch
+                                        aria-label={t('settings.account.auto_refresh')}
                                         checked={formData.auto_refresh}
                                         onCheckedChange={async (enabled) => {
                                             const newConfig = { ...formData, auto_refresh: enabled };
@@ -620,11 +623,15 @@ function Settings() {
                                             <User size={20} />
                                         </div>
                                         <div>
-                                            <div className="font-bold text-foreground">{t('settings.account.auto_sync')}</div>
+                                            <div className="flex items-center font-bold text-foreground">
+                                                {t('settings.account.auto_sync')}
+                                                <InfoTooltip label={t('tooltips.auto_sync')} content={t('tooltips.auto_sync')} />
+                                            </div>
                                             <p className="text-xs text-muted-foreground mt-0.5">{t('settings.account.auto_sync_desc')}</p>
                                         </div>
                                     </div>
                                     <Switch
+                                        aria-label={t('settings.account.auto_sync')}
                                         checked={formData.auto_sync}
                                         onCheckedChange={(enabled) => setFormData({ ...formData, auto_sync: enabled })}
                                     />
@@ -701,7 +708,10 @@ function Settings() {
 
                                 {/* 数据目录 */}
                                 <div>
-                                    <Label className="block text-sm font-medium text-foreground mb-1">{t('settings.advanced.data_dir')}</Label>
+                                    <div className="mb-1 flex items-center">
+                                        <Label className="text-sm font-medium text-foreground">{t('settings.advanced.data_dir')}</Label>
+                                        <InfoTooltip label={t('tooltips.data_dir')} content={t('tooltips.data_dir')} />
+                                    </div>
                                     <div className="flex gap-2">
                                         <Input
                                             type="text"
@@ -895,13 +905,17 @@ function Settings() {
                                                 <Globe size={18} />
                                             </div>
                                             <div>
-                                                <div className="font-bold text-foreground text-sm">{t('settings.network_proxy.title')}</div>
+                                                <div className="flex items-center text-sm font-bold text-foreground">
+                                                    {t('settings.network_proxy.title')}
+                                                    <InfoTooltip label={t('tooltips.network_proxy')} content={t('tooltips.network_proxy')} />
+                                                </div>
                                                 <p className="text-xs text-muted-foreground mt-0.5 leading-tight max-w-[280px]">
                                                     {t('settings.network_proxy.desc_short')}
                                                 </p>
                                             </div>
                                         </div>
                                         <Switch
+                                            aria-label={t('settings.network_proxy.title')}
                                             checked={formData.network_proxy?.enabled ?? false}
                                             onCheckedChange={(checked) => setFormData({
                                                 ...formData,
@@ -965,6 +979,7 @@ function Settings() {
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <Switch
+                                        aria-label={t('settings.debug.title')}
                                         checked={isEnabled}
                                         onCheckedChange={(checked) => checked ? enable() : disable()}
                                     />

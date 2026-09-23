@@ -308,7 +308,7 @@
     },
     "warmup": {
       "title": "7-Day Weekly Reset Warmup",
-      "desc": "Automatically sends a minimal ping once when the 7-day weekly quota resets, starting the countdown with zero extra token waste."
+      "desc": "Sends one lightweight request after the selected model's seven-day quota resets to start the new cycle."
     },
     "advanced": {
       "title": "Advanced Settings",
@@ -319,7 +319,7 @@
       "open_btn": "Open",
       "migrate_btn": "Change & Migrate",
       "data_dir": "Data Directory",
-      "data_dir_desc": "Where accounts, config, logs and the thinking store live. Choosing a new folder migrates data and deletes the old folder (or renames it when they share a parent).",
+      "data_dir_desc": "Where accounts, settings, and logs are stored. Choosing a new folder migrates data and cleans up the old one.",
       "data_dir_select": "Select data directory",
       "data_dir_migrate_title": "Migrate data directory",
       "data_dir_migrate_msg": "All data will be moved to: {{path}}",
@@ -447,14 +447,14 @@
       "latest_version_label": "Latest Version"
     },
     "network_proxy": {
-      "title": "Global Upstream Proxy (Global Proxy)",
-      "desc": "When enabled, all external requests (Token Refresh, Quota Check, Update Check) will be routed through this proxy.",
-      "desc_short": "Fallback proxy used when no suitable proxy is found in the pool.",
+      "title": "Outbound Network Proxy",
+      "desc": "When enabled, AMT routes external requests such as token refresh, quota queries, and update checks through this proxy.",
+      "desc_short": "Used only for AMT's outbound connections to Google, GitHub, and related services.",
       "enable": "Enable Upstream Proxy",
       "url": "Proxy URL",
       "url_placeholder": "e.g. http://127.0.0.1:7890 or socks5://127.0.0.1:7890",
       "tip": "Supports HTTP, HTTPS and SOCKS5.",
-      "socks5h_hint": "To bypass upstream risk control and use Remote DNS resolution, manually change the protocol to socks5h://",
+      "socks5h_hint": "If your proxy requires remote DNS resolution, use the socks5h:// protocol.",
       "validation_error": "Proxy URL is required when upstream proxy is enabled",
       "restart_hint": "Proxy settings saved. Restart the app to apply changes."
     }
@@ -493,6 +493,31 @@
       "stream_error": "Stream transmission error, please retry later",
       "unknown_error": "Unknown error occurred, please retry later"
     }
+  },
+  "tooltips": {
+    "card_more": "Device identity, label, export, delete, and other occasional actions",
+    "card_refresh": "Refresh quota for this account only",
+    "card_resets": "Show separate reset times for the three model groups",
+    "card_switch_unavailable": "Verify or recover this account before switching to it",
+    "refresh_all_empty": "Add an account before refreshing quotas",
+    "relay_unavailable": "No healthy backup account is available for relay",
+    "quota_5h": "Show the five-hour rolling quota; changing the view does not change your quota",
+    "quota_weekly": "Show the seven-day quota; changing the view does not change your quota",
+    "mini_refresh": "Refresh the current account's quota only",
+    "mini_full": "Open the full account manager",
+    "debug_pause_scroll": "Pause automatic scrolling to inspect older logs",
+    "debug_resume_scroll": "Resume scrolling to the newest logs",
+    "debug_clear": "Clear the current debug log buffer without affecting accounts",
+    "debug_close": "Close the debug console",
+    "fingerprint_delete": "Delete this historical device identity without changing the active one",
+    "device_identity": "The account's device identity is applied when switching to it; this cannot guarantee protection from platform risk checks",
+    "auto_sync": "Detect the account signed in to Antigravity and mark it current in AMT; does not switch the IDE",
+    "warmup": "Warmup does not increase quota; it sends one request after reset and may consume a small amount",
+    "network_proxy": "Changes only AMT's outbound network path, not Antigravity IDE's proxy settings",
+    "data_dir": "Migration changes local files; confirm the destination and back up data first",
+    "oauth_link_pending": "The authorization link is being prepared",
+    "import_none": "Select at least one available account to import",
+    "dismiss_update": "Dismiss this update notice"
   },
   "relay": {
     "eyebrow": "ANTIGRAVITY RELAY",

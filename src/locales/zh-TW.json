@@ -309,7 +309,7 @@
     },
     "warmup": {
       "title": "智慧預熱",
-      "desc": "自動監控所有模型，當額度恢復到 100% 時立即觸發預熱，保持模型熱狀態"
+      "desc": "在選定模型的 7 天週配額重置後，觸發一次輕量請求以啟動新週期。"
     },
     "advanced": {
       "title": "進階設定",
@@ -319,7 +319,7 @@
       "select_btn": "選擇",
       "open_btn": "開啟",
       "data_dir": "資料目錄",
-      "data_dir_desc": "帳號資料和配置檔案的儲存位置",
+      "data_dir_desc": "帳號資料、設定和日誌的儲存位置。選擇新目錄後會遷移資料並清理舊目錄。",
       "antigravity_path": "Antigravity 程式路徑",
       "antigravity_path_placeholder": "未設定 (將使用自動偵測)",
       "antigravity_path_desc": "如果您將 Antigravity 應用安裝在非標準位置，可在此手動指定可執行檔案路徑（MacOS 指向 .app 目錄）。",
@@ -448,14 +448,14 @@
       "open_btn": "Open Console"
     },
     "network_proxy": {
-      "title": "全域上游代理 (Global Proxy)",
-      "desc": "開啟後，應用內所有外部請求（API 反向代理、Token 重新整理、配額查詢、更新檢測）都將透過此代理。",
-      "desc_short": "用於無法匹配代理池帳號時的通用出口或降級方案。",
+      "title": "對外網路代理",
+      "desc": "開啟後，AMT 的 Token 更新、配額查詢和更新檢查等外部請求將透過此代理。",
+      "desc_short": "僅用於 AMT 連線 Google、GitHub 等外部服務。",
       "enable": "啟用上游代理",
       "url": "代理地址",
       "url_placeholder": "例如: http://127.0.0.1:7890 或 socks5://127.0.0.1:7890",
       "tip": "支援 HTTP、HTTPS 和 SOCKS5 協定。",
-      "socks5h_hint": "若需避開上游風控並保留原始功能變數名稱解析 (Remote DNS)，請手動將協定改為 socks5h://",
+      "socks5h_hint": "若代理需要遠端 DNS 解析，請使用 socks5h:// 協定。",
       "validation_error": "啟用上游代理時必須填寫代理地址",
       "restart_hint": "代理設定已儲存，重新啟動應用程式後生效"
     }
@@ -494,6 +494,31 @@
       "stream_error": "Stream transmission error, please retry later",
       "unknown_error": "Unknown error occurred, please retry later"
     }
+  },
+  "tooltips": {
+    "card_more": "裝置身份、標籤、匯出和刪除等低頻操作",
+    "card_refresh": "只更新此帳號的配額",
+    "card_resets": "展開三類模型各自的配額重置時間",
+    "card_switch_unavailable": "帳號需先完成驗證或恢復正常，暫時無法切換",
+    "refresh_all_empty": "帳號池為空，請先新增帳號再更新配額",
+    "relay_unavailable": "目前沒有健康的備用帳號可接力",
+    "quota_5h": "顯示 5 小時滑動配額；切換檢視不會改變實際額度",
+    "quota_weekly": "顯示 7 天週配額；切換檢視不會改變實際額度",
+    "mini_refresh": "只更新目前帳號的配額",
+    "mini_full": "返回完整帳號管理視窗",
+    "debug_pause_scroll": "暫停自動捲動，方便查看較舊日誌",
+    "debug_resume_scroll": "繼續自動捲動至最新日誌",
+    "debug_clear": "清空目前調試日誌快取，不影響帳號資料",
+    "debug_close": "關閉調試控制台",
+    "fingerprint_delete": "刪除此筆歷史裝置身份，不影響目前生效的身份",
+    "device_identity": "帳號綁定的裝置身份會在切換該帳號時套用；無法保證避免平台風控",
+    "auto_sync": "識別 Antigravity 目前登入帳號並在 AMT 標記為目前；不會主動切換 IDE",
+    "warmup": "預熱不會增加配額；重置後會發出一次請求，可能產生少量消耗",
+    "network_proxy": "只改變 AMT 的對外網路路徑，不會修改 Antigravity IDE 的代理設定",
+    "data_dir": "遷移會修改本機檔案；請確認目標目錄並先備份",
+    "oauth_link_pending": "授權連結仍在準備中，請稍候",
+    "import_none": "請先選擇至少一個可匯入帳號",
+    "dismiss_update": "關閉此更新提示"
   },
   "relay": {
     "eyebrow": "ANTIGRAVITY RELAY",

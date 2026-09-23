@@ -19,6 +19,7 @@ import { Card, CardContent } from '../ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { DisabledReasonTooltip } from '../ui/help-tooltip';
 import { Textarea } from '../ui/textarea';
 
 interface AddAccountDialogProps {
@@ -415,6 +416,20 @@ function AddAccountDialog({
     }
   };
 
+  const copyLinkButton = (
+    <Button variant="outline" size="sm" disabled={!oauthUrl} onClick={copyOAuthUrl}>
+      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+      {copied ? t('accounts.add.flow.copied') : t('accounts.add.flow.copy_link')}
+    </Button>
+  );
+
+  const importSelectedButton = (
+    <Button className="mt-2 w-full bg-emerald-600 text-white hover:bg-emerald-700" disabled={!selectedIds.length || localBusy} onClick={() => void importLocal()}>
+      {localBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+      {t('accounts.add.flow.import_selected', { count: selectedIds.length })}
+    </Button>
+  );
+
   const oauthPanel = (
     <div className="space-y-4">
       {oauthPhase === 'idle' && (
@@ -440,10 +455,11 @@ function AddAccountDialog({
             <p className="mt-2 text-sm text-muted-foreground">{t(oauthPhase === 'waiting' ? 'accounts.add.flow.oauth_waiting_hint' : 'accounts.add.flow.oauth_processing_hint')}</p>
           </div>
           {oauthPhase === 'waiting' && <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" disabled={!oauthUrl} onClick={copyOAuthUrl}>
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? t('accounts.add.flow.copied') : t('accounts.add.flow.copy_link')}
-            </Button>
+            {oauthUrl ? copyLinkButton : (
+              <DisabledReasonTooltip reason={t('tooltips.oauth_link_pending')}>
+                {copyLinkButton}
+              </DisabledReasonTooltip>
+            )}
             <Button variant="ghost" size="sm" onClick={() => setManualOpen((value) => !value)}>
               {t('accounts.add.flow.manual_toggle')}
             </Button>
@@ -532,10 +548,11 @@ function AddAccountDialog({
               {!candidate.available && <Badge variant="warning">{t('accounts.add.flow.unavailable')}</Badge>}
             </Button>
           ))}
-          <Button className="mt-2 w-full bg-emerald-600 text-white hover:bg-emerald-700" disabled={!selectedIds.length || localBusy} onClick={() => void importLocal()}>
-            {localBusy && <Loader2 className="h-4 w-4 animate-spin" />}
-            {t('accounts.add.flow.import_selected', { count: selectedIds.length })}
-          </Button>
+          {selectedIds.length ? importSelectedButton : (
+            <DisabledReasonTooltip reason={t('tooltips.import_none')} className="w-full">
+              {importSelectedButton}
+            </DisabledReasonTooltip>
+          )}
         </div>
       )}
       {localResult && (

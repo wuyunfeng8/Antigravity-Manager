@@ -33,6 +33,7 @@ import {
 } from "../ui/dropdown-menu";
 import { Input } from "../ui/input";
 import { Progress } from "../ui/progress";
+import { DisabledReasonTooltip, HelpTooltip } from "../ui/help-tooltip";
 
 interface AccountCardProps {
   account: Account;
@@ -131,6 +132,18 @@ export default function AccountCard({
     setEditing(false);
   };
 
+  const switchButton = !isCurrent ? (
+    <Button size="sm" variant="outline"
+      className={cn(
+        "h-7 rounded-lg px-2 text-[11px] font-semibold shadow-none",
+        isBestStandby && "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-300",
+      )}
+      onClick={() => onSwitch()} disabled={isSwitching || risky}>
+      {isSwitching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowLeftRight className="h-3.5 w-3.5" />}
+      {isSwitching ? t("relay.actions.switching") : t("relay.actions.switch")}
+    </Button>
+  ) : null;
+
   return (
     <Card
       role="article"
@@ -174,12 +187,14 @@ export default function AccountCard({
           )}
           <Badge variant="outline" className={cn("px-1.5 text-[10px] font-bold", tierClass(tier))}>{tier}</Badge>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="iconSm" className="ml-0.5 h-7 w-7 rounded-lg text-muted-foreground"
-                title={t("relay.actions.more")} aria-label={t("relay.actions.more")}>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
+            <HelpTooltip content={t("tooltips.card_more")}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="iconSm" className="ml-0.5 h-7 w-7 rounded-lg text-muted-foreground"
+                  aria-label={t("relay.actions.more")}>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+            </HelpTooltip>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={onViewDevice}><Fingerprint className="mr-2 h-4 w-4" />{t("relay.actions.device")}</DropdownMenuItem>
               <DropdownMenuItem onClick={() => setEditing(true)}><Pencil className="mr-2 h-4 w-4" />{t("relay.actions.label")}</DropdownMenuItem>
@@ -248,27 +263,23 @@ export default function AccountCard({
       )}
 
       <div className="mt-auto flex items-center justify-between gap-2 pt-1.5">
-        <Button variant="ghost" size="sm" className="h-7 gap-1 px-1 text-[11px] text-muted-foreground"
-          aria-expanded={showResets} onClick={() => setShowResets((value) => !value)}>
-          {t(showResets ? "relay.card.hide_resets" : "relay.card.show_resets")}
-          <ChevronDown className={cn("h-3 w-3 transition-transform", showResets && "rotate-180")} />
-        </Button>
-        <div className="flex shrink-0 items-center gap-1">
-          {!isCurrent && (
-            <Button size="sm" variant="outline"
-              className={cn(
-                "h-7 rounded-lg px-2 text-[11px] font-semibold shadow-none",
-                isBestStandby && "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-300",
-              )}
-              onClick={() => onSwitch()} disabled={isSwitching || risky}>
-              {isSwitching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowLeftRight className="h-3.5 w-3.5" />}
-              {isSwitching ? t("relay.actions.switching") : t("relay.actions.switch")}
-            </Button>
-          )}
-          <Button variant="ghost" size="iconSm" className="h-7 w-7 rounded-lg text-muted-foreground"
-            onClick={onRefresh} disabled={isRefreshing} title={t("relay.actions.refresh")} aria-label={t("relay.actions.refresh")}>
-            <RefreshCw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")} />
+        <HelpTooltip content={t("tooltips.card_resets")}>
+          <Button variant="ghost" size="sm" className="h-7 gap-1 px-1 text-[11px] text-muted-foreground"
+            aria-expanded={showResets} onClick={() => setShowResets((value) => !value)}>
+            {t(showResets ? "relay.card.hide_resets" : "relay.card.show_resets")}
+            <ChevronDown className={cn("h-3 w-3 transition-transform", showResets && "rotate-180")} />
           </Button>
+        </HelpTooltip>
+        <div className="flex shrink-0 items-center gap-1">
+          {switchButton && (risky
+            ? <DisabledReasonTooltip reason={t("tooltips.card_switch_unavailable")}>{switchButton}</DisabledReasonTooltip>
+            : switchButton)}
+          <HelpTooltip content={t("tooltips.card_refresh")}>
+            <Button variant="ghost" size="iconSm" className="h-7 w-7 rounded-lg text-muted-foreground"
+              onClick={onRefresh} disabled={isRefreshing} aria-label={t("relay.actions.refresh")}>
+              <RefreshCw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin")} />
+            </Button>
+          </HelpTooltip>
         </div>
       </div>
     </Card>

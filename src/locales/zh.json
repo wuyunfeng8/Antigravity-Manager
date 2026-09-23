@@ -308,7 +308,7 @@
     },
     "warmup": {
       "title": "7天周配额智能预热",
-      "desc": "在各账号的 7 天周配额到达重置时间后自动唤醒 1 次，启动当周计时器，零多余消耗。"
+      "desc": "在选定模型的 7 天周配额重置后，触发一次轻量请求以启动新周期。"
     },
     "advanced": {
       "title": "高级设置",
@@ -319,10 +319,10 @@
       "open_btn": "打开",
       "migrate_btn": "更改并迁移",
       "data_dir": "数据目录",
-      "data_dir_desc": "账号数据、配置、日志和思考库的存储位置。选择新目录后会自动迁移并删除原目录（同一父目录则直接重命名）。",
+      "data_dir_desc": "账号数据、配置和日志的存储位置。选择新目录后会迁移数据并清理原目录。",
       "data_dir_select": "选择数据目录",
       "data_dir_migrate_title": "迁移数据目录",
-      "data_dir_migrate_msg": "将把全部数据迁移到：{{path}}\n原目录会被删除（同一父目录则重命名）。请先停止 API 反代和隧道。",
+      "data_dir_migrate_msg": "将把全部数据迁移到：{{path}}\n原目录会被清理（同一父目录则重命名）。请先确认目标位置。",
       "data_dir_migrated": "数据目录已迁移",
       "data_dir_restart_hint": "建议重启应用，让日志等仍被占用的文件完全切换到新目录",
       "migrate_title": "迁移数据目录",
@@ -447,14 +447,14 @@
       "latest_version_label": "最新版本"
     },
     "network_proxy": {
-      "title": "全局上游代理 (Global Proxy)",
-      "desc": "开启后，应用内所有外部请求（API 反代、Token 刷新、配额查询、更新检测）都将通过此代理。",
-      "desc_short": "用于无法匹配代理池账号时的通用出口或降级方案。",
+      "title": "出站网络代理",
+      "desc": "开启后，AMT 的 Token 刷新、配额查询和更新检测等外部请求将通过此代理。",
+      "desc_short": "仅用于 AMT 访问 Google、GitHub 等外部服务。",
       "enable": "启用上游代理",
       "url": "代理地址",
       "url_placeholder": "例如: http://127.0.0.1:7890 或 socks5://127.0.0.1:7890",
       "tip": "支持 HTTP、HTTPS 和 SOCKS5 协议。",
-      "socks5h_hint": "若需避开上游风控并保留原始域名解析 (Remote DNS)，请手动将协议改为 socks5h://",
+      "socks5h_hint": "若代理要求远程 DNS 解析，请使用 socks5h:// 协议。",
       "validation_error": "启用上游代理时必须填写代理地址",
       "restart_hint": "代理配置已保存，重启应用后生效"
     }
@@ -493,6 +493,31 @@
       "stream_error": "数据流传输错误,请稍后重试",
       "unknown_error": "发生未知错误,请稍后重试"
     }
+  },
+  "tooltips": {
+    "card_more": "设备身份、标签、导出和删除等低频操作",
+    "card_refresh": "仅刷新这个账号的配额",
+    "card_resets": "展开三类模型各自的配额重置时间",
+    "card_switch_unavailable": "账号需要先完成验证或恢复健康状态，暂不可切换",
+    "refresh_all_empty": "账号池为空，先添加账号才能刷新配额",
+    "relay_unavailable": "暂无健康的备选账号，添加或恢复账号后才能接力",
+    "quota_5h": "显示 5 小时滑动配额；切换视图不改变真实额度",
+    "quota_weekly": "显示 7 天周配额；切换视图不改变真实额度",
+    "mini_refresh": "仅刷新当前账号的配额",
+    "mini_full": "返回完整账号管理窗口",
+    "debug_pause_scroll": "暂停自动滚动，方便查看旧日志",
+    "debug_resume_scroll": "继续自动滚动到最新日志",
+    "debug_clear": "清空当前调试日志缓存，不影响账号数据",
+    "debug_close": "关闭调试控制台",
+    "fingerprint_delete": "删除这条历史设备身份，不影响当前生效的身份",
+    "device_identity": "账号绑定的设备身份会在切换该账号时应用；它不能保证避免平台风控",
+    "auto_sync": "识别 Antigravity 当前登录账号，并在 AMT 中标记为当前；不会主动切换 IDE",
+    "warmup": "预热不会增加配额；它会在重置后发起一次请求，可能产生少量消耗",
+    "network_proxy": "只改变 AMT 的出站网络路径，不会修改 Antigravity IDE 的代理设置",
+    "data_dir": "迁移会修改本地文件；确认弹窗会列出目标目录，建议先备份",
+    "oauth_link_pending": "授权链接尚在准备，请稍候",
+    "import_none": "请先选择至少一个可导入账号",
+    "dismiss_update": "关闭此更新提示"
   },
   "relay": {
     "eyebrow": "ANTIGRAVITY RELAY",

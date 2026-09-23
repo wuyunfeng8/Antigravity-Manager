@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
+import { HelpTooltip, InfoTooltip } from '../ui/help-tooltip';
 
 interface DeviceFingerprintDialogProps {
     account: Account | null;
@@ -161,6 +162,7 @@ export default function DeviceFingerprintDialog({ account, onClose }: DeviceFing
                     <DialogHeader className="px-6 py-4 border-b bg-muted/30 flex flex-row items-center justify-between">
                         <div className="flex items-center gap-3">
                             <DialogTitle className="text-base font-bold">{t('accounts.device_fingerprint_dialog.title')}</DialogTitle>
+                            <InfoTooltip label={t('tooltips.device_identity')} content={t('tooltips.device_identity')} />
                             <Badge variant="secondary" className="font-mono text-xs">
                                 {account.email}
                             </Badge>
@@ -332,16 +334,18 @@ function HistoryRow({ id, label, createdAt, profile, onRestore, onDelete, isCurr
                     {t('accounts.device_fingerprint_dialog.restore')}
                 </Button>
                 {!isCurrent && onDelete && (
-                    <Button
-                        variant="destructive"
-                        size="icon"
-                        className="h-7 w-7"
-                        disabled={loadingKey === `delete-${key}`}
-                        onClick={onDelete}
-                        title={t('accounts.device_fingerprint_dialog.delete_version')}
-                    >
-                        <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
+                    <HelpTooltip content={t('tooltips.fingerprint_delete')}>
+                        <Button
+                            variant="destructive"
+                            size="icon"
+                            className="h-7 w-7"
+                            disabled={loadingKey === `delete-${key}`}
+                            onClick={onDelete}
+                            aria-label={t('accounts.device_fingerprint_dialog.delete_version')}
+                        >
+                            <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                    </HelpTooltip>
                 )}
             </div>
         </div>

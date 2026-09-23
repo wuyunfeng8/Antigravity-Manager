@@ -7,6 +7,7 @@ import { relaunch as tauriRelaunch } from '@tauri-apps/plugin-process';
 import { showToast } from './common/ToastContainer';
 import { Button } from './ui/button';
 import { Progress } from './ui/progress';
+import { HelpTooltip } from './ui/help-tooltip';
 
 interface UpdateInfo {
   has_update: boolean;
@@ -170,15 +171,17 @@ export const UpdateNotification: React.FC<UpdateNotificationProps> = ({ onClose 
             </div>
 
             {(updateState === 'error' || updateState === 'ready' || updateState === 'manual') && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClose}
-                className="h-6 w-6 rounded-full text-muted-foreground hover:text-foreground"
-                aria-label={t('common.cancel')}
-              >
-                <X className="w-4 h-4" />
-              </Button>
+              <HelpTooltip content={t('tooltips.dismiss_update')}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleClose}
+                  className="h-6 w-6 rounded-full text-muted-foreground hover:text-foreground"
+                  aria-label={t('common.close')}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </HelpTooltip>
             )}
           </div>
 

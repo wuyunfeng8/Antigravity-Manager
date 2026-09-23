@@ -4,6 +4,7 @@ import { Terminal, X, Trash2, Search, ArrowDownToLine, Pause, Play, Bug, Info, A
 import { useDebugConsole, LogEntry, LogLevel } from '../../stores/useDebugConsole';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { HelpTooltip } from '../ui/help-tooltip';
 import { cn } from '../../utils/cn';
 
 const LEVEL_CONFIG: Record<LogLevel, { color: string, icon: React.ReactNode, label: string }> = {
@@ -206,40 +207,41 @@ const DebugConsole: React.FC<DebugConsoleProps> = ({ embedded = false }) => {
                 </div>
 
                 <div className="flex items-center gap-1.5">
-                    <Button
-                        variant={autoScroll ? "secondary" : "ghost"}
-                        size="iconSm"
-                        onClick={() => setAutoScroll(!autoScroll)}
-                        className={cn(
-                            "h-7 w-7",
-                            autoScroll && "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20"
-                        )}
-                        title={autoScroll ? t('debug_console.pause_scroll', { defaultValue: 'Pause scroll' }) : t('debug_console.resume_scroll', { defaultValue: 'Resume scroll' })}
-                    >
-                        {autoScroll ? <Pause size={13} /> : <Play size={13} />}
-                    </Button>
+                    <HelpTooltip content={t(autoScroll ? 'tooltips.debug_pause_scroll' : 'tooltips.debug_resume_scroll')}>
+                        <Button
+                            variant={autoScroll ? "secondary" : "ghost"}
+                            size="iconSm"
+                            onClick={() => setAutoScroll(!autoScroll)}
+                            className={cn(
+                                "h-7 w-7",
+                                autoScroll && "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20"
+                            )}
+                            aria-label={autoScroll ? t('debug_console.pause_scroll') : t('debug_console.resume_scroll')}
+                        >
+                            {autoScroll ? <Pause size={13} /> : <Play size={13} />}
+                        </Button>
+                    </HelpTooltip>
 
-                    <Button
-                        variant="ghost"
-                        size="iconSm"
-                        onClick={() => {
-                            clearLogs();
-                        }}
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        title={t('debug_console.clear', { defaultValue: 'Clear' })}
-                    >
-                        <Trash2 size={13} />
-                    </Button>
-
-                    {!embedded && (
+                    <HelpTooltip content={t('tooltips.debug_clear')}>
                         <Button
                             variant="ghost"
                             size="iconSm"
-                            onClick={close}
-                            className="h-7 w-7 text-muted-foreground hover:text-foreground ml-1"
+                            onClick={() => { void clearLogs(); }}
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                            aria-label={t('debug_console.clear')}
                         >
-                            <X size={13} />
+                            <Trash2 size={13} />
                         </Button>
+                    </HelpTooltip>
+
+                    {!embedded && (
+                        <HelpTooltip content={t('tooltips.debug_close')}>
+                            <Button variant="ghost" size="iconSm" onClick={close}
+                                className="h-7 w-7 text-muted-foreground hover:text-foreground ml-1"
+                                aria-label={t('tooltips.debug_close')}>
+                                <X size={13} />
+                            </Button>
+                        </HelpTooltip>
                     )}
                 </div>
             </div>

@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { listen } from '@tauri-apps/api/event';
 import { isTauri } from './utils/env';
 import { request as invoke } from './utils/request';
+import { TooltipProvider } from './components/ui/tooltip';
 
 const Settings = lazy(() => import('./pages/Settings'));
 const Accounts = lazy(() => import('./pages/Accounts'));
@@ -123,7 +124,7 @@ function App() {
   }, []);
 
   return (
-    <>
+    <TooltipProvider delayDuration={300} skipDelayDuration={100}>
       <ThemeManager />
       <Suspense fallback={null}><DebugConsole /></Suspense>
       {showUpdateNotification && (
@@ -132,7 +133,7 @@ function App() {
         </Suspense>
       )}
       <RouterProvider router={router} />
-    </>
+    </TooltipProvider>
   );
 }
 
