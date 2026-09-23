@@ -8,7 +8,7 @@
   Real quotas, recommended relay accounts, and isolated device identities. Switch accounts with one click instead of another sign-in cycle.
 
   [![Release](https://img.shields.io/github/v/release/wuyunfeng8/Antigravity-Manager?style=flat-square&color=16a34a)](https://github.com/wuyunfeng8/Antigravity-Manager/releases)
-  [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-0f172a?style=flat-square)](#installation)
+  [![Platform](https://img.shields.io/badge/platform-macOS-0f172a?style=flat-square)](#installation)
   [![License](https://img.shields.io/badge/license-MIT-64748b?style=flat-square)](LICENSE)
 
   [简体中文](README.md) · **English**
@@ -61,22 +61,14 @@ Add accounts  →  Inspect real quotas  →  Pick a recommended account  →  Re
 
 ### Download a release
 
-Open [GitHub Releases](https://github.com/wuyunfeng8/Antigravity-Manager/releases) and choose the package for your platform:
+Open [GitHub Releases](https://github.com/wuyunfeng8/Antigravity-Manager/releases) and choose the `.dmg` for Apple Silicon (`aarch64`) or Intel (`x64`). Version 1.1.0 provides macOS packages only.
 
-- macOS: `.dmg`
-- Windows: `.exe`
-- Linux: `.deb` / `.rpm` / `.AppImage`
+**Installation limitation:** Version 1.1.0 is neither Developer ID signed nor Apple notarized. macOS may block the first launch. Check the download source and the release `SHA256SUMS`; if you trust the app, follow [Apple's Open Anyway instructions](https://support.apple.com/en-us/102445) in System Settings → Privacy & Security. Do not disable system security checks.
 
-### macOS / Linux install script
+### macOS install script
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main/install.sh | bash
-```
-
-### Windows PowerShell
-
-```powershell
-irm https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main/install.ps1 | iex
 ```
 
 ### Homebrew (macOS)

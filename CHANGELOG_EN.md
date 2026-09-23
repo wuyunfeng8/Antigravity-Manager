@@ -3,11 +3,12 @@
 > Complete version history for Antigravity Tools. Return to project home at [README_EN.md](README_EN.md).
 
 *   **Version History**:
-    *   **v1.1.0 (2026-09-23)**:
+    *   **v1.1.0 (2026-09-24)**:
+        -   **macOS installation limitation**: This release provides Apple Silicon and Intel packages only. The app is not Developer ID signed or Apple notarized. macOS may block the first launch. Verify the release source and SHA256SUMS, then consult [Apple's instructions](https://support.apple.com/en-us/102445) before choosing Open Anyway in System Settings.
         -   **Credential safety**: Routine account views no longer receive tokens; native dialogs handle import and export, with private atomic exports. OAuth authorization uses PKCE, and proxy credentials are omitted from logs.
         -   **Desktop relay**: Account cards offer one Antigravity desktop switch action. Credential writes are read back; failures are reported and the client is restarted where possible.
         -   **Recovery and quotas**: Device identity changes preserve full backups and use atomic writes. Data migration activates the destination before removing the source. Missing quotas are distinct from zero, and stale data is excluded from relay recommendations.
-        -   **Release gate**: Missing platform artifacts or updater signatures stop publication. Installers verify SHA256SUMS. Production signing, cross-platform installation, and real-account switching still require pre-release acceptance.
+        -   **Release gate**: Missing macOS architecture artifacts or Tauri updater signatures stop publication. Installers verify SHA256SUMS. Real-account switching and automatic updates still require validation on target machines.
         -   **Languages**: The interface and tray now ship only Simplified Chinese and English. Old Traditional Chinese settings migrate to Simplified Chinese; other removed languages migrate to English.
         -   **Settings**: Removed obsolete CLI and IDE switch-path controls while keeping the desktop app path. A saved IDE path remains a background process-safety guard.
         -   **Update checks**: Grouped the toggle and interval, validated the 1–168 hour range, preserved the last-check timestamp when saving preferences, and recorded it only after a successful version check.

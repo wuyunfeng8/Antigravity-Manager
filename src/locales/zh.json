@@ -417,7 +417,7 @@
       "brew_upgrading": "更新中...",
       "brew_confirm_title": "通过 Homebrew 更新",
       "brew_confirm_desc": "即将执行以下命令更新应用，更新完成后需要重启应用。",
-      "brew_quarantine_hint": "如更新后遇到「应用已损坏」提示，请在终端运行：",
+      "brew_unsigned_hint": "本版未使用 Apple Developer ID 签名或公证。若首次打开被阻止，请核对下载来源，并按 macOS 提示在“系统设置 → 隐私与安全性”中决定是否仍要打开。",
       "brew_confirm_btn": "开始更新",
       "brew_success_title": "升级完成",
       "brew_upgrade_success": "Homebrew 升级成功，请重启应用以加载新版本。",

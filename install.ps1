@@ -175,6 +175,10 @@ Write-Host ""
 if (-not (Get-ReleaseVersion)) {
     Wait-AndExit 1
 }
+if ($script:ReleaseVersion -eq "1.1.0") {
+    Script-Error "AMT 1.1.0 provides macOS packages only. Set `$Version to an older release to install on Windows."
+    Wait-AndExit 1
+}
 
 # Step 2: Build download URL
 Get-DownloadUrl

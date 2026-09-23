@@ -8,7 +8,7 @@
   真实配额、推荐接力、独立设备身份。让账号切换回到一次点击，而不是一轮重新登录。
 
   [![Release](https://img.shields.io/github/v/release/wuyunfeng8/Antigravity-Manager?style=flat-square&color=16a34a)](https://github.com/wuyunfeng8/Antigravity-Manager/releases)
-  [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-0f172a?style=flat-square)](#安装)
+  [![Platform](https://img.shields.io/badge/platform-macOS-0f172a?style=flat-square)](#安装)
   [![License](https://img.shields.io/badge/license-MIT-64748b?style=flat-square)](LICENSE)
 
   **简体中文** · [English](README_EN.md)
@@ -61,22 +61,14 @@ AMT 是面向 Google Antigravity 用户的桌面账号中枢。它把账号入�
 
 ### 从 Releases 下载
 
-前往 [GitHub Releases](https://github.com/wuyunfeng8/Antigravity-Manager/releases)，选择对应平台的安装包：
+前往 [GitHub Releases](https://github.com/wuyunfeng8/Antigravity-Manager/releases)，根据 Mac 芯片选择 Apple Silicon（`aarch64`）或 Intel（`x64`）的 `.dmg`。1.1.0 仅发布 macOS 安装包。
 
-- macOS：`.dmg`
-- Windows：`.exe`
-- Linux：`.deb` / `.rpm` / `.AppImage`
+**安装限制：**1.1.0 未使用 Apple Developer ID 签名，也未经 Apple 公证。macOS 可能阻止首次打开；请先核对下载来源和 Release 中的 `SHA256SUMS`，确认可信后参照 [Apple 的“仍要打开”说明](https://support.apple.com/zh-cn/102445) 在“系统设置 → 隐私与安全性”中操作。不要关闭系统安全检查。
 
-### macOS / Linux 安装脚本
+### macOS 安装脚本
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main/install.sh | bash
-```
-
-### Windows PowerShell
-
-```powershell
-irm https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main/install.ps1 | iex
 ```
 
 ### Homebrew（macOS）

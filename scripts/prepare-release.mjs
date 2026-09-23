@@ -18,18 +18,6 @@ const expected = [
   'AMT_aarch64.app.tar.gz.sig',
   'AMT_x64.app.tar.gz',
   'AMT_x64.app.tar.gz.sig',
-  'AMT_universal.app.tar.gz',
-  'AMT_universal.app.tar.gz.sig',
-  `AMT_${version}_x64-setup.exe`,
-  `AMT_${version}_x64-setup.exe.sig`,
-  `AMT_${version}_amd64.AppImage`,
-  `AMT_${version}_amd64.AppImage.sig`,
-  `AMT_${version}_aarch64.AppImage`,
-  `AMT_${version}_aarch64.AppImage.sig`,
-  `AMT_${version}_amd64.deb`,
-  `AMT_${version}_arm64.deb`,
-  `AMT-${version}-1.x86_64.rpm`,
-  `AMT-${version}-1.aarch64.rpm`,
 ];
 
 function collectFiles(directory, files = new Map()) {
@@ -65,9 +53,6 @@ const updater = {
   platforms: {
     'darwin-aarch64': { url: `${base}/AMT_aarch64.app.tar.gz`, signature: signature('AMT_aarch64.app.tar.gz.sig') },
     'darwin-x86_64': { url: `${base}/AMT_x64.app.tar.gz`, signature: signature('AMT_x64.app.tar.gz.sig') },
-    'windows-x86_64': { url: `${base}/AMT_${version}_x64-setup.exe`, signature: signature(`AMT_${version}_x64-setup.exe.sig`) },
-    'linux-x86_64': { url: `${base}/AMT_${version}_amd64.AppImage`, signature: signature(`AMT_${version}_amd64.AppImage.sig`) },
-    'linux-aarch64': { url: `${base}/AMT_${version}_aarch64.AppImage`, signature: signature(`AMT_${version}_aarch64.AppImage.sig`) },
   },
 };
 
@@ -80,4 +65,4 @@ const checksums = [...expected, 'updater.json'].sort().map((name) => {
   return `${digest}  ${basename(name)}`;
 });
 writeFileSync(join(outputDir, 'SHA256SUMS'), checksums.join('\n') + '\n');
-process.stdout.write(`Validated ${expected.length} release assets and five updater signatures for v${version}.\n`);
+process.stdout.write(`Validated ${expected.length} macOS release assets and two updater signatures for v${version}.\n`);

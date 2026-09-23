@@ -54,10 +54,8 @@ Environment Variables:
     DRY_RUN     Set to "1" to preview commands without executing
 
 Supported Platforms:
-    - Linux x86_64:  .deb (Debian/Ubuntu), .rpm (Fedora/RHEL), .AppImage (Universal)
-    - Linux aarch64: .deb (Debian/Ubuntu), .rpm (Fedora/RHEL), .AppImage (Universal)
-    - macOS x86_64:  .dmg
-    - macOS arm64:   .dmg
+    - Current release: macOS x86_64 and arm64 (.dmg)
+    - Older releases may still have Linux packages when VERSION is specified.
 
 EOF
     exit 0
@@ -292,6 +290,9 @@ install_macos() {
     hdiutil detach "$mount_point" -quiet 2>/dev/null || true
 
     success "${APP_NAME} installed to /Applications!"
+    if [[ "$RELEASE_VERSION" == "1.1.0" ]]; then
+        warn "AMT 1.1.0 is not Developer ID signed or Apple notarized. If macOS blocks the first launch, verify the download source and follow Apple's Open Anyway steps in System Settings > Privacy & Security."
+    fi
 }
 
 # Cleanup
@@ -321,6 +322,9 @@ main() {
     detect_platform
     detect_linux_distro
     get_version
+    if [[ "$PLATFORM" == "linux" && "$RELEASE_VERSION" == "1.1.0" ]]; then
+        error "AMT 1.1.0 provides macOS packages only. Specify an older release with VERSION for a Linux package."
+    fi
     build_download_url
     download_installer
 

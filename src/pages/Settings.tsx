@@ -1181,21 +1181,7 @@ function Settings() {
                             </div>
                         </div>
                         <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 rounded-lg p-3">
-                            <p className="text-xs text-amber-700 dark:text-amber-400 mb-2">{t('settings.about.brew_quarantine_hint')}</p>
-                            <div className="flex items-center justify-between gap-2">
-                                <code className="text-xs text-amber-800 dark:text-amber-300 break-all">sudo xattr -rd com.apple.quarantine "/Applications/AMT.app"</code>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="shrink-0 h-7 text-xs text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/30"
-                                    onClick={() => {
-                                        navigator.clipboard.writeText('sudo xattr -rd com.apple.quarantine "/Applications/AMT.app"');
-                                        showToast(t('common.copied', 'Copied'), 'success');
-                                    }}
-                                >
-                                    {t('common.copy', 'Copy')}
-                                </Button>
-                            </div>
+                            <p className="text-xs text-amber-700 dark:text-amber-400">{t('settings.about.brew_unsigned_hint')}</p>
                         </div>
                     </div>
                 </ModalDialog>

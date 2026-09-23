@@ -417,7 +417,7 @@
       "brew_upgrading": "Upgrading...",
       "brew_confirm_title": "Update via Homebrew",
       "brew_confirm_desc": "The following command will be executed to update the app. A restart is required after the upgrade.",
-      "brew_quarantine_hint": "If you see an \"App is damaged\" error after update, run in terminal:",
+      "brew_unsigned_hint": "This release is not Developer ID signed or notarized. If macOS blocks the first launch, verify the download source and use System Settings → Privacy & Security to decide whether to open it anyway.",
       "brew_confirm_btn": "Start Update",
       "brew_success_title": "Upgrade Complete",
       "brew_upgrade_success": "Homebrew upgrade succeeded. Please restart the app to load the new version.",
