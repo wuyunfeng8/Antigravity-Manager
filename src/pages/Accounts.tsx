@@ -34,6 +34,19 @@ function isRiskAccount(account: Account): boolean {
   return Boolean(account.disabled || account.validation_blocked || account.quota?.is_forbidden);
 }
 
+function hasFreshRelayQuota(account: Account): boolean {
+  const quota = account.quota;
+  const age = quota ? Date.now() / 1000 - quota.last_updated : Infinity;
+  if (!quota || age < 0 || age > 30 * 60) return false;
+  const claude = findQuotaModel(quota.models || [], "claude")?.percentage ?? 0;
+  const gemini = findQuotaModel(quota.models || [], "gemini")?.percentage ?? 0;
+  return Math.max(claude, gemini) > 0;
+}
+
+function isReadyForRelay(account: Account): boolean {
+  return !isRiskAccount(account) && hasFreshRelayQuota(account);
+}
+
 function accountScore(account: Account): number {
   const tier = getAccountTier(account);
   const tierWeight = tier === "ultra" ? 300 : tier === "pro" ? 200 : 100;
@@ -43,7 +56,7 @@ function accountScore(account: Account): number {
 }
 
 function quotaValue(account: Account | null, category: ModelCategory, quotaWindow: QuotaWindow) {
-  if (!account) return { percentage: 0, resetTime: undefined as string | undefined };
+  if (!account) return { percentage: null, resetTime: undefined as string | undefined };
   const model = findQuotaModel(account.quota?.models, category);
   return getCategoryQuotaDisplay(category, model, account.quota?.quota_groups, quotaWindow);
 }
@@ -55,22 +68,22 @@ function HeroQuota({
   quotaWindow,
 }: {
   label: string;
-  value: number;
+  value: number | null;
   resetTime?: string;
   quotaWindow?: QuotaWindow;
 }) {
   const { t } = useTranslation();
-  const color = value <= 20 ? "bg-rose-400" : value <= 50 ? "bg-amber-400" : "bg-emerald-400";
+  const color = value === null ? "bg-slate-500" : value <= 20 ? "bg-rose-400" : value <= 50 ? "bg-amber-400" : "bg-emerald-400";
   const resetText = formatQuotaResetTime(resetTime, value, quotaWindow || "5h", t);
 
   return (
     <div className="min-w-0 space-y-1">
       <div className="flex items-center justify-between gap-2 text-[11px] text-slate-300">
         <span className="truncate">{label}</span>
-        <span className="font-semibold text-white">{value}%</span>
+        <span className="font-semibold text-white">{value === null ? "—" : `${value}%`}</span>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-        <div className={cn("h-full rounded-full transition-all duration-500", color)} style={{ width: `${value}%` }} />
+        <div className={cn("h-full rounded-full transition-all duration-500", color)} style={{ width: `${value ?? 0}%` }} />
       </div>
       <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
         <span className="flex items-center gap-1 font-mono truncate" title={resetTime ? formatDate(resetTime) || undefined : undefined}>
@@ -130,8 +143,9 @@ export default function Accounts() {
   }, []);
 
   const bestStandby = useMemo(() => {
+    if (!currentAccount) return null;
     return accounts
-      .filter((account) => account.id !== currentAccount?.id && !isRiskAccount(account))
+      .filter((account) => account.id !== currentAccount?.id && isReadyForRelay(account))
       .sort((a, b) => accountScore(b) - accountScore(a))[0] || null;
   }, [accounts, currentAccount?.id]);
 
@@ -141,7 +155,7 @@ export default function Accounts() {
       const matchesQuery = !normalized || `${account.email} ${account.name || ""} ${account.custom_label || ""}`.toLowerCase().includes(normalized);
       if (!matchesQuery) return false;
       if (filter === "risk") return isRiskAccount(account);
-      if (filter === "ready") return account.id !== currentAccount?.id && !isRiskAccount(account);
+      if (filter === "ready") return Boolean(currentAccount) && account.id !== currentAccount?.id && isReadyForRelay(account);
       return true;
     });
   }, [accounts, currentAccount?.id, filter, query]);
@@ -153,7 +167,9 @@ export default function Accounts() {
   }, [filteredAccounts]);
 
   const riskCount = accounts.filter(isRiskAccount).length;
-  const readyCount = accounts.filter((account) => account.id !== currentAccount?.id && !isRiskAccount(account)).length;
+  const readyCount = currentAccount
+    ? accounts.filter((account) => account.id !== currentAccount.id && isReadyForRelay(account)).length
+    : 0;
   const currentQuotas = {
     gemini: quotaValue(currentAccount, "gemini", quotaWindow),
     claude: quotaValue(currentAccount, "claude", quotaWindow),

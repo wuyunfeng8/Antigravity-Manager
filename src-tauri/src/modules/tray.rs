@@ -17,7 +17,15 @@ static TRAY_BUSY: AtomicU8 = AtomicU8::new(IDLE);
 static TRAY_ERROR: AtomicU8 = AtomicU8::new(IDLE);
 
 fn is_relay_candidate(account: &Account, current_id: Option<&str>) -> bool {
+    let has_fresh_quota = account.quota.as_ref().is_some_and(|quota| {
+        let age = chrono::Utc::now().timestamp() - quota.last_updated;
+        (0..=30 * 60).contains(&age)
+            && ["claude", "gemini"]
+                .iter()
+                .any(|category| model_percentage(quota, category).is_some_and(|value| value > 0))
+    });
     Some(account.id.as_str()) != current_id
+        && has_fresh_quota
         && !account.disabled
         && !account.validation_blocked
         && !account
@@ -490,6 +498,12 @@ mod tests {
         let mut account = Account::new(id.to_string(), format!("{id}@example.test"), token);
         let mut quota = QuotaData::new();
         quota.subscription_tier = Some(tier.to_string());
+        quota.models.push(
+            serde_json::from_value::<ModelQuota>(serde_json::json!({
+                "name": "gemini-3-flash", "percentage": 50, "reset_time": ""
+            }))
+            .unwrap(),
+        );
         account.quota = Some(quota);
         account.disabled = disabled;
         account
@@ -504,7 +518,11 @@ mod tests {
         let mut forbidden = account("forbidden", "ULTRA", false);
         forbidden.quota.as_mut().unwrap().is_forbidden = true;
         let ready = account("ready", "PRO", false);
-        let accounts = [current, disabled, blocked, forbidden, ready];
+        let mut stale = account("stale", "ULTRA", false);
+        stale.quota.as_mut().unwrap().last_updated -= 31 * 60;
+        let mut empty = account("empty", "ULTRA", false);
+        empty.quota.as_mut().unwrap().models.clear();
+        let accounts = [current, disabled, blocked, forbidden, stale, empty, ready];
         assert!(recommended_account(&accounts, None).is_none());
         assert_eq!(
             recommended_account(&accounts, Some("current")).unwrap().id,

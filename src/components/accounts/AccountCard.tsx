@@ -121,7 +121,7 @@ export default function AccountCard({
       const display = getCategoryQuotaDisplay(String(name), typedModel, account.quota?.quota_groups, quotaWindow);
       return {
         name: String(name),
-        percentage: account.quota && (quotaWindow === "5h" || weeklyDataAvailable) && Number.isFinite(display.percentage)
+        percentage: account.quota && (quotaWindow === "5h" || weeklyDataAvailable) && display.percentage !== null && Number.isFinite(display.percentage)
           ? Math.max(0, Math.min(100, display.percentage))
           : null,
         resetTime: display.resetTime,
