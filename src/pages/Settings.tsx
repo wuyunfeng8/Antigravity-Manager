@@ -1082,7 +1082,7 @@ function Settings() {
                             </div>
 
                             <div className="mt-10 px-4 pb-2 text-center text-[10px] text-muted-foreground sm:mt-12">
-                                {t('settings.about.copyright')}
+                                {t('settings.about.independent_notice')}
                             </div>
                         </div>
                     )
