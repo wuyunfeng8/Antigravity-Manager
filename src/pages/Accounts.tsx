@@ -160,11 +160,11 @@ export default function Accounts() {
     gpt: quotaValue(currentAccount, "gpt", quotaWindow),
   };
 
-  const handleSwitch = async (account: Account, targetIde?: string) => {
+  const handleSwitch = async (account: Account) => {
     if (switchingId || isRiskAccount(account)) return;
     setSwitchingId(account.id);
     try {
-      await switchAccount(account.id, targetIde);
+      await switchAccount(account.id);
       await fetchAccounts();
       showToast(t("accounts.toast.switch_success", { defaultValue: `已接力到 ${accountName(account)}` }), "success");
     } catch (error) {
@@ -251,7 +251,7 @@ export default function Accounts() {
         return next;
       })}
       quotaWindow={quotaWindow}
-      onSwitch={(targetIde) => handleSwitch(account, targetIde)}
+      onSwitch={() => handleSwitch(account)}
       onRefresh={() => handleRefresh(account)}
       onViewDevice={() => setDeviceAccount(account)}
       onViewError={() => setErrorAccount(account)}

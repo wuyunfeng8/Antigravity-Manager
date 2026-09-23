@@ -10,7 +10,6 @@ import {
   Pencil,
   RefreshCw,
   Sparkles,
-  Terminal,
   Trash2,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -44,7 +43,7 @@ interface AccountCardProps {
   showResets: boolean;
   onToggleResets: () => void;
   quotaWindow?: "5h" | "weekly";
-  onSwitch: (targetIde?: string) => void;
+  onSwitch: () => void;
   onRefresh: () => void;
   onViewDevice: () => void;
   onViewError: () => void;
@@ -200,10 +199,6 @@ export default function AccountCard({
               <DropdownMenuItem onClick={onViewDevice}><Fingerprint className="mr-2 h-4 w-4" />{t("relay.actions.device")}</DropdownMenuItem>
               <DropdownMenuItem onClick={() => setEditing(true)}><Pencil className="mr-2 h-4 w-4" />{t("relay.actions.label")}</DropdownMenuItem>
               {onWarmup && <DropdownMenuItem onClick={onWarmup}><Sparkles className="mr-2 h-4 w-4" />{t("relay.actions.warmup")}</DropdownMenuItem>}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem disabled={risky || isSwitching} onClick={() => onSwitch("classic")}><RefreshCw className="mr-2 h-4 w-4" />{t("relay.actions.classic")}</DropdownMenuItem>
-              <DropdownMenuItem disabled={risky || isSwitching} onClick={() => onSwitch("ide")}><RefreshCw className="mr-2 h-4 w-4" />{t("relay.actions.ide")}</DropdownMenuItem>
-              <DropdownMenuItem disabled={risky || isSwitching} onClick={() => onSwitch("agy")}><Terminal className="mr-2 h-4 w-4" />{t("relay.actions.cli")}</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onExport}><Download className="mr-2 h-4 w-4" />{t("relay.actions.export")}</DropdownMenuItem>
               <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive"><Trash2 className="mr-2 h-4 w-4" />{t("relay.actions.delete")}</DropdownMenuItem>

@@ -27,7 +27,7 @@ AMT 是面向 Google Antigravity 用户的桌面账号中枢。它把账号入�
 | 能力 | 工作方式 | 带来的价值 |
 | --- | --- | --- |
 | **真实配额雷达** | 读取并聚合 Antigravity 的真实配额桶 | 只展示 Claude、Gemini Pro、Gemini Flash 等核心余量、周期和异常状态 |
-| **一键账号接力** | 写入系统凭据库、CLI Keyring 或 Antigravity SQLite 状态，并重新启动目标客户端 | 不再手工退出、登录和授权，配额不足时快速切换到健康账号 |
+| **一键账号接力** | 写入 Antigravity 主程序使用的系统凭据库或兼容 SQLite 状态，并重新启动主程序 | 不再手工退出、登录和授权，配额不足时快速切换到健康账号 |
 | **独立设备身份** | 为账号保存并应用独立的 `machineId`、`macMachineId`、`devDeviceId` 与 `sqmId` | 降低多个账号长期共用同一客户端身份产生的关联风险 |
 
 ## 使用流程
@@ -50,7 +50,7 @@ AMT 是面向 Google Antigravity 用户的桌面账号中枢。它把账号入�
 - 5 小时滑动窗口与周配额切换。
 - FREE、PRO、ULTRA 订阅等级识别。
 - Google OAuth、Refresh Token、旧数据库与自定义 `state.vscdb` 导入。
-- Antigravity Classic、Antigravity IDE 与 `agy` CLI 切换。
+- Antigravity 主程序账号切换。
 - 设备身份生成、绑定、历史版本和原始状态恢复。
 - 账号验证异常、403 和 OAuth 失效状态提示。
 - 托盘常驻、迷你配额视图、定时刷新与周配额预热。

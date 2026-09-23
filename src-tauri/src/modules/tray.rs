@@ -274,9 +274,13 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
                                 let integration = crate::modules::integration::DesktopIntegration {
                                     app_handle: app_handle.clone(),
                                 };
-                                if modules::switch_account(&target_id, None, &integration)
-                                    .await
-                                    .is_ok()
+                                if modules::switch_account(
+                                    &target_id,
+                                    Some("classic"),
+                                    &integration,
+                                )
+                                .await
+                                .is_ok()
                                 {
                                     let _ = app_handle.emit("tray://account-switched", target_id);
                                     succeeded = true;

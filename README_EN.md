@@ -27,7 +27,7 @@ AMT is a desktop account hub for Google Antigravity users. It brings account onb
 | Capability | How it works | Why it matters |
 | --- | --- | --- |
 | **Real quota radar** | Reads and consolidates Antigravity's actual quota buckets | Shows useful Claude, Gemini Pro, and Gemini Flash capacity, cycles, and account problems without duplicate model noise |
-| **One-click account relay** | Writes the selected account to native credential storage, CLI Keyring, or Antigravity SQLite state, then restarts the target client | Replaces the manual sign-out, sign-in, and authorization cycle when quota runs low |
+| **One-click account relay** | Writes the selected account to the Antigravity desktop app's credential store or compatible SQLite state, then restarts the app | Replaces the manual sign-out, sign-in, and authorization cycle when quota runs low |
 | **Isolated device identities** | Stores and applies separate `machineId`, `macMachineId`, `devDeviceId`, and `sqmId` values per account | Reduces the correlation risk of multiple accounts sharing one long-lived client identity |
 
 ## Workflow
@@ -50,7 +50,7 @@ Add accounts  →  Inspect real quotas  →  Pick a recommended account  →  Re
 - 5-hour sliding-window and weekly quota views.
 - FREE, PRO, and ULTRA subscription-tier detection.
 - Google OAuth, refresh-token, legacy database, and custom `state.vscdb` import.
-- Switching for Antigravity Classic, Antigravity IDE, and the `agy` CLI.
+- Account switching for the Antigravity desktop app.
 - Device identity generation, binding, history, and original-state restoration.
 - Clear account verification, 403, and OAuth-expiration states.
 - System tray, compact quota view, scheduled refresh, and weekly quota warmup.

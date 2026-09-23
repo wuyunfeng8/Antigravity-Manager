@@ -46,18 +46,12 @@ pub async fn delete_account(app: tauri::AppHandle, account_id: String) -> Result
 
 /// 切换账号
 #[tauri::command]
-pub async fn switch_account(
-    app: tauri::AppHandle,
-    account_id: String,
-    target_ide: Option<String>,
-) -> Result<(), String> {
+pub async fn switch_account(app: tauri::AppHandle, account_id: String) -> Result<(), String> {
     let service = modules::account_service::AccountService::new(
         crate::modules::integration::SystemManager::Desktop(app.clone()),
     );
 
-    service
-        .switch_account(&account_id, target_ide.as_deref())
-        .await?;
+    service.switch_account(&account_id, Some("classic")).await?;
 
     // 同步托盘
     crate::modules::tray::update_tray_menus(&app);
