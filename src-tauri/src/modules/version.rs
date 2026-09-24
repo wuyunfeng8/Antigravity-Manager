@@ -9,7 +9,6 @@ use std::path::PathBuf;
 #[derive(Debug, Clone)]
 pub struct AntigravityVersion {
     pub short_version: String,
-    #[allow(dead_code)] // 预留给构建/诊断输出
     pub bundle_version: String,
 }
 
@@ -230,19 +229,9 @@ fn get_version_linux(exe_path: &PathBuf) -> Result<AntigravityVersion, String> {
 }
 
 /// 比较版本号
+#[inline]
 pub fn compare_version(v1: &str, v2: &str) -> std::cmp::Ordering {
-    let parts1: Vec<u32> = v1.split('.').filter_map(|s| s.parse().ok()).collect();
-    let parts2: Vec<u32> = v2.split('.').filter_map(|s| s.parse().ok()).collect();
-
-    for i in 0..parts1.len().max(parts2.len()) {
-        let p1 = parts1.get(i).unwrap_or(&0);
-        let p2 = parts2.get(i).unwrap_or(&0);
-        match p1.cmp(p2) {
-            std::cmp::Ordering::Equal => continue,
-            other => return other,
-        }
-    }
-    std::cmp::Ordering::Equal
+    crate::constants::compare_semver(v1, v2)
 }
 
 #[cfg(test)]

@@ -1,5 +1,4 @@
 use std::process::Command as StdCommand;
-use tokio::process::Command as TokioCommand;
 
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
@@ -16,16 +15,6 @@ pub trait CommandExtWrapper {
 
 #[allow(dead_code)]
 impl CommandExtWrapper for StdCommand {
-    fn creation_flags_windows(&mut self) -> &mut Self {
-        #[cfg(target_os = "windows")]
-        self.creation_flags(WINDOWS_NO_WINDOW_FLAGS);
-
-        self
-    }
-}
-
-#[allow(dead_code)]
-impl CommandExtWrapper for TokioCommand {
     fn creation_flags_windows(&mut self) -> &mut Self {
         #[cfg(target_os = "windows")]
         self.creation_flags(WINDOWS_NO_WINDOW_FLAGS);

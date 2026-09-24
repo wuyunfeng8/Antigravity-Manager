@@ -69,7 +69,7 @@ detect_platform() {
     case "$OS" in
         Linux)  PLATFORM="linux" ;;
         Darwin) PLATFORM="macos" ;;
-        *)      error "Unsupported OS: $OS. Use install.ps1 for Windows." ;;
+        *)      error "Unsupported OS: $OS." ;;
     esac
 
     case "$ARCH" in

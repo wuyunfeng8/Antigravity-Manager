@@ -8,7 +8,6 @@ use tokio::sync::watch;
 
 struct OAuthFlowState {
     auth_url: String,
-    #[allow(dead_code)]
     redirect_uri: String,
     state: String,
     client_key: String,

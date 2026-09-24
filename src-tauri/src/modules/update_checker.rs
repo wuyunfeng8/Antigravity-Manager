@@ -397,25 +397,9 @@ async fn check_static_url(url: &str, source_name: &str) -> Result<UpdateInfo, St
 }
 
 /// Compare two semantic versions (e.g., "3.3.30" vs "3.3.29")
+#[inline]
 fn compare_versions(latest: &str, current: &str) -> bool {
-    let parse_version =
-        |v: &str| -> Vec<u32> { v.split('.').filter_map(|s| s.parse::<u32>().ok()).collect() };
-
-    let latest_parts = parse_version(latest);
-    let current_parts = parse_version(current);
-
-    for i in 0..latest_parts.len().max(current_parts.len()) {
-        let latest_part = latest_parts.get(i).unwrap_or(&0);
-        let current_part = current_parts.get(i).unwrap_or(&0);
-
-        if latest_part > current_part {
-            return true;
-        } else if latest_part < current_part {
-            return false; // e.g. local: 3.3.30, remote: 3.3.30 => false
-        }
-    }
-
-    false
+    crate::constants::compare_semver(latest, current) == std::cmp::Ordering::Greater
 }
 
 /// Check if enough time has passed since last check
