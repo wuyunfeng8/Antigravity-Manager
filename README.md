@@ -117,3 +117,5 @@ cargo check
 本项目采用 [MIT](LICENSE) 许可。
 
 本项目在学习和参考 [lbjlaq/Antigravity-Manager](https://github.com/lbjlaq/Antigravity-Manager) 的基础上独立演进，谨致谢意。
+
+本项目在 [LINUX DO](https://linux.do/) 上交流分享，谨致谢意。
