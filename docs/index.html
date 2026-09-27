@@ -1,25 +1,25 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="scroll-smooth dark">
+<html lang="zh-CN" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AMT — The system for Antigravity multi-account relay</title>
-  <meta name="description" content="AMT is a purpose-built desktop system for Google Antigravity. Ground-truth quota monitoring, 1-click silent relay, and isolated device identity.">
-  <meta name="keywords" content="Antigravity, Antigravity Manager, AMT, Google Antigravity, 多账号管理, 配额雷达, 账号接力, 设备身份隔离, Claude 3.5 Sonnet, Gemini Pro, Linear style">
+  <title>AMT — Antigravity Multi-Account Relay Manager</title>
+  <meta name="description" content="AMT is a purpose-built macOS desktop system for Google Antigravity. Real quota radar, 1-click silent relay, isolated device identity. 100% local, open source.">
+  <meta name="keywords" content="Antigravity, Antigravity Manager, AMT, Google Antigravity, 多账号管理, 配额雷达, 账号接力, 设备身份隔离, Tauri, Rust">
 
-  <!-- Open Graph / Meta -->
+  <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="AMT — The system for Antigravity multi-account relay">
-  <meta property="og:description" content="真实配额、推荐接力、独立设备身份。让账号切换回到一次点击，而不是一轮重新登录。">
+  <meta property="og:title" content="AMT — Antigravity Multi-Account Relay Manager">
+  <meta property="og:description" content="Real quota radar, 1-click silent relay, isolated device identity. Never lose your coding momentum.">
   <meta property="og:image" content="../public/icon.png">
   <link rel="icon" type="image/png" href="../public/icon.png">
 
-  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Tailwind CSS via Google CDN with fallback -->
+  <!-- Tailwind CSS -->
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <script>
     if (!window.tailwind) {
@@ -29,34 +29,17 @@
   <script>
     if (window.tailwind) {
       tailwind.config = {
-        darkMode: 'class',
         theme: {
           extend: {
-            colors: {
-              // Linear.app iconic dark color palette
-              linear: {
-                bg: '#08090a',
-                subtle: '#0f1011',
-                card: '#121315',
-                'card-hover': '#18191b',
-                border: 'rgba(255, 255, 255, 0.08)',
-                'border-hover': 'rgba(255, 255, 255, 0.16)',
-                'border-active': 'rgba(94, 106, 210, 0.4)',
-                text: '#f7f8f8',
-                'text-secondary': '#8a8f98',
-                'text-muted': '#62666d',
-                brand: '#5e6ad2',
-                'brand-light': '#7a85e8',
-                accent: '#8b5cf6',
-                cyan: '#06b6d4',
-                emerald: '#10b981',
-                amber: '#f59e0b',
-                red: '#ef4444'
-              }
-            },
             fontFamily: {
               sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', '"PingFang SC"', 'sans-serif'],
-              mono: ['"JetBrains Mono"', 'ui-monospace', 'Menlo', 'Monaco', 'monospace'],
+              mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'monospace']
+            },
+            colors: {
+              brand: '#6366f1',
+              'brand-light': '#818cf8',
+              surface: '#111111',
+              'surface-hover': '#191919'
             }
           }
         }
@@ -65,855 +48,651 @@
   </script>
 
   <style>
-    /* Linear.app design aesthetics & glowing effects */
+    /* ── Base ─────────────────────────────── */
     body {
-      background-color: #08090a;
-      color: #f7f8f8;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", sans-serif;
-      letter-spacing: -0.015em;
+      background-color: #000000;
+      color: #f5f5f5;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+      letter-spacing: -0.011em;
       overflow-x: hidden;
     }
 
     ::selection {
-      background-color: rgba(94, 106, 210, 0.35);
-      color: #ffffff;
+      background-color: rgba(99, 102, 241, 0.3);
+      color: #fff;
     }
 
-    /* Linear's signature background gradient glow */
-    .linear-glow-top {
+    /* ── Film Grain Texture ────────────── */
+    .grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 99;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 256px;
+    }
+
+    /* ── Gradient Text ──────────────────── */
+    .text-gradient-hero {
+      background: linear-gradient(180deg, #FFFFFF 20%, #6B7280 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .text-gradient-cta {
+      background: linear-gradient(180deg, #FFFFFF 0%, #9CA3AF 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Glass Nav ──────────────────────── */
+    .glass-nav {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(16px) saturate(1.4);
+      -webkit-backdrop-filter: blur(16px) saturate(1.4);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    /* ── Cards ──────────────────────────── */
+    .card {
+      background-color: #111111;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      transition: border-color 0.3s ease, transform 0.3s ease;
+    }
+    .card:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .card-glow-top {
+      position: relative;
+    }
+    .card-glow-top::before {
+      content: '';
       position: absolute;
       top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 100vw;
-      max-width: 1400px;
-      height: 600px;
-      background: radial-gradient(ellipse 70% 50% at 50% -10%, rgba(94, 106, 210, 0.18), rgba(139, 92, 246, 0.08) 50%, transparent 80%);
-      pointer-events: none;
-      z-index: 0;
+      left: 20%;
+      right: 20%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.6), transparent);
     }
 
-    .linear-glow-bottom {
-      background: radial-gradient(ellipse 60% 40% at 50% 120%, rgba(94, 106, 210, 0.15), transparent 70%);
-    }
-
-    /* Linear's signature gradient text */
-    .linear-text-gradient {
-      background: linear-gradient(180deg, #FFFFFF 0%, #8A8F98 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .linear-brand-gradient {
-      background: linear-gradient(135deg, #A8B1FF 0%, #5E6AD2 50%, #06B6D4 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    /* Linear Card Frame */
-    .linear-card {
-      background-color: rgba(18, 19, 21, 0.75);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+    /* ── Window Frame ──────────────────── */
+    .window-frame {
+      background-color: #0a0a0a;
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 16px;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.03),
+        0 25px 80px -15px rgba(0, 0, 0, 0.9),
+        0 0 120px -30px rgba(99, 102, 241, 0.12);
     }
-    .linear-card:hover {
-      border-color: rgba(255, 255, 255, 0.16);
-      background-color: rgba(24, 25, 27, 0.85);
+
+    /* ── Buttons ────────────────────────── */
+    .btn-primary {
+      background-color: #f5f5f5;
+      color: #000;
+      border-radius: 9999px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      box-shadow: 0 0 16px rgba(255, 255, 255, 0.08);
+    }
+    .btn-primary:hover {
+      background-color: #fff;
+      box-shadow: 0 0 24px rgba(255, 255, 255, 0.2);
       transform: translateY(-1px);
-      box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
     }
 
-    /* Linear Glowing Window Frame */
-    .linear-window {
-      background-color: #0d0e10;
+    .btn-ghost {
       border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05),
-                  0 24px 64px -12px rgba(0, 0, 0, 0.8),
-                  0 0 100px -20px rgba(94, 106, 210, 0.2);
-    }
-
-    /* Linear Button Styles */
-    .linear-btn-primary {
-      background-color: #f7f8f8;
-      color: #08090a;
+      color: #f5f5f5;
       border-radius: 9999px;
       font-weight: 500;
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
       transition: all 0.2s ease;
     }
-    .linear-btn-primary:hover {
-      background-color: #ffffff;
-      box-shadow: 0 0 28px rgba(255, 255, 255, 0.25);
-      transform: translateY(-0.5px);
-    }
-
-    .linear-btn-secondary {
+    .btn-ghost:hover {
       background-color: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #f7f8f8;
-      border-radius: 9999px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-    }
-    .linear-btn-secondary:hover {
-      background-color: rgba(255, 255, 255, 0.08);
       border-color: rgba(255, 255, 255, 0.2);
     }
 
-    /* Keyboard badge */
-    .kbd-shortcut {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 4px;
-      padding: 1px 5px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      color: #8a8f98;
+    /* ── Timeline ──────────────────────── */
+    .timeline-line {
+      width: 1px;
+      background: linear-gradient(180deg, rgba(99, 102, 241, 0.6), rgba(99, 102, 241, 0.05));
     }
+
+    .timeline-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #6366f1;
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+    }
+    .timeline-dot-muted {
+      background: rgba(99, 102, 241, 0.3);
+      box-shadow: none;
+    }
+
+    /* ── Scroll Animation ──────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── FAQ Accordion ─────────────────── */
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), padding 0.35s ease;
+      padding-top: 0;
+    }
+    .faq-item.open .faq-answer {
+      max-height: 200px;
+      padding-top: 12px;
+    }
+    .faq-icon {
+      transition: transform 0.25s ease;
+    }
+    .faq-item.open .faq-icon {
+      transform: rotate(45deg);
+    }
+
+    /* ── Tab System ─────────────────────── */
+    .install-tab { display: none; }
+    .install-tab.active { display: block; }
+    .tab-btn-active {
+      color: #fff !important;
+      border-bottom: 2px solid #6366f1;
+    }
+
+    /* ── Scrollbar ──────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #000; }
+    ::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #444; }
   </style>
 </head>
-<body class="bg-linear-bg text-linear-text antialiased min-h-screen relative selection:bg-linear-brand/30">
+<body class="antialiased min-h-screen">
+  <div class="grain"></div>
 
-  <!-- Ambient Glow Background -->
-  <div class="linear-glow-top"></div>
-
-  <!-- Linear-style Navigation Bar -->
-  <header class="sticky top-0 z-50 backdrop-blur-xl bg-linear-bg/80 border-b border-linear-border transition-all">
-    <div class="max-w-[1320px] mx-auto px-5 lg:px-8 h-16 flex items-center justify-between">
-
-      <!-- Brand Logo -->
-      <a href="#" class="flex items-center space-x-3 group">
-        <div class="w-8 h-8 rounded-lg bg-linear-card border border-white/10 flex items-center justify-center p-1.5 shadow-sm group-hover:border-white/25 transition-all">
-          <img src="../public/icon.png" alt="AMT Logo" class="w-full h-full object-contain filter brightness-110" onerror="this.onerror=null; this.src='https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main/public/icon.png';">
+  <!-- ═══════════════════════════════════ NAV ═══════════════════════════════════ -->
+  <header class="fixed top-0 w-full z-50 glass-nav">
+    <div class="max-w-[1200px] mx-auto px-6 h-14 flex items-center justify-between">
+      <a href="#" class="flex items-center space-x-2.5 group">
+        <div class="w-7 h-7 rounded-lg overflow-hidden bg-surface flex items-center justify-center p-1">
+          <img src="../public/icon.png" alt="AMT" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main/public/icon.png';">
         </div>
-        <div class="flex items-center space-x-2">
-          <span class="font-bold text-base tracking-tight text-white group-hover:text-linear-brand-light transition-colors">AMT</span>
-          <span class="px-2 py-0.5 text-[11px] font-mono rounded-full bg-linear-brand/10 text-linear-brand-light border border-linear-brand/20">
-            v1.1.0
-          </span>
-        </div>
+        <span class="font-semibold text-sm tracking-tight text-white/90 group-hover:text-white transition-colors">AMT</span>
       </a>
 
-      <!-- Desktop Links -->
-      <nav class="hidden md:flex items-center space-x-8 text-[13px] font-medium text-linear-text-secondary">
-        <a href="#features" class="hover:text-white transition-colors" data-i18n="nav.features">Features</a>
-        <a href="#demo" class="hover:text-white transition-colors" data-i18n="nav.demo">Live Radar</a>
-        <a href="#workflow" class="hover:text-white transition-colors" data-i18n="nav.workflow">Workflow</a>
-        <a href="#why-amt" class="hover:text-white transition-colors" data-i18n="nav.why">Why AMT</a>
-        <a href="#security" class="hover:text-white transition-colors" data-i18n="nav.security">Security</a>
-        <a href="#install" class="hover:text-white transition-colors" data-i18n="nav.install">Install</a>
-        <a href="#faq" class="hover:text-white transition-colors" data-i18n="nav.faq">FAQ</a>
-      </nav>
-
-      <!-- Action Items -->
-      <div class="flex items-center space-x-3">
-        <!-- Language Switcher -->
-        <button id="lang-toggle-btn" class="px-2.5 py-1 text-xs font-mono font-medium rounded-full border border-linear-border bg-linear-subtle text-linear-text-secondary hover:text-white hover:border-linear-border-hover transition-all flex items-center space-x-1" title="切换语言 / Switch Language">
-          <span id="lang-label">EN</span>
-        </button>
-
-        <!-- GitHub Repo Link -->
-        <a href="https://github.com/wuyunfeng8/Antigravity-Manager" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-full border border-linear-border bg-linear-subtle text-linear-text-secondary hover:text-white hover:border-linear-border-hover transition-all">
-          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
-          <span>Star</span>
+      <div class="flex items-center space-x-5 text-[13px]">
+        <a href="https://github.com/wuyunfeng8/Antigravity-Manager" target="_blank" rel="noopener noreferrer"
+           class="hidden sm:flex items-center space-x-1.5 text-white/40 hover:text-white transition-colors">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          <span>GitHub</span>
         </a>
-
-        <!-- Primary CTA (White Glowing Pill) -->
-        <a href="#install" class="linear-btn-primary px-4 py-1.5 text-xs tracking-tight">
-          <span data-i18n="nav.download">免费下载</span>
-        </a>
+        <button id="lang-toggle" class="text-white/40 hover:text-white transition-colors font-medium" title="Switch Language">EN</button>
+        <a href="#install" class="btn-ghost px-4 py-1.5 text-xs" data-i18n="nav.download">下载</a>
       </div>
-
     </div>
   </header>
 
-  <main class="relative z-10 flex-1">
+  <main>
 
-    <!-- Hero Section (Linear Style) -->
-    <section class="pt-20 pb-20 md:pt-28 md:pb-32 max-w-[1320px] mx-auto px-5 lg:px-8 text-center">
+    <!-- ═══════════════════════════════════ HERO ═══════════════════════════════ -->
+    <section class="min-h-screen flex flex-col items-center justify-center px-6 pt-14 relative">
+      <!-- Ambient Glow -->
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-brand/[0.04] blur-[140px] rounded-full pointer-events-none"></div>
 
-      <!-- Linear Announcement Pill -->
-      <a href="https://github.com/wuyunfeng8/Antigravity-Manager/releases/tag/v1.1.0" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full border border-linear-border bg-linear-card text-xs text-linear-text-secondary hover:text-white hover:border-linear-brand/50 transition-all mb-8 shadow-sm group">
-        <span class="w-2 h-2 rounded-full bg-linear-brand animate-pulse"></span>
-        <span data-i18n="hero.pill">AMT 1.1.0 is now live for Apple Silicon & Intel</span>
-        <span class="text-linear-text-muted group-hover:translate-x-0.5 transition-transform">→</span>
-      </a>
-
-      <!-- Linear Bold Gradient Headline -->
-      <h1 class="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-[-0.035em] leading-[1.05] max-w-4xl mx-auto mb-6">
-        <span class="linear-text-gradient block" data-i18n="hero.title1">AMT is a purpose-built system for</span>
-        <span class="linear-brand-gradient block mt-1" data-i18n="hero.title2">Antigravity account relay.</span>
-      </h1>
-
-      <!-- Linear Subtitle -->
-      <p class="max-w-2xl mx-auto text-base sm:text-lg text-linear-text-secondary leading-relaxed mb-10 font-normal" data-i18n="hero.subtext">
-        真实配额雷达、推荐智能接力、独立设备身份隔离。<br class="hidden sm:inline">
-        让账号切换回到<span class="text-white font-medium">一次点击</span>，告别额度耗尽后反复登出、浏览器授权与开发中断。
-      </p>
-
-      <!-- Action Buttons -->
-      <div class="flex flex-wrap items-center justify-center gap-3.5 mb-14">
-        <a href="#install" class="linear-btn-primary h-11 px-6 text-sm flex items-center space-x-2">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          <span data-i18n="hero.cta_download">下载 macOS 版</span>
-        </a>
-        <a href="#demo" class="linear-btn-secondary h-11 px-6 text-sm flex items-center space-x-2">
-          <svg class="w-4 h-4 text-linear-brand-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <span data-i18n="hero.cta_demo">体验交互演示</span>
-        </a>
-      </div>
-
-      <!-- Linear-style Live Product Canvas (Hero Interactive Window) -->
-      <div id="demo" class="max-w-4xl mx-auto linear-window rounded-2xl overflow-hidden text-left relative">
-
-        <!-- Top Window Header -->
-        <div class="h-10 bg-linear-card/90 px-4 flex items-center justify-between border-b border-linear-border select-none">
-          <div class="flex items-center space-x-2">
-            <span class="w-3 h-3 rounded-full bg-[#ff5f56] inline-block"></span>
-            <span class="w-3 h-3 rounded-full bg-[#ffbd2e] inline-block"></span>
-            <span class="w-3 h-3 rounded-full bg-[#27c93f] inline-block"></span>
-          </div>
-          <div class="flex items-center space-x-2 text-xs font-mono text-linear-text-muted">
-            <span class="w-1.5 h-1.5 rounded-full bg-linear-emerald animate-pulse"></span>
-            <span class="text-linear-text-secondary font-sans font-medium">AMT Workspace — Quota Radar</span>
-            <span class="kbd-shortcut hidden sm:inline">⌘K Relay</span>
-          </div>
-          <div class="text-[11px] font-mono text-linear-text-muted">macOS Native</div>
+      <div class="text-center max-w-4xl mx-auto relative z-10 reveal">
+        <!-- Version Badge -->
+        <div class="inline-flex items-center space-x-2 border border-white/8 rounded-full px-4 py-1.5 mb-10">
+          <span class="w-1.5 h-1.5 rounded-full bg-brand animate-pulse"></span>
+          <span class="text-xs font-mono text-white/40" data-i18n="hero.badge">v1.1.0 · macOS Native</span>
         </div>
 
-        <!-- Simulator Canvas Area -->
-        <div class="p-6 sm:p-8 space-y-6 bg-linear-bg/95">
+        <!-- Headline -->
+        <h1 class="text-5xl sm:text-7xl lg:text-[84px] leading-[1.08] tracking-[-0.04em] mb-7">
+          <span class="font-light block text-white" data-i18n="hero.line1">不再打断你的</span>
+          <span class="font-bold block text-gradient-hero" data-i18n="hero.line2">编码心流。</span>
+        </h1>
 
-          <!-- Active Account Card -->
-          <div class="linear-card p-5 space-y-5 border border-linear-border">
-
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-linear-border">
-              <div class="flex items-center space-x-3.5">
-                <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-linear-brand to-linear-cyan flex items-center justify-center text-white font-bold text-base shadow-lg shadow-linear-brand/20" id="sim-avatar">
-                  D
-                </div>
-                <div>
-                  <div class="flex items-center space-x-2">
-                    <span class="font-bold text-[15px] text-white tracking-tight" id="sim-email">dev.primary@gmail.com</span>
-                    <span class="px-1.5 py-0.2 text-[10px] font-mono font-bold rounded bg-purple-500/15 text-purple-400 border border-purple-500/25" id="sim-badge">PRO</span>
-                    <span class="px-1.5 py-0.2 text-[10px] font-medium rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 flex items-center space-x-1">
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                      <span id="sim-status">当前主力</span>
-                    </span>
-                  </div>
-                  <div class="text-xs text-linear-text-secondary mt-1 flex items-center space-x-2 font-mono">
-                    <span>指纹: <code class="text-linear-text-muted" id="sim-device">dev_8f2a...</code></span>
-                    <span>·</span>
-                    <span class="text-linear-text-muted">同步于 刚才</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Segmented Window Switcher -->
-              <div class="inline-flex rounded-lg p-0.5 bg-linear-card border border-linear-border text-xs font-medium self-start sm:self-auto">
-                <button id="sim-tab-5h" class="px-3 py-1 rounded-md bg-linear-brand text-white shadow-sm transition-all" onclick="switchSimWindow('5h')">
-                  5 小时滑动窗口
-                </button>
-                <button id="sim-tab-week" class="px-3 py-1 rounded-md text-linear-text-secondary hover:text-white transition-all" onclick="switchSimWindow('week')">
-                  每周配额
-                </button>
-              </div>
-            </div>
-
-            <!-- Model Quota Meters -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-
-              <!-- Claude Meter -->
-              <div class="p-3.5 rounded-xl bg-linear-card border border-linear-border">
-                <div class="flex justify-between text-xs mb-2">
-                  <span class="font-medium text-linear-text flex items-center space-x-1.5">
-                    <span class="w-2 h-2 rounded-full" id="claude-indicator" style="background-color: #ef4444;"></span>
-                    <span>Claude 3.5 Sonnet</span>
-                  </span>
-                  <span class="font-mono font-bold" id="claude-val" style="color: #ef4444;">12%</span>
-                </div>
-                <div class="w-full h-1.5 rounded-full bg-linear-subtle overflow-hidden">
-                  <div id="claude-bar" class="h-full rounded-full transition-all duration-700" style="width: 12%; background: linear-gradient(90deg, #ef4444, #f87171);"></div>
-                </div>
-                <div class="flex justify-between text-[10px] text-linear-text-muted mt-2">
-                  <span id="claude-sub">余量警戒 · 需接力</span>
-                  <span class="font-mono" id="claude-ratio">6 / 50</span>
-                </div>
-              </div>
-
-              <!-- Gemini Pro Meter -->
-              <div class="p-3.5 rounded-xl bg-linear-card border border-linear-border">
-                <div class="flex justify-between text-xs mb-2">
-                  <span class="font-medium text-linear-text flex items-center space-x-1.5">
-                    <span class="w-2 h-2 rounded-full bg-linear-emerald"></span>
-                    <span>Gemini 1.5 Pro</span>
-                  </span>
-                  <span class="font-mono font-bold text-linear-emerald" id="gemini-pro-val">68%</span>
-                </div>
-                <div class="w-full h-1.5 rounded-full bg-linear-subtle overflow-hidden">
-                  <div id="gemini-pro-bar" class="h-full rounded-full bg-linear-emerald transition-all duration-700" style="width: 68%;"></div>
-                </div>
-                <div class="flex justify-between text-[10px] text-linear-text-muted mt-2">
-                  <span>余量充裕</span>
-                  <span class="font-mono" id="gemini-pro-ratio">34 / 50</span>
-                </div>
-              </div>
-
-              <!-- Flash Meter -->
-              <div class="p-3.5 rounded-xl bg-linear-card border border-linear-border">
-                <div class="flex justify-between text-xs mb-2">
-                  <span class="font-medium text-linear-text flex items-center space-x-1.5">
-                    <span class="w-2 h-2 rounded-full bg-linear-cyan"></span>
-                    <span>Gemini Flash</span>
-                  </span>
-                  <span class="font-mono font-bold text-linear-cyan" id="flash-val">94%</span>
-                </div>
-                <div class="w-full h-1.5 rounded-full bg-linear-subtle overflow-hidden">
-                  <div id="flash-bar" class="h-full rounded-full bg-linear-cyan transition-all duration-700" style="width: 94%;"></div>
-                </div>
-                <div class="flex justify-between text-[10px] text-linear-text-muted mt-2">
-                  <span>极度充裕</span>
-                  <span class="font-mono" id="flash-ratio">188 / 200</span>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-
-          <!-- Smart Relay Recommendation Banner -->
-          <div id="relay-banner" class="rounded-xl p-4 border border-amber-500/30 bg-amber-500/10 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all">
-            <div class="flex items-start sm:items-center space-x-3 w-full sm:w-auto">
-              <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/30">
-                ⚡
-              </div>
-              <div class="space-y-0.5">
-                <div class="text-xs font-semibold text-white flex items-center space-x-2">
-                  <span id="relay-title">智能接力推荐就绪</span>
-                  <span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-amber-500/20 text-amber-300">AUTO-RELAY</span>
-                </div>
-                <p class="text-xs text-linear-text-secondary" id="relay-desc">
-                  主力 Claude 余量仅 12%，已自动推导备用账号 <strong class="text-white">dev.relay.pool2@gmail.com</strong> (96% · PRO)。
-                </p>
-              </div>
-            </div>
-
-            <div class="flex items-center space-x-2 w-full sm:w-auto shrink-0">
-              <button id="relay-action-btn" onclick="executeRelaySimulation()" class="linear-btn-primary px-4 py-2 text-xs w-full sm:w-auto flex items-center justify-center space-x-1.5">
-                <span>立即一键接力 ⚡</span>
-              </button>
-              <button id="reset-sim-btn" onclick="resetSimulation()" class="linear-btn-secondary px-3 py-2 text-xs hidden">
-                重置演示
-              </button>
-            </div>
-          </div>
-
-          <!-- Relay Stepper Animation -->
-          <div id="relay-stepper" class="hidden rounded-xl p-3.5 bg-linear-card border border-linear-brand/40 text-xs space-y-2 font-mono">
-            <div class="text-linear-brand-light flex items-center space-x-2 text-[12px]">
-              <span class="w-1.5 h-1.5 rounded-full bg-linear-brand animate-ping"></span>
-              <span>正在执行系统级静默接力流程...</span>
-            </div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
-              <div id="step-1" class="p-2 rounded bg-linear-subtle border border-linear-border text-linear-text-muted">1. Token 校验</div>
-              <div id="step-2" class="p-2 rounded bg-linear-subtle border border-linear-border text-linear-text-muted">2. 隔离指纹 dev_7c9e</div>
-              <div id="step-3" class="p-2 rounded bg-linear-subtle border border-linear-border text-linear-text-muted">3. 写入 Keychain</div>
-              <div id="step-4" class="p-2 rounded bg-linear-subtle border border-linear-border text-linear-text-muted">4. 热重启 Antigravity</div>
-            </div>
-          </div>
-
-          <!-- Account Pool Switcher -->
-          <div>
-            <div class="flex justify-between items-center text-[11px] font-mono text-linear-text-muted mb-2">
-              <span>账号池 (3) · 点击卡片切换</span>
-              <span>Unix 0600 本地存储</span>
-            </div>
-            <div class="grid grid-cols-3 gap-2.5">
-              <div class="p-3 rounded-lg border border-linear-border bg-linear-card hover:border-linear-border-hover cursor-pointer transition-colors" onclick="selectPoolAccount(0)">
-                <div class="font-medium text-white truncate text-xs">dev.primary</div>
-                <div class="text-[11px] text-linear-text-muted font-mono mt-1">Claude: <span class="text-red-400 font-bold" id="pool-c0">12%</span></div>
-              </div>
-              <div class="p-3 rounded-lg border border-amber-500/40 bg-amber-500/5 hover:border-amber-500/60 cursor-pointer transition-colors" onclick="selectPoolAccount(1)">
-                <div class="font-medium text-white truncate text-xs">dev.relay.pool2</div>
-                <div class="text-[11px] text-linear-text-muted font-mono mt-1">Claude: <span class="text-emerald-400 font-bold" id="pool-c1">96%</span></div>
-              </div>
-              <div class="p-3 rounded-lg border border-linear-border bg-linear-card hover:border-linear-border-hover cursor-pointer transition-colors" onclick="selectPoolAccount(2)">
-                <div class="font-medium text-white truncate text-xs">free.tier.test</div>
-                <div class="text-[11px] text-linear-text-muted font-mono mt-1">Flash: <span class="text-cyan-400 font-bold" id="pool-p2">80%</span></div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-    <!-- Linear Bento Grid (Features Section) -->
-    <section id="features" class="py-24 max-w-[1320px] mx-auto px-5 lg:px-8 border-t border-linear-border">
-
-      <div class="max-w-3xl mb-16">
-        <span class="text-xs font-mono uppercase tracking-wider text-linear-brand-light block mb-3" data-i18n="feat.badge">ENGINEERED FOR FLOW</span>
-        <h2 class="text-3xl sm:text-5xl font-bold tracking-[-0.03em] linear-text-gradient mb-4" data-i18n="feat.title">
-          专为极速编码与稳定性打造的系统能力
-        </h2>
-        <p class="text-base text-linear-text-secondary" data-i18n="feat.desc">
-          拒绝冗余的 API 网关与代理池。AMT 专注于纯本地多账号真实配额监控与一秒无缝接力。
+        <!-- Subtitle -->
+        <p class="text-white/40 text-base sm:text-lg max-w-xl mx-auto mb-10 font-light leading-relaxed" data-i18n="hero.sub">
+          AMT 让你随时掌握 Antigravity 账号的真实配额。一键无感中继，独立设备身份。纯本地，零干扰。
         </p>
-      </div>
 
-      <!-- Bento Grid Layout -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-
-        <!-- Bento 1 (Span 2) -->
-        <div class="linear-card p-8 md:col-span-2 space-y-4 relative overflow-hidden">
-          <div class="w-10 h-10 rounded-xl bg-linear-brand/10 text-linear-brand-light border border-linear-brand/20 flex items-center justify-center text-lg">
-            📡
-          </div>
-          <h3 class="text-xl font-bold text-white tracking-tight" data-i18n="bento1.title">真实配额雷达：直连官方后端配额桶</h3>
-          <p class="text-sm text-linear-text-secondary leading-relaxed max-w-xl" data-i18n="bento1.desc">
-            直连 Google 官方 loadCodeAssist 接口，精确聚合 Claude 3.5 Sonnet、Gemini 1.5 Pro 与 Flash 配额桶。支持 5 小时滑动窗口与周配额随意切换，精准区分 403 / 429 报错，拒绝第三方工具的模型猜测误导。
-          </p>
-          <div class="pt-4 flex items-center space-x-4 text-xs font-mono text-linear-text-muted">
-            <span class="flex items-center space-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>5h Rolling Window</span></span>
-            <span class="flex items-center space-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span><span>Weekly Quota Reset</span></span>
-            <span class="flex items-center space-x-1.5"><span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span><span>Auto-Warmup</span></span>
-          </div>
-        </div>
-
-        <!-- Bento 2 (Span 1) -->
-        <div class="linear-card p-8 space-y-4">
-          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-lg">
-            ⚡
-          </div>
-          <h3 class="text-xl font-bold text-white tracking-tight" data-i18n="bento2.title">1 秒静默接力</h3>
-          <p class="text-sm text-linear-text-secondary leading-relaxed" data-i18n="bento2.desc">
-            根据健康度与余量实时推导最优账号。一键静默写入 macOS Keychain 并热重启主程序，保留工作区现场，换号瞬间完成。
-          </p>
-        </div>
-
-        <!-- Bento 3 (Span 1) -->
-        <div class="linear-card p-8 space-y-4">
-          <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center text-lg">
-            🛡️
-          </div>
-          <h3 class="text-xl font-bold text-white tracking-tight" data-i18n="bento3.title">独立设备指纹隔离</h3>
-          <p class="text-sm text-linear-text-secondary leading-relaxed" data-i18n="bento3.desc">
-            每账号专属保存独立的 machineId 与 devDeviceId。切号时同步应用指纹并提供基线还原快照，有效降低风控关联风险。
-          </p>
-        </div>
-
-        <!-- Bento 4 (Span 1) -->
-        <div class="linear-card p-8 space-y-4">
-          <div class="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center text-lg">
-            💊
-          </div>
-          <h3 class="text-xl font-bold text-white tracking-tight" data-i18n="bento4.title">菜单栏托盘与迷你胶囊</h3>
-          <p class="text-sm text-linear-text-secondary leading-relaxed" data-i18n="bento4.desc">
-            菜单栏随手瞄一眼余量，悬浮迷你胶囊窗不抢夺编辑器焦点。支持后台静默自动轮询与周配额预热。
-          </p>
-        </div>
-
-        <!-- Bento 5 (Span 1) -->
-        <div class="linear-card p-8 space-y-4">
-          <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-lg">
-            🔑
-          </div>
-          <h3 class="text-xl font-bold text-white tracking-tight" data-i18n="bento5.title">多渠道安全入库</h3>
-          <p class="text-sm text-linear-text-secondary leading-relaxed" data-i18n="bento5.desc">
-            支持原生 Google OAuth 授权、Refresh Token 快速导入与兼容 SQLite state.vscdb 批量扫描，轻松纳管全部账号。
-          </p>
-        </div>
-
-        <!-- Bento 6 (Span 3 on Desktop) -->
-        <div class="linear-card p-8 md:col-span-3 space-y-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div class="space-y-2 max-w-2xl">
-            <div class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center text-lg">
-              🦀
-            </div>
-            <h3 class="text-xl font-bold text-white tracking-tight" data-i18n="bento6.title">Rust + Tauri 2 原生轻量架构</h3>
-            <p class="text-sm text-linear-text-secondary leading-relaxed" data-i18n="bento6.desc">
-              采用 Rust + Tokio 原生后端，常驻内存占用低于 50MB，毫秒级响应，永不卡顿，绝无庞大臃肿的 Electron 包袱。
-            </p>
-          </div>
-          <div class="flex items-center space-x-6 shrink-0 font-mono text-xs">
-            <div class="text-center p-3 rounded-lg bg-linear-subtle border border-linear-border">
-              <div class="text-xl font-bold text-white">&lt; 50MB</div>
-              <div class="text-linear-text-muted mt-0.5">RAM Footprint</div>
-            </div>
-            <div class="text-center p-3 rounded-lg bg-linear-subtle border border-linear-border">
-              <div class="text-xl font-bold text-linear-emerald">1s</div>
-              <div class="text-linear-text-muted mt-0.5">Relay Latency</div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-    </section>
-
-    <!-- Linear-style Workflow Section (Momentum Pipeline) -->
-    <section id="workflow" class="py-24 max-w-[1320px] mx-auto px-5 lg:px-8 border-t border-linear-border">
-
-      <div class="max-w-2xl mb-16">
-        <span class="text-xs font-mono uppercase tracking-wider text-linear-brand-light block mb-3">WORKFLOW MOMENTUM</span>
-        <h2 class="text-3xl sm:text-5xl font-bold tracking-[-0.03em] linear-text-gradient mb-4">
-          端到端四步接力闭环
-        </h2>
-        <p class="text-base text-linear-text-secondary">
-          凭据流与设备身份流严格分离，保障每一次切换都是原子化、幂等且可回溯的。
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
-        <div class="linear-card p-6 space-y-3">
-          <div class="text-xs font-mono text-linear-brand-light">01 / INGEST</div>
-          <h4 class="text-lg font-bold text-white">账号接入入库</h4>
-          <p class="text-xs text-linear-text-secondary leading-relaxed">
-            支持 Google OAuth 授权或直接输入 Token，本地 0600 安全权限原子化存储。
-          </p>
-        </div>
-
-        <div class="linear-card p-6 space-y-3">
-          <div class="text-xs font-mono text-linear-brand-light">02 / RADAR</div>
-          <h4 class="text-lg font-bold text-white">真实配额追踪</h4>
-          <p class="text-xs text-linear-text-secondary leading-relaxed">
-            直连官方接口获取 5h 滑动窗口与周配额真实余量，自动预热并预警耗尽状态。
-          </p>
-        </div>
-
-        <div class="linear-card p-6 space-y-3">
-          <div class="text-xs font-mono text-linear-brand-light">03 / SCORE</div>
-          <h4 class="text-lg font-bold text-white">智能接力推导</h4>
-          <p class="text-xs text-linear-text-secondary leading-relaxed">
-            排除不可用与受限账号，实时计算余量与健康度最高的备用账号，随时待命。
-          </p>
-        </div>
-
-        <div class="linear-card p-6 space-y-3">
-          <div class="text-xs font-mono text-linear-brand-light">04 / RELAY</div>
-          <h4 class="text-lg font-bold text-white">一秒静默热切</h4>
-          <p class="text-xs text-linear-text-secondary leading-relaxed">
-            写入系统 Keychain 并绑定独立设备指纹，热重启 Antigravity 恢复现场。
-          </p>
-        </div>
-
-      </div>
-
-    </section>
-
-    <!-- Linear-style Pain Points vs AMT Section -->
-    <section id="why-amt" class="py-24 max-w-[1320px] mx-auto px-5 lg:px-8 border-t border-linear-border">
-
-      <div class="max-w-2xl mb-16">
-        <span class="text-xs font-mono uppercase tracking-wider text-linear-brand-light block mb-3">CONTRAST & CLARITY</span>
-        <h2 class="text-3xl sm:text-5xl font-bold tracking-[-0.03em] linear-text-gradient mb-4">
-          为什么重度开发者选择 AMT？
-        </h2>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-        <!-- Card 1 -->
-        <div class="linear-card p-7 space-y-5 flex flex-col justify-between">
-          <div class="space-y-4">
-            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-linear-subtle text-linear-text-secondary border border-linear-border">编码心流</span>
-            <h3 class="text-lg font-bold text-white">反复重新登录 ➔ 1 秒静默接力</h3>
-            <div class="space-y-3 text-xs leading-relaxed">
-              <div class="p-3 rounded-lg bg-red-500/5 border border-red-500/20 text-linear-text-secondary">
-                <span class="text-red-400 font-semibold block mb-1">传统痛苦:</span>
-                额度耗尽 → 退出主程序 → 浏览器 OAuth → 网页授权登录 → 重新绑定工作区。打断 3~5 分钟心流。
-              </div>
-              <div class="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-linear-text-secondary">
-                <span class="text-emerald-400 font-semibold block mb-1">AMT 体验:</span>
-                后台提前感知各号余量，点击接力，1秒写入 Keychain 并热重启，心流不中断。
-              </div>
-            </div>
-          </div>
-          <div class="pt-4 border-t border-linear-border text-[11px] font-mono text-linear-text-muted flex justify-between">
-            <span>换号效率</span>
-            <span class="text-emerald-400 font-bold font-mono">提升 300%+</span>
-          </div>
-        </div>
-
-        <!-- Card 2 -->
-        <div class="linear-card p-7 space-y-5 flex flex-col justify-between">
-          <div class="space-y-4">
-            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-linear-subtle text-linear-text-secondary border border-linear-border">配额口径</span>
-            <h3 class="text-lg font-bold text-white">模糊猜测变体 ➔ 权威官方真实口径</h3>
-            <div class="space-y-3 text-xs leading-relaxed">
-              <div class="p-3 rounded-lg bg-red-500/5 border border-red-500/20 text-linear-text-secondary">
-                <span class="text-red-400 font-semibold block mb-1">普通工具:</span>
-                靠模型名称猜测账号等级，搞不清 5 小时滑动窗口与周配额的区别，关键时刻误报。
-              </div>
-              <div class="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-linear-text-secondary">
-                <span class="text-emerald-400 font-semibold block mb-1">AMT 权威:</span>
-                直连 loadCodeAssist 官方配额桶，精准分离 Claude / Pro / Flash，严谨展示恢复倒计时。
-              </div>
-            </div>
-          </div>
-          <div class="pt-4 border-t border-linear-border text-[11px] font-mono text-linear-text-muted flex justify-between">
-            <span>准确度</span>
-            <span class="text-white font-bold font-mono">100% 官方一致</span>
-          </div>
-        </div>
-
-        <!-- Card 3 -->
-        <div class="linear-card p-7 space-y-5 flex flex-col justify-between">
-          <div class="space-y-4">
-            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-linear-subtle text-linear-text-secondary border border-linear-border">风控隔离</span>
-            <h3 class="text-lg font-bold text-white">共用硬件指纹 ➔ 独立设备身份隔离</h3>
-            <div class="space-y-3 text-xs leading-relaxed">
-              <div class="p-3 rounded-lg bg-red-500/5 border border-red-500/20 text-linear-text-secondary">
-                <span class="text-red-400 font-semibold block mb-1">多号风险:</span>
-                多账号长期共用同一客户端 machineId、macMachineId，极易被平台判定关联批量限制。
-              </div>
-              <div class="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-linear-text-secondary">
-                <span class="text-emerald-400 font-semibold block mb-1">AMT 隔离:</span>
-                为每账号绑定专属设备身份指纹与原始基线快照。切号同步应用，降低关联风险。
-              </div>
-            </div>
-          </div>
-          <div class="pt-4 border-t border-linear-border text-[11px] font-mono text-linear-text-muted flex justify-between">
-            <span>环境关联度</span>
-            <span class="text-purple-400 font-bold font-mono">显著隔离</span>
-          </div>
-        </div>
-
-      </div>
-
-    </section>
-
-    <!-- Linear-style Security Manifesto -->
-    <section id="security" class="py-24 max-w-[1320px] mx-auto px-5 lg:px-8 border-t border-linear-border">
-
-      <div class="linear-card p-8 sm:p-12">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-
-          <div class="lg:col-span-7 space-y-4">
-            <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full border border-linear-border bg-linear-subtle text-xs font-mono text-linear-brand-light">
-              <span>🔒 本地优先 · 隐私边界保证</span>
-            </div>
-            <h2 class="text-2xl sm:text-4xl font-bold tracking-tight text-white">
-              绝非 API 代理网关 · 数据 100% 留在你的 Mac
-            </h2>
-            <p class="text-sm text-linear-text-secondary leading-relaxed">
-              AMT 始终做纯粹、克制、透明的本地账号中枢。绝不架设远程反代服务器，不转售 Token，不分发 API Key，不统计或上传用户的工作区代码。
-            </p>
-            <ul class="space-y-2 text-xs font-mono text-linear-text-secondary pt-2">
-              <li class="flex items-center space-x-2">
-                <span class="text-emerald-400">✓</span>
-                <span><strong>0600 Unix 安全权限:</strong> 账号数据保存在 <code>~/.antigravity_tools</code>，仅当前操作系统用户可读。</span>
-              </li>
-              <li class="flex items-center space-x-2">
-                <span class="text-emerald-400">✓</span>
-                <span><strong>直连 Google 官方端点:</strong> 配额与 OAuth 刷新直接与官方服务器通信，零第三方中转介入。</span>
-              </li>
-              <li class="flex items-center space-x-2">
-                <span class="text-emerald-400">✓</span>
-                <span><strong>100% 开源透明:</strong> 前后端代码全部托管在 GitHub，支持本地从源码验证自编译。</span>
-              </li>
-            </ul>
-          </div>
-
-          <div class="lg:col-span-5 bg-linear-bg border border-linear-border rounded-xl p-5 font-mono text-xs space-y-3">
-            <div class="flex justify-between pb-2 border-b border-linear-border text-linear-text-muted text-[11px]">
-              <span>SECURITY_SPEC</span>
-              <span class="text-emerald-400">PASSED</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-linear-text-secondary">云端中转服务器:</span>
-              <span class="text-white font-bold">0 (无)</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-linear-text-secondary">API 反代中转:</span>
-              <span class="text-emerald-400 font-bold">完全禁用</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-linear-text-secondary">本地文件权限:</span>
-              <span class="text-white font-bold">0600 (User-Only)</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-linear-text-secondary">凭据保护方式:</span>
-              <span class="text-cyan-400 font-bold">macOS Keychain</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-linear-text-secondary">开源许可证:</span>
-              <span class="text-white font-bold">MIT License</span>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-    </section>
-
-    <!-- Linear-style Installation Box -->
-    <section id="install" class="py-24 max-w-[1320px] mx-auto px-5 lg:px-8 border-t border-linear-border">
-
-      <div class="max-w-2xl mx-auto text-center mb-12">
-        <span class="text-xs font-mono uppercase tracking-wider text-linear-brand-light block mb-3">GET STARTED</span>
-        <h2 class="text-3xl sm:text-5xl font-bold tracking-[-0.03em] linear-text-gradient mb-3">
-          立即安装 AMT
-        </h2>
-        <p class="text-sm text-linear-text-secondary">
-          提供 Homebrew Cask、一键终端脚本以及直接 DMG 镜像。
-        </p>
-      </div>
-
-      <div class="max-w-3xl mx-auto linear-card overflow-hidden">
-
-        <!-- Segmented Tab Header -->
-        <div class="flex border-b border-linear-border bg-linear-card p-1.5 text-xs font-mono">
-          <button id="tab-btn-brew" onclick="switchInstallTab('brew')" class="flex-1 py-2 rounded-lg bg-linear-brand text-white font-semibold transition-all">
-            Homebrew Cask (推荐)
-          </button>
-          <button id="tab-btn-curl" onclick="switchInstallTab('curl')" class="flex-1 py-2 rounded-lg text-linear-text-secondary hover:text-white transition-all">
-            终端脚本
-          </button>
-          <button id="tab-btn-dmg" onclick="switchInstallTab('dmg')" class="flex-1 py-2 rounded-lg text-linear-text-secondary hover:text-white transition-all">
-            DMG 镜像直接下载
-          </button>
-        </div>
-
-        <!-- Tab Body: Brew -->
-        <div id="tab-pane-brew" class="p-6 sm:p-8 space-y-4">
-          <p class="text-xs text-linear-text-secondary">
-            打开 macOS 终端，执行以下命令即可通过 Homebrew Cask 自动安装并管理后续升级：
-          </p>
-          <div class="bg-linear-bg rounded-xl p-4 border border-linear-border font-mono text-xs sm:text-sm text-white flex items-center justify-between group">
-            <code id="cmd-brew" class="truncate mr-4 text-linear-brand-light">brew tap wuyunfeng8/antigravity-manager https://github.com/wuyunfeng8/Antigravity-Manager && brew install --cask antigravity-tools</code>
-            <button onclick="copyToClipboard('cmd-brew', this)" class="linear-btn-secondary px-3 py-1.5 text-xs shrink-0 flex items-center space-x-1">
-              <span>复制</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Tab Body: Curl -->
-        <div id="tab-pane-curl" class="hidden p-6 sm:p-8 space-y-4">
-          <p class="text-xs text-linear-text-secondary">
-            适合没有安装 Homebrew 的用户，一键下载并自动安装至 <code>/Applications</code>：
-          </p>
-          <div class="bg-linear-bg rounded-xl p-4 border border-linear-border font-mono text-xs sm:text-sm text-white flex items-center justify-between group">
-            <code id="cmd-curl" class="truncate mr-4 text-cyan-400">curl -fsSL https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main/install.sh | bash</code>
-            <button onclick="copyToClipboard('cmd-curl', this)" class="linear-btn-secondary px-3 py-1.5 text-xs shrink-0 flex items-center space-x-1">
-              <span>复制</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Tab Body: DMG -->
-        <div id="tab-pane-dmg" class="hidden p-6 sm:p-8 space-y-5">
-          <p class="text-xs text-linear-text-secondary">
-            从 GitHub Releases 官方下载对应芯片架构的 <code>.dmg</code> 镜像：
-          </p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono text-xs">
-            <a href="https://github.com/wuyunfeng8/Antigravity-Manager/releases/download/v1.1.0/Antigravity-Manager_1.1.0_aarch64.dmg" class="p-4 rounded-xl border border-linear-border bg-linear-bg hover:border-linear-brand transition-colors flex items-center justify-between">
-              <div>
-                <div class="font-bold text-white">Apple Silicon (M1~M4)</div>
-                <div class="text-[11px] text-linear-text-muted">Antigravity-Manager_1.1.0_aarch64.dmg</div>
-              </div>
-              <span class="text-linear-brand-light">下载 →</span>
-            </a>
-            <a href="https://github.com/wuyunfeng8/Antigravity-Manager/releases/download/v1.1.0/Antigravity-Manager_1.1.0_x64.dmg" class="p-4 rounded-xl border border-linear-border bg-linear-bg hover:border-linear-brand transition-colors flex items-center justify-between">
-              <div>
-                <div class="font-bold text-white">Intel Mac (x86_64)</div>
-                <div class="text-[11px] text-linear-text-muted">Antigravity-Manager_1.1.0_x64.dmg</div>
-              </div>
-              <span class="text-linear-brand-light">下载 →</span>
-            </a>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Gatekeeper Note -->
-      <div class="max-w-3xl mx-auto mt-6 p-4 rounded-xl bg-linear-card border border-linear-border text-xs text-linear-text-secondary flex items-start space-x-3">
-        <span class="text-amber-400 font-bold shrink-0 mt-0.5">ℹ</span>
-        <div>
-          <span class="font-semibold text-white">macOS 首次打开提示“无法验证开发者”？</span>
-          由于 1.1.0 为开源独立构建，暂未加入苹果付费开发者证书。若首次启动被 Gatekeeper 拦截，请前往 Mac「系统设置 → 隐私与安全性」，滑到底部点击「仍要打开」即可正常启动。
-        </div>
-      </div>
-
-    </section>
-
-    <!-- Linear-style FAQ Section -->
-    <section id="faq" class="py-24 max-w-[1320px] mx-auto px-5 lg:px-8 border-t border-linear-border">
-
-      <div class="max-w-2xl mb-12">
-        <span class="text-xs font-mono uppercase tracking-wider text-linear-brand-light block mb-3">FAQ</span>
-        <h2 class="text-3xl sm:text-5xl font-bold tracking-[-0.03em] linear-text-gradient mb-4">
-          常见问题解答
-        </h2>
-      </div>
-
-      <div class="max-w-3xl space-y-3.5">
-
-        <div class="linear-card p-5 cursor-pointer" onclick="toggleFaq(this)">
-          <div class="flex justify-between items-center text-sm font-semibold text-white">
-            <span>AMT 是 API 代理或中转反代吗？我能用它接入 NextChat / OneAPI 吗？</span>
-            <span class="faq-icon text-linear-text-muted text-base transition-transform duration-200">+</span>
-          </div>
-          <div class="faq-answer hidden text-xs text-linear-text-secondary leading-relaxed pt-3 border-t border-linear-border mt-3">
-            <strong>不是。</strong> AMT 专为 Google Antigravity 原生桌面客户端管理设计，负责监控真实配额、推荐接力与设备身份切换。项目中明确去除了所有 HTTP 网关、API Key 分发、Headless 模式及第三方兼容端点，不提供 API 反代功能。
-          </div>
-        </div>
-
-        <div class="linear-card p-5 cursor-pointer" onclick="toggleFaq(this)">
-          <div class="flex justify-between items-center text-sm font-semibold text-white">
-            <span>一键接力切换账号后，我的 IDE 插件、工作区历史与代码会丢吗？</span>
-            <span class="faq-icon text-linear-text-muted text-base transition-transform duration-200">+</span>
-          </div>
-          <div class="faq-answer hidden text-xs text-linear-text-secondary leading-relaxed pt-3 border-t border-linear-border mt-3">
-            <strong>完全不会。</strong> AMT 的接力机制是精准替换 Antigravity 原生客户端在系统凭据库（macOS Keychain）或兼容 SQLite 中的授权登录状态，并在重启时保留所有打开的工作区、文件与编辑器设置，换号后立刻无缝继续写代码。
-          </div>
-        </div>
-
-        <div class="linear-card p-5 cursor-pointer" onclick="toggleFaq(this)">
-          <div class="flex justify-between items-center text-sm font-semibold text-white">
-            <span>设备身份隔离能保证 100% 不会被封号吗？</span>
-            <span class="faq-icon text-linear-text-muted text-base transition-transform duration-200">+</span>
-          </div>
-          <div class="faq-answer hidden text-xs text-linear-text-secondary leading-relaxed pt-3 border-t border-linear-border mt-3">
-            <strong>不作此类绝对保证。</strong> 任何工具都无法规避平台的整体风控模型。AMT 提供的是客户端层面的设备身份隔离（如 machineId, macMachineId, devDeviceId），主要目的是降低多个账号在同一设备上长期共用相同硬指纹带来的直接关联风险，并支持随时还原原始环境基线。
-          </div>
-        </div>
-
-        <div class="linear-card p-5 cursor-pointer" onclick="toggleFaq(this)">
-          <div class="flex justify-between items-center text-sm font-semibold text-white">
-            <span>我的账号 Token 会被上传到远程服务器吗？</span>
-            <span class="faq-icon text-linear-text-muted text-base transition-transform duration-200">+</span>
-          </div>
-          <div class="faq-answer hidden text-xs text-linear-text-secondary leading-relaxed pt-3 border-t border-linear-border mt-3">
-            <strong>绝对不会。</strong> AMT 没有任何后端中心化服务器或遥测后台。所有账号数据仅存放在你本地 Mac 的 <code>~/.antigravity_tools</code> 目录中，并使用 Unix 0600 安全权限防护，刷新配额直接与 Google 官方端点通信。你可以随时在源码中审查网络请求模块。
-          </div>
-        </div>
-
-      </div>
-
-    </section>
-
-    <!-- Linear-style Horizon Closing CTA -->
-    <section class="py-28 max-w-[1320px] mx-auto px-5 lg:px-8 border-t border-linear-border relative overflow-hidden text-center linear-glow-bottom">
-      <div class="max-w-3xl mx-auto space-y-6 relative z-10">
-        <h2 class="text-4xl sm:text-6xl font-bold tracking-[-0.035em] linear-text-gradient">
-          Ready to keep your coding flow uninterrupted?
-        </h2>
-        <p class="text-base text-linear-text-secondary max-w-lg mx-auto">
-          告别额度耗尽中断开发，让多个 Antigravity 账号成为你源源不断的高效后备军。
-        </p>
-        <div class="flex flex-wrap items-center justify-center gap-4 pt-2">
-          <a href="#install" class="linear-btn-primary h-11 px-8 text-sm flex items-center space-x-2">
-            <span>免费下载 macOS 版</span>
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-14">
+          <a href="#install" class="btn-primary h-12 px-7 text-sm inline-flex items-center space-x-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span data-i18n="hero.cta1">下载 macOS 版</span>
           </a>
-          <a href="https://github.com/wuyunfeng8/Antigravity-Manager" target="_blank" rel="noopener noreferrer" class="linear-btn-secondary h-11 px-8 text-sm flex items-center space-x-2">
-            <span>GitHub 源码仓库</span>
+          <a href="https://github.com/wuyunfeng8/Antigravity-Manager" target="_blank" rel="noopener noreferrer"
+             class="btn-ghost h-12 px-7 text-sm inline-flex items-center space-x-2">
+            <span data-i18n="hero.cta2">查看源码</span>
+          </a>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="flex items-center justify-center gap-6 text-[11px] font-mono text-white/25">
+          <span data-i18n="hero.s1">&lt; 50MB 内存</span>
+          <span class="w-px h-3 bg-white/10"></span>
+          <span data-i18n="hero.s2">1 秒中继</span>
+          <span class="w-px h-3 bg-white/10"></span>
+          <span data-i18n="hero.s3">100% 本地</span>
+          <span class="w-px h-3 bg-white/10"></span>
+          <span data-i18n="hero.s4">MIT 开源</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════ PRODUCT SHOWCASE ═══════════════════ -->
+    <section class="pb-32 px-6 reveal">
+      <div class="max-w-[900px] mx-auto window-frame overflow-hidden">
+        <!-- macOS Title Bar -->
+        <div class="h-11 bg-[#111]/80 px-4 flex items-center justify-between border-b border-white/6 select-none">
+          <div class="flex items-center space-x-2">
+            <span class="w-3 h-3 rounded-full bg-[#ff5f56]"></span>
+            <span class="w-3 h-3 rounded-full bg-[#ffbd2e]"></span>
+            <span class="w-3 h-3 rounded-full bg-[#27c93f]"></span>
+          </div>
+          <span class="text-[11px] text-white/25 font-medium">AMT — Quota Radar</span>
+          <span class="text-[10px] text-white/15 font-mono">macOS</span>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="p-6 sm:p-8 space-y-5 bg-[#080808]">
+
+          <!-- Account Header -->
+          <div class="flex items-center justify-between pb-5 border-b border-white/5">
+            <div class="flex items-center space-x-3.5">
+              <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-brand to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-brand/20">D</div>
+              <div>
+                <div class="flex items-center space-x-2">
+                  <span class="font-semibold text-sm text-white">dev.primary@gmail.com</span>
+                  <span class="px-1.5 py-px text-[10px] font-mono font-bold rounded bg-purple-500/15 text-purple-400 border border-purple-500/20">PRO</span>
+                </div>
+                <div class="text-[11px] text-white/25 mt-1 font-mono">fingerprint: dev_8f2a · synced just now</div>
+              </div>
+            </div>
+            <div class="hidden sm:flex items-center space-x-1.5 text-[10px] text-emerald-400 font-medium">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span data-i18n="win.active">当前主力</span>
+            </div>
+          </div>
+
+          <!-- Quota Meters -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <!-- Claude -->
+            <div class="p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+              <div class="flex justify-between text-xs mb-2.5">
+                <span class="text-white/60 flex items-center space-x-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                  <span>Claude Sonnet</span>
+                </span>
+                <span class="font-mono font-bold text-red-400">12%</span>
+              </div>
+              <div class="w-full h-1 rounded-full bg-white/5 overflow-hidden">
+                <div class="h-full rounded-full bg-gradient-to-r from-red-500 to-red-400" style="width: 12%"></div>
+              </div>
+              <div class="text-[10px] text-white/20 mt-2 font-mono" data-i18n="win.q1">余量警戒 · 6/50</div>
+            </div>
+
+            <!-- Gemini Pro -->
+            <div class="p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+              <div class="flex justify-between text-xs mb-2.5">
+                <span class="text-white/60 flex items-center space-x-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  <span>Gemini Pro</span>
+                </span>
+                <span class="font-mono font-bold text-emerald-400">68%</span>
+              </div>
+              <div class="w-full h-1 rounded-full bg-white/5 overflow-hidden">
+                <div class="h-full rounded-full bg-emerald-500" style="width: 68%"></div>
+              </div>
+              <div class="text-[10px] text-white/20 mt-2 font-mono" data-i18n="win.q2">余量充裕 · 34/50</div>
+            </div>
+
+            <!-- Flash -->
+            <div class="p-3.5 rounded-xl bg-white/[0.02] border border-white/5">
+              <div class="flex justify-between text-xs mb-2.5">
+                <span class="text-white/60 flex items-center space-x-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                  <span>Gemini Flash</span>
+                </span>
+                <span class="font-mono font-bold text-cyan-400">94%</span>
+              </div>
+              <div class="w-full h-1 rounded-full bg-white/5 overflow-hidden">
+                <div class="h-full rounded-full bg-cyan-500" style="width: 94%"></div>
+              </div>
+              <div class="text-[10px] text-white/20 mt-2 font-mono" data-i18n="win.q3">极度充裕 · 188/200</div>
+            </div>
+          </div>
+
+          <!-- Relay Banner -->
+          <div class="rounded-xl p-4 border border-amber-500/20 bg-amber-500/[0.05] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-start space-x-3">
+              <span class="text-amber-400 text-lg mt-0.5">⚡</span>
+              <div>
+                <div class="text-xs font-semibold text-white flex items-center space-x-2">
+                  <span data-i18n="win.relay">智能接力推荐就绪</span>
+                  <span class="px-1.5 py-px text-[9px] font-mono rounded bg-amber-500/15 text-amber-400">AUTO-RELAY</span>
+                </div>
+                <p class="text-[11px] text-white/35 mt-1" data-i18n="win.rdesc">Claude 余量仅 12%，推荐接力至 dev.relay.pool2@gmail.com (96% · PRO)</p>
+              </div>
+            </div>
+            <span class="btn-primary px-4 py-2 text-[11px] cursor-default shrink-0" data-i18n="win.rbtn">一键接力 ⚡</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════ FEATURES ═══════════════════════════ -->
+    <section class="py-28 px-6 border-t border-white/[0.03]">
+      <div class="max-w-[1100px] mx-auto">
+        <div class="max-w-xl mb-20 reveal">
+          <span class="text-[11px] font-mono uppercase tracking-widest text-brand-light block mb-3">CORE CAPABILITIES</span>
+          <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-gradient-hero mb-4" data-i18n="feat.title">
+            专为不间断编码打造
+          </h2>
+          <p class="text-white/35 text-sm" data-i18n="feat.desc">
+            不是 API 网关。不是代理池。AMT 只做一件事：让你的多个 Antigravity 账号始终处于最佳接力状态。
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div class="card card-glow-top p-8 reveal">
+            <div class="text-2xl mb-5">📡</div>
+            <h3 class="text-lg font-semibold text-white mb-3 tracking-tight" data-i18n="f1.title">真实配额雷达</h3>
+            <p class="text-sm text-white/35 leading-relaxed" data-i18n="f1.desc">
+              直连 Google 官方 loadCodeAssist 接口，精确聚合 Claude Sonnet、Gemini Pro 与 Flash 配额。支持 5 小时滑动窗口与周配额双视图。
+            </p>
+            <div class="mt-5 flex flex-wrap gap-2 text-[10px] font-mono text-white/20">
+              <span class="px-2 py-0.5 rounded border border-white/5">5h Rolling</span>
+              <span class="px-2 py-0.5 rounded border border-white/5">Weekly</span>
+              <span class="px-2 py-0.5 rounded border border-white/5">Auto-Warmup</span>
+            </div>
+          </div>
+
+          <div class="card card-glow-top p-8 reveal" style="transition-delay: 80ms;">
+            <div class="text-2xl mb-5">⚡</div>
+            <h3 class="text-lg font-semibold text-white mb-3 tracking-tight" data-i18n="f2.title">一键无感中继</h3>
+            <p class="text-sm text-white/35 leading-relaxed" data-i18n="f2.desc">
+              根据健康度与余量实时推导最优备用账号。一键静默写入 macOS Keychain 并热重启主程序，工作区现场完整保留。
+            </p>
+          </div>
+
+          <div class="card card-glow-top p-8 reveal" style="transition-delay: 160ms;">
+            <div class="text-2xl mb-5">🛡️</div>
+            <h3 class="text-lg font-semibold text-white mb-3 tracking-tight" data-i18n="f3.title">独立设备身份隔离</h3>
+            <p class="text-sm text-white/35 leading-relaxed" data-i18n="f3.desc">
+              为每个账号绑定专属 machineId 与 devDeviceId。切号时同步应用指纹并提供基线还原快照，有效降低关联风险。
+            </p>
+          </div>
+        </div>
+
+        <!-- Secondary features row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-5">
+          <div class="card p-8 reveal">
+            <div class="text-2xl mb-5">💊</div>
+            <h3 class="text-lg font-semibold text-white mb-3 tracking-tight" data-i18n="f4.title">菜单栏托盘</h3>
+            <p class="text-sm text-white/35 leading-relaxed" data-i18n="f4.desc">菜单栏随手瞄一眼余量。悬浮迷你胶囊窗不抢编辑器焦点，支持后台静默轮询与周配额预热。</p>
+          </div>
+          <div class="card p-8 reveal" style="transition-delay: 80ms;">
+            <div class="text-2xl mb-5">🔑</div>
+            <h3 class="text-lg font-semibold text-white mb-3 tracking-tight" data-i18n="f5.title">多渠道安全入库</h3>
+            <p class="text-sm text-white/35 leading-relaxed" data-i18n="f5.desc">支持 Google OAuth 授权、Refresh Token 快速导入与 state.vscdb 批量扫描。</p>
+          </div>
+          <div class="card p-8 reveal" style="transition-delay: 160ms;">
+            <div class="text-2xl mb-5">🦀</div>
+            <h3 class="text-lg font-semibold text-white mb-3 tracking-tight" data-i18n="f6.title">Rust + Tauri 2</h3>
+            <p class="text-sm text-white/35 leading-relaxed" data-i18n="f6.desc">原生轻量架构，常驻内存低于 50MB，毫秒级响应。无 Electron 包袱。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════ WORKFLOW ═══════════════════════════ -->
+    <section class="py-28 px-6 border-t border-white/[0.03] bg-[#030303]">
+      <div class="max-w-[700px] mx-auto">
+        <div class="text-center mb-16 reveal">
+          <span class="text-[11px] font-mono uppercase tracking-widest text-brand-light block mb-3">WORKFLOW</span>
+          <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-gradient-hero" data-i18n="wf.title">四步完成接力闭环</h2>
+        </div>
+
+        <div class="relative reveal">
+          <!-- Vertical Line -->
+          <div class="absolute left-[15px] top-4 bottom-4 timeline-line"></div>
+
+          <div class="space-y-10">
+            <div class="relative pl-12">
+              <div class="absolute left-[11px] top-1.5 timeline-dot"></div>
+              <div class="text-brand text-xs font-mono mb-1">01</div>
+              <h4 class="text-lg font-semibold text-white mb-1" data-i18n="s1.t">安全入库 (INGEST)</h4>
+              <p class="text-sm text-white/30" data-i18n="s1.d">Google OAuth 授权或直接输入 Token，本地 0600 安全权限原子化存储。</p>
+            </div>
+            <div class="relative pl-12">
+              <div class="absolute left-[11px] top-1.5 timeline-dot timeline-dot-muted"></div>
+              <div class="text-brand text-xs font-mono mb-1">02</div>
+              <h4 class="text-lg font-semibold text-white mb-1" data-i18n="s2.t">配额追踪 (RADAR)</h4>
+              <p class="text-sm text-white/30" data-i18n="s2.d">直连官方接口获取 5h 滑动窗口与周配额真实余量，自动预热并预警耗尽。</p>
+            </div>
+            <div class="relative pl-12">
+              <div class="absolute left-[11px] top-1.5 timeline-dot timeline-dot-muted"></div>
+              <div class="text-brand text-xs font-mono mb-1">03</div>
+              <h4 class="text-lg font-semibold text-white mb-1" data-i18n="s3.t">智能评分 (SCORE)</h4>
+              <p class="text-sm text-white/30" data-i18n="s3.d">排除不可用与受限账号，实时计算余量与健康度最高的备用账号。</p>
+            </div>
+            <div class="relative pl-12">
+              <div class="absolute left-[11px] top-1.5 timeline-dot timeline-dot-muted"></div>
+              <div class="text-brand text-xs font-mono mb-1">04</div>
+              <h4 class="text-lg font-semibold text-white mb-1" data-i18n="s4.t">无感中继 (RELAY)</h4>
+              <p class="text-sm text-white/30" data-i18n="s4.d">写入系统 Keychain 并绑定独立设备指纹，热重启 Antigravity 恢复现场。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════ SECURITY ═══════════════════════════ -->
+    <section class="py-28 px-6 border-t border-white/[0.03]">
+      <div class="max-w-[1100px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 reveal">
+
+        <div class="card p-10">
+          <h3 class="text-2xl font-bold text-white mb-8 tracking-tight" data-i18n="arch.t">原生构建</h3>
+          <div class="space-y-4 text-sm font-mono">
+            <div class="flex justify-between border-b border-white/5 pb-3">
+              <span class="text-white/30">Core</span><span class="text-white">Rust + Tauri 2</span>
+            </div>
+            <div class="flex justify-between border-b border-white/5 pb-3">
+              <span class="text-white/30">Frontend</span><span class="text-white">React 19 + TypeScript</span>
+            </div>
+            <div class="flex justify-between border-b border-white/5 pb-3">
+              <span class="text-white/30">RAM Footprint</span><span class="text-white">&lt; 50MB</span>
+            </div>
+            <div class="flex justify-between border-b border-white/5 pb-3">
+              <span class="text-white/30">Relay Latency</span><span class="text-emerald-400">~1 second</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-white/30">Electron</span><span class="text-white/50">None</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card p-10">
+          <h3 class="text-2xl font-bold text-white mb-8 tracking-tight" data-i18n="sec.t">隐私优先</h3>
+          <div class="space-y-4 text-sm text-white/50">
+            <div class="flex items-start space-x-3">
+              <span class="text-brand mt-0.5">✓</span>
+              <span data-i18n="sec.1">纯本地应用，绝非 API 代理网关。不转售 Token，不分发 API Key。</span>
+            </div>
+            <div class="flex items-start space-x-3">
+              <span class="text-brand mt-0.5">✓</span>
+              <span data-i18n="sec.2">零云端服务器。配额与 OAuth 刷新直连 Google 官方端点，零第三方中转。</span>
+            </div>
+            <div class="flex items-start space-x-3">
+              <span class="text-brand mt-0.5">✓</span>
+              <span data-i18n="sec.3">账号数据保存在 <code class="text-white/70">~/.antigravity_tools</code>，Unix 0600 仅当前用户可读。</span>
+            </div>
+            <div class="flex items-start space-x-3">
+              <span class="text-brand mt-0.5">✓</span>
+              <span data-i18n="sec.4">凭据存储于 macOS Keychain。前后端代码 100% 开源透明。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════ INSTALL ════════════════════════════ -->
+    <section id="install" class="py-28 px-6 border-t border-white/[0.03] bg-[#030303]">
+      <div class="max-w-[800px] mx-auto reveal">
+        <div class="text-center mb-12">
+          <span class="text-[11px] font-mono uppercase tracking-widest text-brand-light block mb-3">GET STARTED</span>
+          <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-gradient-hero mb-3" data-i18n="inst.t">立即安装 AMT</h2>
+          <p class="text-sm text-white/30" data-i18n="inst.d">支持 Homebrew Cask、一键终端脚本和 DMG 直接下载。</p>
+        </div>
+
+        <div class="card overflow-hidden">
+          <!-- Tab Buttons -->
+          <div class="flex border-b border-white/5 text-xs font-mono">
+            <button class="install-tab-btn tab-btn-active flex-1 py-3.5 text-white/40 hover:text-white transition-colors" data-tab="brew">Homebrew (推荐)</button>
+            <button class="install-tab-btn flex-1 py-3.5 text-white/40 hover:text-white transition-colors" data-tab="script">终端脚本</button>
+            <button class="install-tab-btn flex-1 py-3.5 text-white/40 hover:text-white transition-colors" data-tab="dmg">DMG 下载</button>
+          </div>
+
+          <!-- Brew -->
+          <div id="tab-brew" class="install-tab active p-6 sm:p-8 space-y-3">
+            <p class="text-xs text-white/30" data-i18n="inst.brew.desc">打开终端，执行以下命令通过 Homebrew Cask 安装：</p>
+            <div class="bg-black rounded-xl p-4 border border-white/6 flex items-center justify-between group">
+              <code id="cmd-brew" class="text-xs sm:text-sm text-brand-light truncate mr-4">brew tap wuyunfeng8/antigravity-manager https://github.com/wuyunfeng8/Antigravity-Manager && brew install --cask antigravity-tools</code>
+              <button onclick="copyCmd('cmd-brew', this)" class="btn-ghost px-3 py-1.5 text-[11px] shrink-0">复制</button>
+            </div>
+          </div>
+
+          <!-- Script -->
+          <div id="tab-script" class="install-tab p-6 sm:p-8 space-y-3">
+            <p class="text-xs text-white/30" data-i18n="inst.curl.desc">适合没有 Homebrew 的用户，一键下载并安装至 /Applications：</p>
+            <div class="bg-black rounded-xl p-4 border border-white/6 flex items-center justify-between">
+              <code id="cmd-curl" class="text-xs sm:text-sm text-cyan-400 truncate mr-4">curl -fsSL https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main/install.sh | bash</code>
+              <button onclick="copyCmd('cmd-curl', this)" class="btn-ghost px-3 py-1.5 text-[11px] shrink-0">复制</button>
+            </div>
+          </div>
+
+          <!-- DMG -->
+          <div id="tab-dmg" class="install-tab p-6 sm:p-8 space-y-4">
+            <p class="text-xs text-white/30" data-i18n="inst.dmg.desc">从 GitHub Releases 下载对应芯片架构的 .dmg 镜像：</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <a href="https://github.com/wuyunfeng8/Antigravity-Manager/releases/download/v1.1.0/Antigravity-Manager_1.1.0_aarch64.dmg"
+                 class="p-5 rounded-xl border border-white/6 bg-black hover:border-brand/40 transition-colors flex justify-between items-center">
+                <div>
+                  <div class="font-semibold text-sm text-white">Apple Silicon</div>
+                  <div class="text-[11px] text-white/25 font-mono mt-1">M1~M4 · aarch64</div>
+                </div>
+                <span class="text-brand-light text-xs">下载 →</span>
+              </a>
+              <a href="https://github.com/wuyunfeng8/Antigravity-Manager/releases/download/v1.1.0/Antigravity-Manager_1.1.0_x64.dmg"
+                 class="p-5 rounded-xl border border-white/6 bg-black hover:border-brand/40 transition-colors flex justify-between items-center">
+                <div>
+                  <div class="font-semibold text-sm text-white">Intel Mac</div>
+                  <div class="text-[11px] text-white/25 font-mono mt-1">x86_64</div>
+                </div>
+                <span class="text-brand-light text-xs">下载 →</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gatekeeper Note -->
+        <div class="mt-5 p-4 rounded-xl bg-surface border border-white/5 text-xs text-white/30 flex items-start space-x-3">
+          <span class="text-amber-400 shrink-0 mt-0.5">ℹ</span>
+          <div>
+            <span class="font-semibold text-white/70" data-i18n="inst.gk.t">macOS 首次打开提示"无法验证开发者"？</span>
+            <span data-i18n="inst.gk.d"> 前往「系统设置 → 隐私与安全性」，滑到底部点击「仍要打开」即可。</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════ FAQ ════════════════════════════════ -->
+    <section class="py-28 px-6 border-t border-white/[0.03]">
+      <div class="max-w-[700px] mx-auto reveal">
+        <div class="mb-12">
+          <span class="text-[11px] font-mono uppercase tracking-widest text-brand-light block mb-3">FAQ</span>
+          <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-gradient-hero" data-i18n="faq.t">常见问题</h2>
+        </div>
+
+        <div class="space-y-3">
+          <div class="faq-item card px-6 py-5 cursor-pointer" onclick="toggleFaq(this)">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-white pr-4" data-i18n="q1.q">AMT 是 API 代理或中转网关吗？</span>
+              <span class="faq-icon text-white/30 text-lg font-light select-none">+</span>
+            </div>
+            <div class="faq-answer text-xs text-white/35 leading-relaxed">
+              <span data-i18n="q1.a"><strong class="text-white/60">不是。</strong>AMT 专为 Google Antigravity 原生桌面客户端管理设计，负责监控真实配额、推荐接力与设备身份切换。项目中明确去除了所有 HTTP 网关、API Key 分发、Headless 模式及第三方兼容端点。</span>
+            </div>
+          </div>
+
+          <div class="faq-item card px-6 py-5 cursor-pointer" onclick="toggleFaq(this)">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-white pr-4" data-i18n="q2.q">切换账号后，工作区和代码会丢失吗？</span>
+              <span class="faq-icon text-white/30 text-lg font-light select-none">+</span>
+            </div>
+            <div class="faq-answer text-xs text-white/35 leading-relaxed">
+              <span data-i18n="q2.a"><strong class="text-white/60">完全不会。</strong>AMT 的接力机制精准替换系统凭据库中的登录状态，重启时保留所有打开的工作区、文件与设置，换号后立刻无缝继续。</span>
+            </div>
+          </div>
+
+          <div class="faq-item card px-6 py-5 cursor-pointer" onclick="toggleFaq(this)">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-white pr-4" data-i18n="q3.q">设备身份隔离能保证 100% 不被封号吗？</span>
+              <span class="faq-icon text-white/30 text-lg font-light select-none">+</span>
+            </div>
+            <div class="faq-answer text-xs text-white/35 leading-relaxed">
+              <span data-i18n="q3.a"><strong class="text-white/60">不作此类绝对保证。</strong>设备指纹隔离的目的是降低多账号在同一设备上长期共用相同硬指纹带来的直接关联风险，并支持随时还原原始环境基线。</span>
+            </div>
+          </div>
+
+          <div class="faq-item card px-6 py-5 cursor-pointer" onclick="toggleFaq(this)">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-white pr-4" data-i18n="q4.q">我的账号 Token 会被上传到远程服务器吗？</span>
+              <span class="faq-icon text-white/30 text-lg font-light select-none">+</span>
+            </div>
+            <div class="faq-answer text-xs text-white/35 leading-relaxed">
+              <span data-i18n="q4.a"><strong class="text-white/60">绝对不会。</strong>AMT 没有任何后端中心化服务器或遥测后台。所有数据仅存放在本地 <code>~/.antigravity_tools</code> 目录，配额刷新直接与 Google 官方端点通信。源码随时可审查。</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════ CLOSING CTA ════════════════════════ -->
+    <section class="py-36 px-6 text-center relative border-t border-white/[0.03]">
+      <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-brand/[0.04] blur-[120px] pointer-events-none"></div>
+      <div class="max-w-2xl mx-auto relative z-10 reveal">
+        <h2 class="text-4xl sm:text-6xl font-bold tracking-[-0.04em] text-gradient-cta mb-8 leading-tight" data-i18n="cta.t">
+          别再让配额打断你的心流。
+        </h2>
+        <p class="text-sm text-white/30 mb-10 max-w-md mx-auto" data-i18n="cta.d">
+          让多个 Antigravity 账号成为你源源不断的编码后备军。免费、开源、纯本地。
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <a href="#install" class="btn-primary h-12 px-8 text-sm inline-flex items-center space-x-2">
+            <span data-i18n="cta.btn">免费下载 AMT</span>
+          </a>
+          <a href="https://github.com/wuyunfeng8/Antigravity-Manager" target="_blank" rel="noopener noreferrer"
+             class="btn-ghost h-12 px-8 text-sm inline-flex items-center space-x-2">
+            <span>GitHub</span>
           </a>
         </div>
       </div>
@@ -921,351 +700,215 @@
 
   </main>
 
-  <!-- Linear-style Minimal Footer -->
-  <footer class="border-t border-linear-border bg-linear-bg py-12 text-xs text-linear-text-muted">
-    <div class="max-w-[1320px] mx-auto px-5 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-6">
-
-      <div class="flex items-center space-x-3">
-        <img src="../public/icon.png" alt="AMT Logo" class="w-5 h-5 object-contain" onerror="this.onerror=null; this.src='https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main/public/icon.png';">
-        <span class="font-semibold text-white">AMT (Antigravity Manager)</span>
-        <span>·</span>
-        <span>MIT License</span>
+  <!-- ═══════════════════════════════════ FOOTER ══════════════════════════════ -->
+  <footer class="border-t border-white/[0.03] py-10 px-6 text-xs text-white/20">
+    <div class="max-w-[1200px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div class="flex items-center space-x-2.5">
+        <img src="../public/icon.png" alt="AMT" class="w-4 h-4 object-contain opacity-30 grayscale"
+             onerror="this.onerror=null; this.src='https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main/public/icon.png';">
+        <span>AMT (Antigravity Manager) · MIT License</span>
       </div>
-
-      <div class="flex items-center space-x-6 text-linear-text-secondary font-mono">
+      <div class="flex items-center space-x-6 font-mono">
         <a href="https://github.com/wuyunfeng8/Antigravity-Manager" class="hover:text-white transition-colors">GitHub</a>
         <a href="https://github.com/wuyunfeng8/Antigravity-Manager/releases" class="hover:text-white transition-colors">Releases</a>
         <a href="https://github.com/wuyunfeng8/Antigravity-Manager/blob/main/LICENSE" class="hover:text-white transition-colors">License</a>
         <a href="https://github.com/wuyunfeng8/Antigravity-Manager/issues" class="hover:text-white transition-colors">Issues</a>
       </div>
-
-      <div class="text-linear-text-muted font-mono">
-        专注于本地多账号配额雷达与一键接力
-      </div>
-
     </div>
   </footer>
 
-  <!-- Scripts: Live Simulator, Translation & Clipboard -->
+  <!-- ═══════════════════════════════════ SCRIPTS ═════════════════════════════ -->
   <script>
-    // --- Bilingual Translation Engine ---
+    // ── Bilingual Translation Engine ──────────────────────
     let currentLang = 'zh';
 
-    const translations = {
+    const T = {
       zh: {
-        'nav.features': '核心能力',
-        'nav.demo': '配额雷达',
-        'nav.workflow': '接力工作流',
-        'nav.why': '痛点对比',
-        'nav.security': '安全边界',
-        'nav.install': '安装指南',
-        'nav.faq': '常见问题',
-        'nav.download': '免费下载',
-        'hero.pill': 'AMT 1.1.0 现已支持 macOS Apple Silicon & Intel',
-        'hero.title1': 'AMT is a purpose-built system for',
-        'hero.title2': 'Antigravity account relay.',
-        'hero.subtext': '真实配额雷达、推荐智能接力、独立设备身份隔离。<br class="hidden sm:inline">让账号切换回到<span class="text-white font-medium">一次点击</span>，告别额度耗尽后反复登出、浏览器授权与开发中断。',
-        'hero.cta_download': '下载 macOS 版',
-        'hero.cta_demo': '体验交互演示',
-        'feat.badge': 'ENGINEERED FOR FLOW',
-        'feat.title': '专为极速编码与稳定性打造的系统能力',
-        'feat.desc': '拒绝冗余的 API 网关与代理池。AMT 专注于纯本地多账号真实配额监控与一秒无缝接力。',
-        'bento1.title': '真实配额雷达：直连官方后端配额桶',
-        'bento1.desc': '直连 Google 官方 loadCodeAssist 接口，精确聚合 Claude 3.5 Sonnet、Gemini 1.5 Pro 与 Flash 配额桶。支持 5 小时滑动窗口与周配额随意切换，精准区分 403 / 429 报错，拒绝第三方工具的模型猜测误导。',
-        'bento2.title': '1 秒静默接力',
-        'bento2.desc': '根据健康度与余量实时推导最优账号。一键静默写入 macOS Keychain 并热重启主程序，保留工作区现场，换号瞬间完成。',
-        'bento3.title': '独立设备指纹隔离',
-        'bento3.desc': '每账号专属保存独立的 machineId 与 devDeviceId。切号时同步应用指纹并提供基线还原快照，有效降低风控关联风险。',
-        'bento4.title': '菜单栏托盘与迷你胶囊',
-        'bento4.desc': '菜单栏随手瞄一眼余量，悬浮迷你胶囊窗不抢夺编辑器焦点。支持后台静默自动轮询与周配额预热。',
-        'bento5.title': '多渠道安全入库',
-        'bento5.desc': '支持原生 Google OAuth 授权、Refresh Token 快速导入与兼容 SQLite state.vscdb 批量扫描，轻松纳管全部账号。',
-        'bento6.title': 'Rust + Tauri 2 原生轻量架构',
-        'bento6.desc': '采用 Rust + Tokio 原生后端，常驻内存占用低于 50MB，毫秒级响应，永不卡顿，绝无庞大臃肿的 Electron 包袱。'
+        'nav.download': '下载',
+        'hero.badge': 'v1.1.0 · macOS 原生',
+        'hero.line1': '不再打断你的',
+        'hero.line2': '编码心流。',
+        'hero.sub': 'AMT 让你随时掌握 Antigravity 账号的真实配额。一键无感中继，独立设备身份。纯本地，零干扰。',
+        'hero.cta1': '下载 macOS 版',
+        'hero.cta2': '查看源码',
+        'hero.s1': '< 50MB 内存',
+        'hero.s2': '1 秒中继',
+        'hero.s3': '100% 本地',
+        'hero.s4': 'MIT 开源',
+        'win.active': '当前主力',
+        'win.q1': '余量警戒 · 6/50',
+        'win.q2': '余量充裕 · 34/50',
+        'win.q3': '极度充裕 · 188/200',
+        'win.relay': '智能接力推荐就绪',
+        'win.rdesc': 'Claude 余量仅 12%，推荐接力至 dev.relay.pool2@gmail.com (96% · PRO)',
+        'win.rbtn': '一键接力 ⚡',
+        'feat.title': '专为不间断编码打造',
+        'feat.desc': '不是 API 网关。不是代理池。AMT 只做一件事：让你的多个 Antigravity 账号始终处于最佳接力状态。',
+        'f1.title': '真实配额雷达',
+        'f1.desc': '直连 Google 官方 loadCodeAssist 接口，精确聚合 Claude Sonnet、Gemini Pro 与 Flash 配额。支持 5 小时滑动窗口与周配额双视图。',
+        'f2.title': '一键无感中继',
+        'f2.desc': '根据健康度与余量实时推导最优备用账号。一键静默写入 macOS Keychain 并热重启主程序，工作区现场完整保留。',
+        'f3.title': '独立设备身份隔离',
+        'f3.desc': '为每个账号绑定专属 machineId 与 devDeviceId。切号时同步应用指纹并提供基线还原快照，有效降低关联风险。',
+        'f4.title': '菜单栏托盘',
+        'f4.desc': '菜单栏随手瞄一眼余量。悬浮迷你胶囊窗不抢编辑器焦点，支持后台静默轮询与周配额预热。',
+        'f5.title': '多渠道安全入库',
+        'f5.desc': '支持 Google OAuth 授权、Refresh Token 快速导入与 state.vscdb 批量扫描。',
+        'f6.title': 'Rust + Tauri 2',
+        'f6.desc': '原生轻量架构，常驻内存低于 50MB，毫秒级响应。无 Electron 包袱。',
+        'wf.title': '四步完成接力闭环',
+        's1.t': '安全入库 (INGEST)', 's1.d': 'Google OAuth 授权或直接输入 Token，本地 0600 安全权限原子化存储。',
+        's2.t': '配额追踪 (RADAR)', 's2.d': '直连官方接口获取 5h 滑动窗口与周配额真实余量，自动预热并预警耗尽。',
+        's3.t': '智能评分 (SCORE)', 's3.d': '排除不可用与受限账号，实时计算余量与健康度最高的备用账号。',
+        's4.t': '无感中继 (RELAY)', 's4.d': '写入系统 Keychain 并绑定独立设备指纹，热重启 Antigravity 恢复现场。',
+        'arch.t': '原生构建',
+        'sec.t': '隐私优先',
+        'sec.1': '纯本地应用，绝非 API 代理网关。不转售 Token，不分发 API Key。',
+        'sec.2': '零云端服务器。配额与 OAuth 刷新直连 Google 官方端点，零第三方中转。',
+        'sec.3': '账号数据保存在 <code class="text-white/70">~/.antigravity_tools</code>，Unix 0600 仅当前用户可读。',
+        'sec.4': '凭据存储于 macOS Keychain。前后端代码 100% 开源透明。',
+        'inst.t': '立即安装 AMT',
+        'inst.d': '支持 Homebrew Cask、一键终端脚本和 DMG 直接下载。',
+        'inst.brew.desc': '打开终端，执行以下命令通过 Homebrew Cask 安装：',
+        'inst.curl.desc': '适合没有 Homebrew 的用户，一键下载并安装至 /Applications：',
+        'inst.dmg.desc': '从 GitHub Releases 下载对应芯片架构的 .dmg 镜像：',
+        'inst.gk.t': 'macOS 首次打开提示"无法验证开发者"？',
+        'inst.gk.d': ' 前往「系统设置 → 隐私与安全性」，滑到底部点击「仍要打开」即可。',
+        'faq.t': '常见问题',
+        'q1.q': 'AMT 是 API 代理或中转网关吗？',
+        'q1.a': '<strong class="text-white/60">不是。</strong>AMT 专为 Google Antigravity 原生桌面客户端管理设计，负责监控真实配额、推荐接力与设备身份切换。项目中明确去除了所有 HTTP 网关、API Key 分发、Headless 模式及第三方兼容端点。',
+        'q2.q': '切换账号后，工作区和代码会丢失吗？',
+        'q2.a': '<strong class="text-white/60">完全不会。</strong>AMT 的接力机制精准替换系统凭据库中的登录状态，重启时保留所有打开的工作区、文件与设置，换号后立刻无缝继续。',
+        'q3.q': '设备身份隔离能保证 100% 不被封号吗？',
+        'q3.a': '<strong class="text-white/60">不作此类绝对保证。</strong>设备指纹隔离的目的是降低多账号在同一设备上长期共用相同硬指纹带来的直接关联风险，并支持随时还原原始环境基线。',
+        'q4.q': '我的账号 Token 会被上传到远程服务器吗？',
+        'q4.a': '<strong class="text-white/60">绝对不会。</strong>AMT 没有任何后端中心化服务器或遥测后台。所有数据仅存放在本地 <code>~/.antigravity_tools</code> 目录，配额刷新直接与 Google 官方端点通信。源码随时可审查。',
+        'cta.t': '别再让配额打断你的心流。',
+        'cta.d': '让多个 Antigravity 账号成为你源源不断的编码后备军。免费、开源、纯本地。',
+        'cta.btn': '免费下载 AMT'
       },
       en: {
-        'nav.features': 'Features',
-        'nav.demo': 'Live Radar',
-        'nav.workflow': 'Workflow',
-        'nav.why': 'Why AMT',
-        'nav.security': 'Security',
-        'nav.install': 'Install',
-        'nav.faq': 'FAQ',
         'nav.download': 'Download',
-        'hero.pill': 'AMT 1.1.0 is now live for Apple Silicon & Intel',
-        'hero.title1': 'AMT is a purpose-built system for',
-        'hero.title2': 'Antigravity account relay.',
-        'hero.subtext': 'Real quota radar, smart standby recommendation, and isolated device identity.<br class="hidden sm:inline">Turn account switching back into <span class="text-white font-medium">one single click</span> without relogin friction.',
-        'hero.cta_download': 'Download for macOS',
-        'hero.cta_demo': 'Interactive Demo',
-        'feat.badge': 'ENGINEERED FOR FLOW',
-        'feat.title': 'Purpose-built capabilities for deep coding momentum',
-        'feat.desc': 'Zero bloated API proxy baggage. AMT is hyper-focused on quota monitoring, instant relay, and credential privacy.',
-        'bento1.title': 'Real Quota Radar: Direct Ground-Truth Buckets',
-        'bento1.desc': 'Directly connects to official loadCodeAssist endpoints, segregating Claude, Pro, and Flash quota limits with recovery countdowns.',
-        'bento2.title': '1-Second Silent Relay',
-        'bento2.desc': 'Calculates the optimal standby account before exhaustion. Silently writes credentials to macOS Keychain and restarts client in 1s.',
-        'bento3.title': 'Device Fingerprint Isolation',
-        'bento3.desc': 'Manages dedicated machineId and devDeviceId per account with history versioning and baseline recovery.',
-        'bento4.title': 'Menu Bar Tray & Mini Capsule',
-        'bento4.desc': 'Check quotas at a glance in the macOS menu bar or floating capsule widget. Background polling and weekly quota warming.',
-        'bento5.title': 'Multi-Source Safe Ingestion',
-        'bento5.desc': 'Supports native Google OAuth, Refresh Token direct import, and legacy state.vscdb synchronization to manage all accounts.',
-        'bento6.title': 'Rust + Tauri 2 Native Architecture',
-        'bento6.desc': 'Built on Tauri 2 + Rust + Tokio with less than 50MB RAM footprint. Instant launch with zero bulky Electron overhead.'
+        'hero.badge': 'v1.1.0 · macOS Native',
+        'hero.line1': 'Never lose your',
+        'hero.line2': 'coding momentum.',
+        'hero.sub': 'AMT keeps your Antigravity accounts relay-ready. Real quotas. One-click switch. Zero interruption.',
+        'hero.cta1': 'Download for macOS',
+        'hero.cta2': 'View Source',
+        'hero.s1': '< 50MB RAM',
+        'hero.s2': '1s Relay',
+        'hero.s3': '100% Local',
+        'hero.s4': 'MIT Open Source',
+        'win.active': 'Active Primary',
+        'win.q1': 'Critical · 6/50',
+        'win.q2': 'Healthy · 34/50',
+        'win.q3': 'Abundant · 188/200',
+        'win.relay': 'Smart Relay Ready',
+        'win.rdesc': 'Claude at 12%. Recommending relay to dev.relay.pool2@gmail.com (96% · PRO)',
+        'win.rbtn': '1-Click Relay ⚡',
+        'feat.title': 'Built for uninterrupted coding',
+        'feat.desc': 'Not an API gateway. Not a proxy pool. AMT does one thing: keeps your Antigravity accounts relay-ready.',
+        'f1.title': 'Real Quota Radar',
+        'f1.desc': 'Direct connection to official loadCodeAssist endpoints. Precise Claude Sonnet, Gemini Pro & Flash quota aggregation with 5h rolling + weekly views.',
+        'f2.title': '1-Click Silent Relay',
+        'f2.desc': 'Calculates optimal standby account in real-time. Silently writes to macOS Keychain and hot-restarts the client. Workspace fully preserved.',
+        'f3.title': 'Device Identity Isolation',
+        'f3.desc': 'Dedicated machineId and devDeviceId per account. Fingerprint applied on switch with baseline recovery snapshots. Reduces correlation risk.',
+        'f4.title': 'Menu Bar Tray',
+        'f4.desc': 'Check quotas at a glance in macOS menu bar. Floating mini capsule without stealing editor focus. Background polling & weekly warming.',
+        'f5.title': 'Multi-Source Ingestion',
+        'f5.desc': 'Native Google OAuth, Refresh Token import, and legacy state.vscdb batch scanning.',
+        'f6.title': 'Rust + Tauri 2',
+        'f6.desc': 'Native lightweight architecture. Under 50MB RAM, millisecond response. Zero Electron overhead.',
+        'wf.title': 'Four-step relay pipeline',
+        's1.t': 'INGEST', 's1.d': 'Google OAuth or direct token import. Local 0600 atomic storage.',
+        's2.t': 'RADAR', 's2.d': 'Direct official API for 5h rolling + weekly quota tracking with auto-warmup.',
+        's3.t': 'SCORE', 's3.d': 'Excludes unavailable accounts. Real-time health scoring for optimal standby.',
+        's4.t': 'RELAY', 's4.d': 'Writes to system Keychain with isolated fingerprint. Hot-restarts Antigravity.',
+        'arch.t': 'Built Different',
+        'sec.t': 'Privacy First',
+        'sec.1': 'Local desktop tool, NOT an API proxy or gateway. No token reselling, no API key distribution.',
+        'sec.2': 'Zero cloud servers. Quota & OAuth refresh directly to Google official endpoints.',
+        'sec.3': 'Account data in <code class="text-white/70">~/.antigravity_tools</code>, Unix 0600 user-only readable.',
+        'sec.4': 'Credentials in macOS Keychain. 100% open source frontend & backend.',
+        'inst.t': 'Install AMT',
+        'inst.d': 'Available via Homebrew Cask, install script, or direct DMG download.',
+        'inst.brew.desc': 'Open Terminal and run the following command:',
+        'inst.curl.desc': 'For users without Homebrew — downloads and installs to /Applications:',
+        'inst.dmg.desc': 'Download the .dmg image for your chip architecture from GitHub Releases:',
+        'inst.gk.t': 'macOS Gatekeeper blocking the app?',
+        'inst.gk.d': ' Go to System Settings → Privacy & Security, scroll down and click "Open Anyway".',
+        'faq.t': 'Frequently Asked Questions',
+        'q1.q': 'Is AMT an API proxy or gateway?',
+        'q1.a': '<strong class="text-white/60">No.</strong> AMT is purpose-built for managing Google Antigravity native desktop client. It monitors real quotas, recommends relay targets, and manages device identity. All HTTP gateway, API key distribution, and third-party endpoint features have been explicitly removed.',
+        'q2.q': 'Will I lose my workspace when switching?',
+        'q2.a': '<strong class="text-white/60">Absolutely not.</strong> AMT precisely replaces login credentials in the system credential store. All open workspaces, files, and settings are fully preserved on restart.',
+        'q3.q': 'Does fingerprint isolation guarantee safety?',
+        'q3.a': '<strong class="text-white/60">No absolute guarantees.</strong> Device fingerprint isolation reduces the direct correlation risk of multiple accounts sharing the same hardware identifiers on one machine, with baseline recovery support.',
+        'q4.q': 'Is my token uploaded anywhere?',
+        'q4.a': '<strong class="text-white/60">Never.</strong> AMT has no backend server or telemetry. All data stays in local <code>~/.antigravity_tools</code>. Quota refresh connects directly to Google endpoints. Source code is fully auditable.',
+        'cta.t': 'Stop losing time to quota walls.',
+        'cta.d': 'Turn your Antigravity accounts into an uninterrupted coding reserve. Free, open source, completely local.',
+        'cta.btn': 'Download AMT Free'
       }
     };
 
-    document.getElementById('lang-toggle-btn').addEventListener('click', () => {
-      currentLang = currentLang === 'zh' ? 'en' : 'zh';
-      document.getElementById('lang-label').innerText = currentLang === 'zh' ? 'EN' : '中文';
-
-      const dict = translations[currentLang];
+    function applyLang() {
+      document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
+      document.getElementById('lang-toggle').textContent = currentLang === 'zh' ? 'EN' : '中文';
+      const dict = T[currentLang];
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (dict[key]) {
-          el.innerHTML = dict[key];
+        if (dict[key]) el.innerHTML = dict[key];
+      });
+    }
+
+    document.getElementById('lang-toggle').addEventListener('click', () => {
+      currentLang = currentLang === 'zh' ? 'en' : 'zh';
+      applyLang();
+    });
+
+    applyLang();
+
+    // ── Scroll Reveal ─────────────────────────────────────
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          obs.unobserve(e.target);
         }
+      });
+    }, { threshold: 0.08 });
+
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+    // ── FAQ Accordion ─────────────────────────────────────
+    function toggleFaq(item) {
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    }
+
+    // ── Install Tabs ──────────────────────────────────────
+    document.querySelectorAll('.install-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.install-tab-btn').forEach(b => b.classList.remove('tab-btn-active'));
+        document.querySelectorAll('.install-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('tab-btn-active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
       });
     });
 
-    // --- Interactive Simulator Logic ---
-    let simMode = '5h';
-    let currentSimAccountIndex = 0;
-
-    const simAccounts = [
-      {
-        email: 'dev.primary@gmail.com',
-        avatar: 'D',
-        badge: 'PRO',
-        status: '当前主力',
-        device: 'dev_8f2a...',
-        claude5h: 12,
-        gemini5h: 68,
-        flash5h: 94,
-        claudeWeek: 30,
-        geminiWeek: 85,
-        flashWeek: 98,
-        recommendation: {
-          show: true,
-          title: '智能接力推荐就绪',
-          desc: '主力 Claude 余量仅 12%，已自动推导备用账号 dev.relay.pool2@gmail.com (96% · PRO)。'
-        }
-      },
-      {
-        email: 'dev.relay.pool2@gmail.com',
-        avatar: 'R',
-        badge: 'PRO',
-        status: '当前主力 (已接力)',
-        device: 'dev_7c9e...',
-        claude5h: 96,
-        gemini5h: 100,
-        flash5h: 100,
-        claudeWeek: 92,
-        geminiWeek: 98,
-        flashWeek: 100,
-        recommendation: {
-          show: false,
-          title: '配额状态充裕',
-          desc: '当前主力各模型配额充沛，无需接力，尽情享受不间断编码！'
-        }
-      },
-      {
-        email: 'free.tier.test@gmail.com',
-        avatar: 'F',
-        badge: 'FREE',
-        status: '当前主力',
-        device: 'dev_1b4d...',
-        claude5h: 0,
-        gemini5h: 45,
-        flash5h: 80,
-        claudeWeek: 0,
-        geminiWeek: 60,
-        flashWeek: 90,
-        recommendation: {
-          show: true,
-          title: 'Free 等级受限',
-          desc: 'Free 等级不包含 Claude 额度。建议接力至 PRO 等级账号以恢复最强生产力。'
-        }
-      }
-    ];
-
-    function updateSimDisplay() {
-      const acc = simAccounts[currentSimAccountIndex];
-      document.getElementById('sim-email').innerText = acc.email;
-      document.getElementById('sim-avatar').innerText = acc.avatar;
-      document.getElementById('sim-badge').innerText = acc.badge;
-      document.getElementById('sim-status').innerText = acc.status;
-      document.getElementById('sim-device').innerText = acc.device;
-
-      const is5h = simMode === '5h';
-      const cVal = is5h ? acc.claude5h : acc.claudeWeek;
-      const gVal = is5h ? acc.gemini5h : acc.geminiWeek;
-      const fVal = is5h ? acc.flash5h : acc.flashWeek;
-
-      // Update Claude
-      const claudeBar = document.getElementById('claude-bar');
-      const claudeVal = document.getElementById('claude-val');
-      const claudeInd = document.getElementById('claude-indicator');
-      const claudeSub = document.getElementById('claude-sub');
-      const claudeRat = document.getElementById('claude-ratio');
-
-      claudeBar.style.width = cVal + '%';
-      claudeVal.innerText = cVal === 0 ? '不可用' : cVal + '%';
-
-      if (cVal <= 15) {
-        claudeBar.style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
-        claudeVal.style.color = '#ef4444';
-        claudeInd.style.backgroundColor = '#ef4444';
-        claudeSub.innerText = cVal === 0 ? 'Free 等级无此模型' : '余量警戒 · 需接力';
-        claudeRat.innerText = cVal === 0 ? '0 / 0' : `${Math.round(cVal * 0.5)} / 50`;
-      } else {
-        claudeBar.style.background = 'linear-gradient(90deg, #10b981, #34d399)';
-        claudeVal.style.color = '#34d399';
-        claudeInd.style.backgroundColor = '#10b981';
-        claudeSub.innerText = '余量充沛';
-        claudeRat.innerText = `${Math.round(cVal * 0.5)} / 50`;
-      }
-
-      // Update Gemini Pro
-      document.getElementById('gemini-pro-bar').style.width = gVal + '%';
-      document.getElementById('gemini-pro-val').innerText = gVal + '%';
-      document.getElementById('gemini-pro-ratio').innerText = `${Math.round(gVal * 0.5)} / 50`;
-
-      // Update Flash
-      document.getElementById('flash-bar').style.width = fVal + '%';
-      document.getElementById('flash-val').innerText = fVal + '%';
-      document.getElementById('flash-ratio').innerText = `${Math.round(fVal * 2)} / 200`;
-
-      // Update Banner
-      const banner = document.getElementById('relay-banner');
-      const actionBtn = document.getElementById('relay-action-btn');
-      const resetBtn = document.getElementById('reset-sim-btn');
-
-      if (acc.recommendation.show) {
-        banner.className = 'rounded-xl p-4 border border-amber-500/30 bg-amber-500/10 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all';
-        document.getElementById('relay-title').innerText = acc.recommendation.title;
-        document.getElementById('relay-desc').innerHTML = acc.recommendation.desc;
-        actionBtn.classList.remove('hidden');
-        resetBtn.classList.add('hidden');
-      } else {
-        banner.className = 'rounded-xl p-4 border border-emerald-500/30 bg-emerald-500/10 flex flex-col sm:flex-row items-center justify-between gap-4 transition-all';
-        document.getElementById('relay-title').innerText = acc.recommendation.title;
-        document.getElementById('relay-desc').innerHTML = acc.recommendation.desc;
-        actionBtn.classList.add('hidden');
-        resetBtn.classList.remove('hidden');
-      }
-    }
-
-    function switchSimWindow(mode) {
-      simMode = mode;
-      const b5 = document.getElementById('sim-tab-5h');
-      const bw = document.getElementById('sim-tab-week');
-      if (mode === '5h') {
-        b5.className = 'px-3 py-1 rounded-md bg-linear-brand text-white shadow-sm transition-all';
-        bw.className = 'px-3 py-1 rounded-md text-linear-text-secondary hover:text-white transition-all';
-      } else {
-        b5.className = 'px-3 py-1 rounded-md text-linear-text-secondary hover:text-white transition-all';
-        bw.className = 'px-3 py-1 rounded-md bg-linear-brand text-white shadow-sm transition-all';
-      }
-      updateSimDisplay();
-    }
-
-    function selectPoolAccount(index) {
-      currentSimAccountIndex = index;
-      updateSimDisplay();
-    }
-
-    function executeRelaySimulation() {
-      const stepper = document.getElementById('relay-stepper');
-      const actionBtn = document.getElementById('relay-action-btn');
-      stepper.classList.remove('hidden');
-      actionBtn.disabled = true;
-
-      const steps = [
-        { id: 'step-1', text: '✓ 1. Token 校验通过' },
-        { id: 'step-2', text: '✓ 2. 指纹 dev_7c9e 隔离' },
-        { id: 'step-3', text: '✓ 3. 写入 Keychain' },
-        { id: 'step-4', text: '✓ 4. 主程序热重启' }
-      ];
-
-      steps.forEach((step, idx) => {
-        setTimeout(() => {
-          const el = document.getElementById(step.id);
-          el.className = 'p-2 rounded bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 font-bold';
-          el.innerText = step.text;
-        }, (idx + 1) * 300);
-      });
-
-      setTimeout(() => {
-        currentSimAccountIndex = 1; // switch to relay backup account
-        updateSimDisplay();
-        actionBtn.disabled = false;
-        setTimeout(() => {
-          stepper.classList.add('hidden');
-        }, 1500);
-      }, 1500);
-    }
-
-    function resetSimulation() {
-      currentSimAccountIndex = 0;
-      for (let i = 1; i <= 4; i++) {
-        const el = document.getElementById(`step-${i}`);
-        el.className = 'p-2 rounded bg-linear-subtle border border-linear-border text-linear-text-muted';
-      }
-      document.getElementById('step-1').innerText = '1. Token 校验';
-      document.getElementById('step-2').innerText = '2. 隔离指纹 dev_7c9e';
-      document.getElementById('step-3').innerText = '3. 写入 Keychain';
-      document.getElementById('step-4').innerText = '4. 热重启 Antigravity';
-      updateSimDisplay();
-    }
-
-    // --- Tab Switching for Installation ---
-    function switchInstallTab(tab) {
-      ['brew', 'curl', 'dmg'].forEach(t => {
-        const pane = document.getElementById(`tab-pane-${t}`);
-        const btn = document.getElementById(`tab-btn-${t}`);
-        if (t === tab) {
-          pane.classList.remove('hidden');
-          btn.className = 'flex-1 py-2 rounded-lg bg-linear-brand text-white font-semibold transition-all';
-        } else {
-          pane.classList.add('hidden');
-          btn.className = 'flex-1 py-2 rounded-lg text-linear-text-secondary hover:text-white transition-all';
-        }
-      });
-    }
-
-    // --- Clipboard Utility ---
-    function copyToClipboard(elementId, btn) {
-      const text = document.getElementById(elementId).innerText;
+    // ── Clipboard ─────────────────────────────────────────
+    function copyCmd(id, btn) {
+      const text = document.getElementById(id).textContent;
       navigator.clipboard.writeText(text).then(() => {
-        const originalContent = btn.innerHTML;
-        btn.innerHTML = `<span class="text-emerald-400 font-bold">✓ 已复制</span>`;
-        setTimeout(() => {
-          btn.innerHTML = originalContent;
-        }, 2000);
-      }).catch(err => {
-        console.error('Copy failed', err);
-      });
+        const orig = btn.textContent;
+        btn.textContent = '✓';
+        btn.classList.add('text-emerald-400');
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('text-emerald-400'); }, 2000);
+      }).catch(() => {});
     }
-
-    // --- FAQ Accordion ---
-    function toggleFaq(card) {
-      const answer = card.querySelector('.faq-answer');
-      const icon = card.querySelector('.faq-icon');
-      const isHidden = answer.classList.contains('hidden');
-
-      if (isHidden) {
-        answer.classList.remove('hidden');
-        icon.innerText = '−';
-      } else {
-        answer.classList.add('hidden');
-        icon.innerText = '+';
-      }
-    }
-
-    // Initialize display on load
-    updateSimDisplay();
   </script>
 </body>
 </html>
