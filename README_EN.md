@@ -1,139 +1,60 @@
 <div align="center">
-  <img src="public/icon.png" width="112" height="112" alt="AMT Logo">
-
-  # AMT
-
-  **Multi-account quota radar and relay manager for Antigravity**
-
-  Real quotas, recommended relay accounts, and isolated device identities. Switch accounts with one click instead of another sign-in cycle.
-
-  [![Release](https://img.shields.io/github/v/release/wuyunfeng8/Antigravity-Manager?style=flat-square&color=16a34a)](https://github.com/wuyunfeng8/Antigravity-Manager/releases)
-  [![Platform](https://img.shields.io/badge/platform-macOS-0f172a?style=flat-square)](#installation)
-  [![License](https://img.shields.io/badge/license-MIT-64748b?style=flat-square)](LICENSE)
-
-  [简体中文](README.md) · **English**
+  <img src="public/icon.png" width="88" height="88" alt="AMT">
+  <h1>AMT</h1>
+  <p><strong>Multi-account quota and relay manager for Antigravity</strong></p>
+  <p>Know your quotas. Switch accounts. Stay focused.</p>
+  <p>
+    <a href="https://github.com/wuyunfeng8/Antigravity-Manager/releases"><img src="https://img.shields.io/github/v/release/wuyunfeng8/Antigravity-Manager?style=flat-square&color=059669" alt="Release"></a>
+    <img src="https://img.shields.io/badge/platform-macOS-18181b?style=flat-square" alt="macOS">
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-18181b?style=flat-square" alt="MIT License"></a>
+  </p>
+  <p><a href="README.md">简体中文</a> · <strong>English</strong></p>
+  <p><a href="https://github.com/wuyunfeng8/Antigravity-Manager/releases">Download</a> · <a href="CHANGELOG.md">Changelog</a> · <a href="https://github.com/wuyunfeng8/Antigravity-Manager/issues">Feedback</a></p>
 </div>
 
----
-
-## Keep coding when quota runs low
-
-![AMT product overview: current account, recommended relay, and account pool](docs/images/amt-relay-overview.png)
-
-<p align="center">Current account · Real quotas · Recommended relay · Account pool<br><sub>Chinese interface shown with account details masked. Quotas and model availability depend on the service response.</sub></p>
-
-[Download](#installation) · [Get started](#workflow) · [Changelog](CHANGELOG.md) · [Report an issue](https://github.com/wuyunfeng8/Antigravity-Manager/issues)
-
-## What is AMT?
-
-AMT is a desktop account hub for Google Antigravity users. It brings account onboarding, real quota monitoring, device identity management, and native client switching into one focused interface, reducing interruptions caused by quota exhaustion and repeated authorization flows.
-
-> AMT is a local desktop account manager. It does not expose OpenAI-, Anthropic-, or Gemini-compatible API proxy endpoints and has no HTTP gateway or Docker headless mode.
-
-## Three core capabilities
-
-| Capability | How it works | Why it matters |
-| --- | --- | --- |
-| **Real quota radar** | Reads and consolidates Antigravity's actual quota buckets | Shows Gemini, Claude, and GPT quota categories, reset times, and account problems |
-| **One-click account relay** | Writes the selected account to the Antigravity desktop app's credential store or compatible SQLite state, then restarts the app | Replaces the manual sign-out, sign-in, and authorization cycle when quota runs low |
-| **Isolated device identities** | Stores and applies separate `machineId`, `macMachineId`, `devDeviceId`, and `sqmId` values per account | Reduces the correlation risk of multiple accounts sharing one long-lived client identity |
-
-## Workflow
-
-```text
-Add accounts  →  Inspect real quotas  →  Pick a recommended account  →  Relay
- OAuth            5-hour / weekly         Health and capacity             Credentials + device identity
- Token
- Database import
-```
-
-Before starting, install and launch the Antigravity desktop app at least once. Switching restarts the client, so save your work first.
-
-1. Choose **Add account** and sign in with Google OAuth. Refresh-token and database imports are available as advanced options.
-2. Inspect the current account, the complete account pool, and 5-hour/weekly quota windows.
-3. When capacity runs low, choose the recommended relay account or any healthy account.
-
-### Reading quotas
-
-- **5-hour and weekly quotas are separate windows.** Switch views to inspect remaining capacity and reset times. Missing weekly data means unknown, not a full allowance.
-- **Subscription tiers come from the service.** FREE, PRO, and ULTRA use information returned by `loadCodeAssist`, rather than model names.
-- **Resolve account problems before relaying.** Follow verification or reauthorization prompts when access is blocked, then refresh quotas.
+![AMT — current account, quotas, and recommended relay (Chinese interface)](docs/images/amt-relay-overview.png)
 
 ## Features
 
-- Current and recommended relay accounts visible at a glance.
-- Gemini, Claude, and GPT quota categories; categories may share upstream quota buckets and do not imply three independent allowances.
-- 5-hour sliding-window and weekly quota views.
-- FREE, PRO, and ULTRA subscription-tier detection.
-- Google OAuth, refresh-token, legacy database, and custom `state.vscdb` import.
-- Account switching for the Antigravity desktop app.
-- Device identity generation, binding, history, and saved-baseline restoration; older baselines may not represent the first-install state.
-- Clear account verification, 403, and OAuth-expiration states.
-- System tray, compact quota view, scheduled refresh, and weekly quota warmup.
-- Data-directory migration, client cache cleanup, network proxy, and debug console.
-- Interface languages: Simplified Chinese and English.
+- **Quotas at a glance** — Remaining capacity, reset times, and account health, with 5-hour and weekly views.
+- **One-click relay** — Find an available account and switch the Antigravity desktop app with fewer sign-in interruptions.
+- **Device identities** — Bind identities to accounts, manage history, and restore saved baselines.
+- **Always within reach** — System tray, compact view, background refresh, and weekly quota warmup. English and Simplified Chinese.
 
 ## Installation
 
-### Download a release
+Download a `.dmg` from [Releases](https://github.com/wuyunfeng8/Antigravity-Manager/releases): `aarch64` for Apple Silicon or `x64` for Intel. Version 1.1.0 provides macOS packages only.
 
-Open [GitHub Releases](https://github.com/wuyunfeng8/Antigravity-Manager/releases) and choose the `.dmg` for Apple Silicon (`aarch64`) or Intel (`x64`). Version 1.1.0 provides macOS packages only.
-
-**Installation limitation:** Version 1.1.0 is neither Developer ID signed nor Apple notarized. macOS may block the first launch. Check the download source and the release `SHA256SUMS`; if you trust the app, follow [Apple's Open Anyway instructions](https://support.apple.com/en-us/102445) in System Settings → Privacy & Security. Do not disable system security checks.
-
-### macOS install script
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main/install.sh | bash
-```
-
-### Homebrew (macOS)
+Or install with Homebrew:
 
 ```bash
 brew tap wuyunfeng8/antigravity-manager https://github.com/wuyunfeng8/Antigravity-Manager
 brew install --cask antigravity-tools
 ```
 
-## Data and security
+> Version 1.1.0 is not Apple Developer ID signed or notarized. If macOS blocks the first launch, verify the source and release `SHA256SUMS`, then follow [Apple’s instructions](https://support.apple.com/en-us/102445) to select **Open Anyway**.
 
-- Default data directory: `~/.antigravity_tools`
-- Move the data directory from **Settings → Maintenance**.
-- Account data is written atomically; sensitive configuration files use `0600` permissions on Unix.
-- Exported account JSON contains refresh tokens. Never upload, forward, or commit it.
-- Device identity isolation can reduce client-environment correlation risk, but it cannot guarantee account safety or any platform risk-control outcome.
+## Getting started
 
-## Technology
+1. Install and launch the Antigravity desktop app once.
+2. Add accounts in AMT using Google OAuth. Refresh-token and database imports are also supported.
+3. Check quotas, then use the recommended account or switch manually. Switching restarts the client, so save your work first.
 
-- Desktop: Tauri 2
-- Frontend: React 19, TypeScript, Vite, Zustand, Tailwind CSS, shadcn/ui
-- Backend: Rust, Tokio, SQLite, native credential stores
+Account data stays locally in `~/.antigravity_tools`; move it from Settings if needed. Exports contain refresh tokens—keep them private. Quotas depend on service responses; device identity isolation does not guarantee account safety or platform risk-control outcomes.
 
 ## Development
 
-Install Node.js 22 (22.12+), npm, Rust stable, and the platform build tools required by Tauri 2. On macOS, install Xcode Command Line Tools.
+Built with **Tauri 2 · Rust · React · TypeScript · shadcn/ui**. Requires Node.js 22 (22.12+), Rust stable, and platform build tools. On macOS, install Xcode Command Line Tools.
 
 ```bash
-git clone git@github.com:wuyunfeng8/Antigravity-Manager.git
+git clone https://github.com/wuyunfeng8/Antigravity-Manager.git
 cd Antigravity-Manager
 npm ci --legacy-peer-deps
 npm run tauri dev
 ```
 
-Pre-flight checks:
+See [AGENTS.md](AGENTS.md) for development and validation guidelines (Chinese).
 
-```bash
-npm run build
-cd src-tauri
-cargo fmt -- --check
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test --all-features
-cargo check
-```
+## License & acknowledgments
 
-## License
-
-Licensed under the [MIT License](LICENSE).
-
-AMT independently evolved while learning from and referencing [lbjlaq/Antigravity-Manager](https://github.com/lbjlaq/Antigravity-Manager), with sincere appreciation.
-
-The project is also shared and discussed on [LINUX DO](https://linux.do/), with thanks to the community.
+[MIT](LICENSE) · Independently developed with reference to [lbjlaq/Antigravity-Manager](https://github.com/lbjlaq/Antigravity-Manager). Thanks to the original project and the [LINUX DO](https://linux.do/) community.

@@ -1,139 +1,60 @@
 <div align="center">
-  <img src="public/icon.png" width="112" height="112" alt="AMT Logo">
-
-  # AMT
-
-  **Antigravity 多账号配额雷达与接力管理器**
-
-  真实配额、推荐接力、独立设备身份。让账号切换回到一次点击，而不是一轮重新登录。
-
-  [![Release](https://img.shields.io/github/v/release/wuyunfeng8/Antigravity-Manager?style=flat-square&color=16a34a)](https://github.com/wuyunfeng8/Antigravity-Manager/releases)
-  [![Platform](https://img.shields.io/badge/platform-macOS-0f172a?style=flat-square)](#安装)
-  [![License](https://img.shields.io/badge/license-MIT-64748b?style=flat-square)](LICENSE)
-
-  **简体中文** · [English](README_EN.md)
+  <img src="public/icon.png" width="88" height="88" alt="AMT">
+  <h1>AMT</h1>
+  <p><strong>Antigravity 多账号配额与接力管理器</strong></p>
+  <p>看清配额，从容切换，继续专注。</p>
+  <p>
+    <a href="https://github.com/wuyunfeng8/Antigravity-Manager/releases"><img src="https://img.shields.io/github/v/release/wuyunfeng8/Antigravity-Manager?style=flat-square&color=059669" alt="Release"></a>
+    <img src="https://img.shields.io/badge/platform-macOS-18181b?style=flat-square" alt="macOS">
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-18181b?style=flat-square" alt="MIT License"></a>
+  </p>
+  <p><strong>简体中文</strong> · <a href="README_EN.md">English</a></p>
+  <p><a href="https://github.com/wuyunfeng8/Antigravity-Manager/releases">下载</a> · <a href="CHANGELOG.md">更新记录</a> · <a href="https://github.com/wuyunfeng8/Antigravity-Manager/issues">反馈</a></p>
 </div>
 
----
+![AMT — 当前主力、配额与推荐接力](docs/images/amt-relay-overview.png)
 
-## 今天继续编码，不等配额
+## 功能
 
-![AMT 产品界面：当前主力、推荐接力与账号池](docs/images/amt-relay-overview.png)
-
-<p align="center">当前主力 · 真实配额 · 推荐接力 · 账号池<br><sub>中文界面展示，账号信息已打码；配额和模型可用性以实际返回为准。</sub></p>
-
-[下载安装](#安装) · [快速上手](#使用流程) · [更新记录](CHANGELOG.md) · [问题反馈](https://github.com/wuyunfeng8/Antigravity-Manager/issues)
-
-## AMT 是什么
-
-AMT 是面向 Google Antigravity 用户的桌面账号中枢。它把账号入库、真实配额监控、设备身份管理与客户端切换集中在一个轻量界面中，减少额度耗尽后退出账号、重新登录和再次授权造成的工作中断。
-
-> AMT 是本地桌面账号管理工具，不提供 OpenAI、Anthropic 或 Gemini API 代理服务，也不包含 HTTP 网关与 Docker Headless 模式。
-
-## 三个核心能力
-
-| 能力 | 工作方式 | 带来的价值 |
-| --- | --- | --- |
-| **真实配额雷达** | 读取并聚合 Antigravity 的真实配额桶 | 只展示 Gemini、Claude、GPT 分类的余量、重置时间和异常状态 |
-| **一键账号接力** | 写入 Antigravity 主程序使用的系统凭据库或兼容 SQLite 状态，并重新启动主程序 | 不再手工退出、登录和授权，配额不足时快速切换到健康账号 |
-| **独立设备身份** | 为账号保存并应用独立的 `machineId`、`macMachineId`、`devDeviceId` 与 `sqmId` | 降低多个账号长期共用同一客户端身份产生的关联风险 |
-
-## 使用流程
-
-```text
-添加账号  →  查看真实配额  →  选择推荐账号  →  一键接力
- OAuth        5H / 周配额       健康度与余量       凭据 + 设备身份
- Token
- 数据库导入
-```
-
-开始前，请先安装并启动一次 Antigravity 主程序。切换会重新启动客户端，请先保存正在进行的工作。
-
-1. 点击“添加账号”，优先使用 Google OAuth；Refresh Token 和数据库导入作为高级入口。
-2. 在主页查看当前主力、全账号池以及 5 小时/周配额状态。
-3. 当前账号余量不足时，点击“立即接力”或切换到任意健康账号。
-
-### 如何理解配额
-
-- **5H 与周配额是不同窗口**：切换视图查看各自余量和重置时间；未同步到周配额时显示未知，不代表额度充足。
-- **订阅等级来自服务端**：FREE、PRO、ULTRA 依据 `loadCodeAssist` 返回的信息识别，不根据模型名称推断。
-- **异常账号需先处理**：遇到验证要求、权限受限或授权失效时，先按提示完成验证或重新授权，再刷新配额。
-
-## 功能概览
-
-- 当前主力账号与推荐接力账号一屏呈现。
-- Gemini、Claude、GPT 分类配额展示；分类可能共享上游配额桶，不代表三份独立额度。
-- 5 小时滑动窗口与周配额切换。
-- FREE、PRO、ULTRA 订阅等级识别。
-- Google OAuth、Refresh Token、旧数据库与自定义 `state.vscdb` 导入。
-- Antigravity 主程序账号切换。
-- 设备身份生成、绑定、历史版本和已保存基线恢复；旧版本的基线未必代表首次安装状态。
-- 账号验证异常、403 和 OAuth 失效状态提示。
-- 托盘常驻、迷你配额视图、定时刷新与周配额预热。
-- 数据目录迁移、客户端缓存清理、网络代理与调试控制台。
-- 界面语言仅提供简体中文和英文。
+- **配额一览** — 查看账号余量、重置时间与健康状态，支持 5H / 周配额视图。
+- **一键接力** — 推荐可用账号，切换 Antigravity 主程序，减少重复登录。
+- **设备身份** — 按账号绑定设备身份，支持历史管理与已保存基线恢复。
+- **轻量常驻** — 托盘、迷你视图、后台刷新与周配额预热，中英文界面。
 
 ## 安装
 
-### 从 Releases 下载
+从 [Releases](https://github.com/wuyunfeng8/Antigravity-Manager/releases) 下载适合 Mac 芯片的 `.dmg`：Apple Silicon 选 `aarch64`，Intel 选 `x64`。1.1.0 仅提供 macOS 安装包。
 
-前往 [GitHub Releases](https://github.com/wuyunfeng8/Antigravity-Manager/releases)，根据 Mac 芯片选择 Apple Silicon（`aarch64`）或 Intel（`x64`）的 `.dmg`。1.1.0 仅发布 macOS 安装包。
-
-**安装限制：**1.1.0 未使用 Apple Developer ID 签名，也未经 Apple 公证。macOS 可能阻止首次打开；请先核对下载来源和 Release 中的 `SHA256SUMS`，确认可信后参照 [Apple 的“仍要打开”说明](https://support.apple.com/zh-cn/102445) 在“系统设置 → 隐私与安全性”中操作。不要关闭系统安全检查。
-
-### macOS 安装脚本
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/wuyunfeng8/Antigravity-Manager/main/install.sh | bash
-```
-
-### Homebrew（macOS）
+也可使用 Homebrew：
 
 ```bash
 brew tap wuyunfeng8/antigravity-manager https://github.com/wuyunfeng8/Antigravity-Manager
 brew install --cask antigravity-tools
 ```
 
-## 数据与安全
+> 1.1.0 未经 Apple Developer ID 签名与公证。首次打开若被拦截，请核对来源及 Release 中的 `SHA256SUMS`，再按 [Apple 说明](https://support.apple.com/zh-cn/102445) 选择“仍要打开”。
 
-- 默认数据目录：`~/.antigravity_tools`
-- 可在“设置 → 维护工具”中迁移数据目录。
-- 账号数据采用原子写入；Unix 系统中的敏感配置文件使用 `0600` 权限。
-- 导出的账号 JSON 包含 Refresh Token，请勿上传、转发或提交到 Git。
-- 设备身份隔离只能降低客户端环境关联风险，不构成账号安全或平台风控结果保证。
+## 使用
 
-## 技术栈
+1. 安装并启动一次 Antigravity 主程序。
+2. 在 AMT 中添加账号，使用 Google OAuth 授权；也支持 Refresh Token 和数据库导入。
+3. 查看配额，选择推荐账号或手动切换。切换会重启客户端，请先保存工作。
 
-- 桌面：Tauri 2
-- 前端：React 19、TypeScript、Vite、Zustand、Tailwind CSS、shadcn/ui
-- 后端：Rust、Tokio、SQLite、原生系统凭据库
+账号数据保存在本地 `~/.antigravity_tools`，可在设置中迁移。导出文件包含 Refresh Token，请妥善保管。配额以服务返回为准；设备身份隔离不保证账号安全或平台风控结果。
 
-## 本地开发
+## 开发
 
-准备 Node.js 22（22.12+）、npm、Rust stable，以及对应平台的 Tauri 2 构建工具链；macOS 需要 Xcode Command Line Tools。
+基于 **Tauri 2 · Rust · React · TypeScript · shadcn/ui**。准备 Node.js 22（22.12+）、Rust stable 与平台构建工具；macOS 需要 Xcode Command Line Tools。
 
 ```bash
-git clone git@github.com:wuyunfeng8/Antigravity-Manager.git
+git clone https://github.com/wuyunfeng8/Antigravity-Manager.git
 cd Antigravity-Manager
 npm ci --legacy-peer-deps
 npm run tauri dev
 ```
 
-提交前检查：
+开发与验证规范见 [AGENTS.md](AGENTS.md)。
 
-```bash
-npm run build
-cd src-tauri
-cargo fmt -- --check
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test --all-features
-cargo check
-```
+## 许可与致谢
 
-## License
-
-本项目采用 [MIT](LICENSE) 许可。
-
-本项目在学习和参考 [lbjlaq/Antigravity-Manager](https://github.com/lbjlaq/Antigravity-Manager) 的基础上独立演进，谨致谢意。
-
-本项目在 [LINUX DO](https://linux.do/) 上交流分享，谨致谢意。
+[MIT](LICENSE) · 本项目参考 [lbjlaq/Antigravity-Manager](https://github.com/lbjlaq/Antigravity-Manager) 独立演进，感谢原项目与 [LINUX DO](https://linux.do/) 社区。
