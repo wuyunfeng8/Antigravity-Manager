@@ -16,6 +16,14 @@
 
 ---
 
+## Keep coding when quota runs low
+
+![AMT product overview: current account, recommended relay, and account pool](docs/images/amt-relay-overview.png)
+
+<p align="center">Current account · Real quotas · Recommended relay · Account pool<br><sub>Chinese interface shown with account details masked. Quotas and model availability depend on the service response.</sub></p>
+
+[Download](#installation) · [Get started](#workflow) · [Changelog](CHANGELOG.md) · [Report an issue](https://github.com/wuyunfeng8/Antigravity-Manager/issues)
+
 ## What is AMT?
 
 AMT is a desktop account hub for Google Antigravity users. It brings account onboarding, real quota monitoring, device identity management, and native client switching into one focused interface, reducing interruptions caused by quota exhaustion and repeated authorization flows.
@@ -26,7 +34,7 @@ AMT is a desktop account hub for Google Antigravity users. It brings account onb
 
 | Capability | How it works | Why it matters |
 | --- | --- | --- |
-| **Real quota radar** | Reads and consolidates Antigravity's actual quota buckets | Shows useful Claude, Gemini Pro, and Gemini Flash capacity, cycles, and account problems without duplicate model noise |
+| **Real quota radar** | Reads and consolidates Antigravity's actual quota buckets | Shows Gemini, Claude, and GPT quota categories, reset times, and account problems |
 | **One-click account relay** | Writes the selected account to the Antigravity desktop app's credential store or compatible SQLite state, then restarts the app | Replaces the manual sign-out, sign-in, and authorization cycle when quota runs low |
 | **Isolated device identities** | Stores and applies separate `machineId`, `macMachineId`, `devDeviceId`, and `sqmId` values per account | Reduces the correlation risk of multiple accounts sharing one long-lived client identity |
 
@@ -39,14 +47,22 @@ Add accounts  →  Inspect real quotas  →  Pick a recommended account  →  Re
  Database import
 ```
 
-1. Add accounts through Google OAuth, refresh tokens, or an existing database.
+Before starting, install and launch the Antigravity desktop app at least once. Switching restarts the client, so save your work first.
+
+1. Choose **Add account** and sign in with Google OAuth. Refresh-token and database imports are available as advanced options.
 2. Inspect the current account, the complete account pool, and 5-hour/weekly quota windows.
 3. When capacity runs low, choose the recommended relay account or any healthy account.
+
+### Reading quotas
+
+- **5-hour and weekly quotas are separate windows.** Switch views to inspect remaining capacity and reset times. Missing weekly data means unknown, not a full allowance.
+- **Subscription tiers come from the service.** FREE, PRO, and ULTRA use information returned by `loadCodeAssist`, rather than model names.
+- **Resolve account problems before relaying.** Follow verification or reauthorization prompts when access is blocked, then refresh quotas.
 
 ## Features
 
 - Current and recommended relay accounts visible at a glance.
-- Consolidated Claude, Gemini Pro, and Gemini Flash quota families.
+- Gemini, Claude, and GPT quota categories; categories may share upstream quota buckets and do not imply three independent allowances.
 - 5-hour sliding-window and weekly quota views.
 - FREE, PRO, and ULTRA subscription-tier detection.
 - Google OAuth, refresh-token, legacy database, and custom `state.vscdb` import.
@@ -94,10 +110,12 @@ brew install --cask antigravity-tools
 
 ## Development
 
+Install Node.js 22 (22.12+), npm, Rust stable, and the platform build tools required by Tauri 2. On macOS, install Xcode Command Line Tools.
+
 ```bash
 git clone git@github.com:wuyunfeng8/Antigravity-Manager.git
 cd Antigravity-Manager
-npm install
+npm ci --legacy-peer-deps
 npm run tauri dev
 ```
 
@@ -117,3 +135,5 @@ cargo check
 Licensed under the [MIT License](LICENSE).
 
 AMT independently evolved while learning from and referencing [lbjlaq/Antigravity-Manager](https://github.com/lbjlaq/Antigravity-Manager), with sincere appreciation.
+
+The project is also shared and discussed on [LINUX DO](https://linux.do/), with thanks to the community.

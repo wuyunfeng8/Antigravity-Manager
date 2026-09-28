@@ -16,6 +16,14 @@
 
 ---
 
+## 今天继续编码，不等配额
+
+![AMT 产品界面：当前主力、推荐接力与账号池](docs/images/amt-relay-overview.png)
+
+<p align="center">当前主力 · 真实配额 · 推荐接力 · 账号池<br><sub>中文界面展示，账号信息已打码；配额和模型可用性以实际返回为准。</sub></p>
+
+[下载安装](#安装) · [快速上手](#使用流程) · [更新记录](CHANGELOG.md) · [问题反馈](https://github.com/wuyunfeng8/Antigravity-Manager/issues)
+
 ## AMT 是什么
 
 AMT 是面向 Google Antigravity 用户的桌面账号中枢。它把账号入库、真实配额监控、设备身份管理与客户端切换集中在一个轻量界面中，减少额度耗尽后退出账号、重新登录和再次授权造成的工作中断。
@@ -26,7 +34,7 @@ AMT 是面向 Google Antigravity 用户的桌面账号中枢。它把账号入�
 
 | 能力 | 工作方式 | 带来的价值 |
 | --- | --- | --- |
-| **真实配额雷达** | 读取并聚合 Antigravity 的真实配额桶 | 只展示 Claude、Gemini Pro、Gemini Flash 等核心余量、周期和异常状态 |
+| **真实配额雷达** | 读取并聚合 Antigravity 的真实配额桶 | 只展示 Gemini、Claude、GPT 分类的余量、重置时间和异常状态 |
 | **一键账号接力** | 写入 Antigravity 主程序使用的系统凭据库或兼容 SQLite 状态，并重新启动主程序 | 不再手工退出、登录和授权，配额不足时快速切换到健康账号 |
 | **独立设备身份** | 为账号保存并应用独立的 `machineId`、`macMachineId`、`devDeviceId` 与 `sqmId` | 降低多个账号长期共用同一客户端身份产生的关联风险 |
 
@@ -39,14 +47,22 @@ AMT 是面向 Google Antigravity 用户的桌面账号中枢。它把账号入�
  数据库导入
 ```
 
-1. 使用 Google OAuth、Refresh Token 或已有数据库导入账号。
+开始前，请先安装并启动一次 Antigravity 主程序。切换会重新启动客户端，请先保存正在进行的工作。
+
+1. 点击“添加账号”，优先使用 Google OAuth；Refresh Token 和数据库导入作为高级入口。
 2. 在主页查看当前主力、全账号池以及 5 小时/周配额状态。
 3. 当前账号余量不足时，点击“立即接力”或切换到任意健康账号。
+
+### 如何理解配额
+
+- **5H 与周配额是不同窗口**：切换视图查看各自余量和重置时间；未同步到周配额时显示未知，不代表额度充足。
+- **订阅等级来自服务端**：FREE、PRO、ULTRA 依据 `loadCodeAssist` 返回的信息识别，不根据模型名称推断。
+- **异常账号需先处理**：遇到验证要求、权限受限或授权失效时，先按提示完成验证或重新授权，再刷新配额。
 
 ## 功能概览
 
 - 当前主力账号与推荐接力账号一屏呈现。
-- Claude、Gemini Pro、Gemini Flash 三类核心配额聚合。
+- Gemini、Claude、GPT 分类配额展示；分类可能共享上游配额桶，不代表三份独立额度。
 - 5 小时滑动窗口与周配额切换。
 - FREE、PRO、ULTRA 订阅等级识别。
 - Google OAuth、Refresh Token、旧数据库与自定义 `state.vscdb` 导入。
@@ -94,10 +110,12 @@ brew install --cask antigravity-tools
 
 ## 本地开发
 
+准备 Node.js 22（22.12+）、npm、Rust stable，以及对应平台的 Tauri 2 构建工具链；macOS 需要 Xcode Command Line Tools。
+
 ```bash
 git clone git@github.com:wuyunfeng8/Antigravity-Manager.git
 cd Antigravity-Manager
-npm install
+npm ci --legacy-peer-deps
 npm run tauri dev
 ```
 
